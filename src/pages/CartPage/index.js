@@ -1,69 +1,184 @@
 // src/pages/CartPage/index.js
-import React, { useState, useEffect } from 'react'; // 1. Adicione useState e useEffect
+
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button';
-import { db } from '../../services/firebaseConfig'; // 2. Importe db
-import { doc, getDoc } from 'firebase/firestore'; // 3. Importe doc e getDoc
+import { db } from '../../services/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS (com ajustes para o novo resumo de total) ---
+// --- STYLED COMPONENTS (com regras de responsividade) ---
+
 const CartPageWrapper = styled.div`
-  padding: 20px; max-width: 900px; margin: 40px auto;
-  background-color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 900px;
+  margin: 40px auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* --- Início das Regras de Responsividade --- */
+  @media (max-width: 768px) {
+    margin: 20px 0; // Reduz a margem em telas pequenas
+    padding: 15px;
+    border-radius: 0; // Remove a borda arredondada para ocupar a tela toda
+    box-shadow: none;
+    min-height: calc(100vh - 70px); // Garante que a página ocupe a altura da tela (descontando o navbar)
+  }
 `;
-const Title = styled.h1`text-align: center; color: #7c3aed; margin-bottom: 30px;`;
+
+const Title = styled.h1`
+  text-align: center;
+  color: #7c3aed;
+  margin-bottom: 30px;
+
+  @media (max-width: 768px) {
+    font-size: 1.8em; // Diminui o tamanho da fonte do título
+    margin-bottom: 20px;
+  }
+`;
+
 const CartItem = styled.div`
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid #eee; padding: 15px 0;
-  &:last-child { border-bottom: none; }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+  gap: 15px; // Adiciona um espaçamento entre os elementos da linha
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Empilha os itens verticalmente
+    align-items: flex-start; // Alinha os itens à esquerda
+    gap: 12px; // Ajusta o espaçamento para o layout em coluna
+  }
 `;
+
 const ItemDetails = styled.div`
-  flex-grow: 1; display: flex; align-items: center;
-  img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  
+  img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Garante que o container de detalhes ocupe toda a largura
+    
+    img {
+      width: 50px; // Diminui a imagem
+      height: 50px;
+    }
+  }
 `;
-const ItemName = styled.h4`margin: 0 0 5px 0; color: #333; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+
+const ItemName = styled.h4`
+  margin: 0 0 5px 0;
+  color: #333;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: 768px) {
+    white-space: normal; // Permite que o texto quebre a linha
+    max-width: 100%; // Remove a largura máxima
+  }
+`;
+
 const ItemPrice = styled.p`margin: 0; color: #666; font-size: 0.9em;`;
+
 const QuantityControl = styled.div`
-  display: flex; align-items: center; min-width: 120px; justify-content: center;
+  display: flex;
+  align-items: center;
+  min-width: 120px;
+  justify-content: center;
+  
   button { 
     background-color: #eee; border: none; color: #333; padding: 5px 10px; cursor: pointer;
     border-radius: 4px; margin: 0 5px; font-size: 1em;
     &:hover { background-color: #ddd; }
   }
+
+  @media (max-width: 768px) {
+    justify-content: flex-start; // Alinha à esquerda
+    min-width: auto;
+  }
 `;
+
 const ItemQuantityDisplay = styled.span`font-weight: bold; margin: 0 10px;`;
-const ItemSubtotal = styled.span`font-weight: bold; color: #7c3aed; min-width: 100px; text-align: right;`;
-const RemoveButton = styled(Button)`
-  background-color: #ef4444; padding: 6px 12px; font-size: 0.9em; margin-left: 15px;
-  &:hover { background-color: #dc2626; }
+
+const ItemSubtotal = styled.span`
+  font-weight: bold;
+  color: #7c3aed;
+  min-width: 100px;
+  text-align: right;
+
+  @media (max-width: 768px) {
+    text-align: left; // Alinha à esquerda
+    min-width: auto;
+    font-size: 1.1em;
+    /* Adicionamos um rótulo para clareza no mobile */
+    &::before {
+      content: 'Subtotal: ';
+      font-weight: normal;
+      color: #555;
+    }
+  }
 `;
+
+const RemoveButton = styled(Button)`
+  background-color: #ef4444;
+  padding: 6px 12px;
+  font-size: 0.9em;
+  margin-left: 15px;
+
+  &:hover { background-color: #dc2626; }
+
+  @media (max-width: 768px) {
+    width: 100%; // Ocupa toda a largura para fácil clique
+    margin-left: 0;
+    margin-top: 10px;
+  }
+`;
+
 const EmptyCartMessage = styled.p`text-align: center; font-size: 1.2em; color: #555; padding: 40px 0;`;
 
-// Estilos ATUALIZADOS para o resumo do total
 const TotalsSection = styled.div`
   margin-top: 30px;
   padding-top: 20px;
   border-top: 2px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* Alinha tudo à direita */
+  align-items: flex-end;
+
+  @media (max-width: 768px) {
+    align-items: stretch; // Faz as linhas de total ocuparem toda a largura
+  }
 `;
 
 const SummaryLine = styled.div`
   display: flex;
   justify-content: space-between;
   width: 100%;
-  max-width: 350px; /* Largura máxima para as linhas de total */
+  max-width: 350px;
   font-size: 1.1em;
   padding: 8px 0;
   
-  span:first-child {
-    color: #555;
-  }
-  span:last-child {
-    font-weight: 600;
-    color: #333;
+  span:first-child { color: #555; }
+  span:last-child { font-weight: 600; color: #333; }
+
+  @media (max-width: 768px) {
+    max-width: 100%; // Remove a largura máxima para ocupar todo o espaço
   }
 `;
 
@@ -74,126 +189,152 @@ const GrandTotalLine = styled(SummaryLine)`
   padding-top: 10px;
   border-top: 2px solid #7c3aed;
 
-  span:last-child {
-    color: #7c3aed;
-  }
+  span:last-child { color: #7c3aed; }
 `;
 
 const ActionsWrapper = styled.div`
-  display: flex; justify-content: space-between; align-items: center;
-  margin-top: 40px; flex-wrap: wrap; gap: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Empilha os grupos de ação
+    gap: 15px;
+    margin-top: 30px;
+  }
 `;
-const ActionGroup = styled.div`display: flex; gap: 10px;`;
+
+const ActionGroup = styled.div`
+  display: flex;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex-direction: column; // Empilha os botões dentro de um grupo
+
+    & > * { // Aplica a todos os filhos diretos (nossos botões e links)
+      width: 100%;
+      text-align: center;
+    }
+  }
+`;
+
 // --- FIM DOS STYLED COMPONENTS ---
 
 const STORE_SETTINGS_DOC_ID = "mainConfig";
 
 const CartPage = () => {
-  const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useCart();
-  const navigate = useNavigate();
+    const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useCart();
+    const navigate = useNavigate();
+    
+    const [storeDeliveryFee, setStoreDeliveryFee] = useState(0);
+    const [loadingSettings, setLoadingSettings] = useState(true);
   
-  // 4. Novos estados para buscar a taxa de entrega
-  const [storeDeliveryFee, setStoreDeliveryFee] = useState(0);
-  const [loadingSettings, setLoadingSettings] = useState(true);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      setLoadingSettings(true);
-      try {
-        const settingsDocRef = doc(db, 'storeSettings', STORE_SETTINGS_DOC_ID);
-        const docSnap = await getDoc(settingsDocRef);
-        if (docSnap.exists() && docSnap.data().deliveryFee !== undefined) {
-          setStoreDeliveryFee(docSnap.data().deliveryFee);
-        } else {
+    useEffect(() => {
+      const fetchSettings = async () => {
+        setLoadingSettings(true);
+        try {
+          const settingsDocRef = doc(db, 'storeSettings', STORE_SETTINGS_DOC_ID);
+          const docSnap = await getDoc(settingsDocRef);
+          if (docSnap.exists() && docSnap.data().deliveryFee !== undefined) {
+            setStoreDeliveryFee(docSnap.data().deliveryFee);
+          } else {
+            setStoreDeliveryFee(0);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar configurações:", error);
           setStoreDeliveryFee(0);
+        } finally {
+          setLoadingSettings(false);
         }
-      } catch (error) {
-        console.error("Erro ao buscar configurações:", error);
-        setStoreDeliveryFee(0);
-      } finally {
-        setLoadingSettings(false);
-      }
-    };
-    fetchSettings();
-  }, []); // Roda apenas uma vez quando a página carrega
-
-  const calculateItemsSubtotal = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
+      };
+      fetchSettings();
+    }, []);
   
-  const calculateGrandTotal = () => {
-    return calculateItemsSubtotal() + storeDeliveryFee;
-  };
-
-  const handleClearCart = () => { if (window.confirm("Tem certeza que deseja limpar o carrinho?")) { clearCart(); }};
-  const handleProceedToCheckout = () => { if (cartItems.length === 0) { alert("Seu carrinho está vazio!"); return; } navigate('/checkout'); };
-
-  if (cartItems.length === 0) {
+    const calculateItemsSubtotal = () => {
+      return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    };
+    
+    const calculateGrandTotal = () => {
+      return calculateItemsSubtotal() + storeDeliveryFee;
+    };
+  
+    const handleClearCart = () => { if (window.confirm("Tem certeza que deseja limpar o carrinho?")) { clearCart(); }};
+    const handleProceedToCheckout = () => { if (cartItems.length === 0) { alert("Seu carrinho está vazio!"); return; } navigate('/checkout'); };
+  
+    if (cartItems.length === 0) {
+      return (
+        <CartPageWrapper>
+          <Title>Seu Carrinho de Compras</Title>
+          <EmptyCartMessage>Seu carrinho está vazio. Que tal adicionar alguns produtos?</EmptyCartMessage>
+          <ActionsWrapper><Link to="/menu"><Button>Ver Cardápio</Button></Link></ActionsWrapper>
+        </CartPageWrapper>
+      );
+    }
+  
     return (
       <CartPageWrapper>
         <Title>Seu Carrinho de Compras</Title>
-        <EmptyCartMessage>Seu carrinho está vazio. Que tal adicionar alguns produtos?</EmptyCartMessage>
-        <ActionsWrapper><Link to="/menu"><Button>Ver Cardápio</Button></Link></ActionsWrapper>
+        {cartItems.map(item => (
+          <CartItem key={item.id_cart || item.id}>
+            <ItemDetails>
+              <img src={item.imageUrl || 'https://via.placeholder.com/60x60.png?text=Vibe'} alt={item.name} />
+              <div>
+                <ItemName title={item.name}>{item.name}</ItemName>
+                {item.selectedToppings && item.selectedToppings.length > 0 && (
+                  <p style={{ fontSize: '0.8em', color: '#777', margin: '2px 0 0 0', fontStyle: 'italic' }}>
+                    Adicionais: {item.selectedToppings.map(topping => topping.name).join(', ')}
+                  </p>
+                )}
+                <ItemPrice>R$ {item.price.toFixed(2).replace('.', ',')} /un.</ItemPrice>
+              </div>
+            </ItemDetails>
+            
+            {/* Agrupamos controle e subtotal para melhor fluxo no mobile */}
+            <div style={{display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
+                <QuantityControl>
+                <button onClick={() => decreaseQuantity(item.id_cart || item.id)}>-</button>
+                <ItemQuantityDisplay>{item.quantity}</ItemQuantityDisplay>
+                <button onClick={() => increaseQuantity(item.id_cart || item.id)}>+</button>
+                </QuantityControl>
+                <ItemSubtotal>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</ItemSubtotal>
+            </div>
+            
+            <RemoveButton onClick={() => removeFromCart(item.id_cart || item.id)}>Remover</RemoveButton>
+          </CartItem>
+        ))}
+  
+        <TotalsSection>
+          <SummaryLine>
+            <span>Subtotal dos Itens:</span>
+            <span>R$ {calculateItemsSubtotal().toFixed(2).replace('.', ',')}</span>
+          </SummaryLine>
+          {loadingSettings ? (
+            <SummaryLine><span>Carregando taxa de entrega...</span></SummaryLine>
+          ) : storeDeliveryFee > 0 && (
+            <SummaryLine>
+              <span>Taxa de Entrega:</span>
+              <span>R$ {storeDeliveryFee.toFixed(2).replace('.', ',')}</span>
+            </SummaryLine>
+          )}
+          <GrandTotalLine>
+            <span>Total Geral:</span>
+            <span>R$ {calculateGrandTotal().toFixed(2).replace('.', ',')}</span>
+          </GrandTotalLine>
+        </TotalsSection>
+  
+        <ActionsWrapper>
+          <ActionGroup><Link to="/menu"><Button>Continuar Comprando</Button></Link></ActionGroup>
+          <ActionGroup>
+            <Button onClick={handleClearCart} style={{backgroundColor: '#f59e0b', color: 'white'}}>Limpar Carrinho</Button>
+            <Button onClick={handleProceedToCheckout}>Finalizar Compra</Button>
+          </ActionGroup>
+        </ActionsWrapper>
       </CartPageWrapper>
     );
-  }
-
-  return (
-    <CartPageWrapper>
-      <Title>Seu Carrinho de Compras</Title>
-      {cartItems.map(item => (
-        <CartItem key={item.id_cart || item.id}>
-          <ItemDetails>
-            <img src={item.imageUrl || 'https://via.placeholder.com/60x60.png?text=Vibe'} alt={item.name} />
-            <div>
-              <ItemName title={item.name}>{item.name}</ItemName>
-              {item.selectedToppings && item.selectedToppings.length > 0 && (
-                <p style={{ fontSize: '0.8em', color: '#777', margin: '2px 0 0 0', fontStyle: 'italic' }}>
-                  Adicionais: {item.selectedToppings.map(topping => topping.name).join(', ')}
-                </p>
-              )}
-              <ItemPrice>R$ {item.price.toFixed(2).replace('.', ',')} /un.</ItemPrice>
-            </div>
-          </ItemDetails>
-          <QuantityControl>
-            <button onClick={() => decreaseQuantity(item.id_cart || item.id)}>-</button>
-            <ItemQuantityDisplay>{item.quantity}</ItemQuantityDisplay>
-            <button onClick={() => increaseQuantity(item.id_cart || item.id)}>+</button>
-          </QuantityControl>
-          <ItemSubtotal>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</ItemSubtotal>
-          <RemoveButton onClick={() => removeFromCart(item.id_cart || item.id)}>Remover</RemoveButton>
-        </CartItem>
-      ))}
-
-      {/* 5. Seção de Totais ATUALIZADA */}
-      <TotalsSection>
-        <SummaryLine>
-          <span>Subtotal dos Itens:</span>
-          <span>R$ {calculateItemsSubtotal().toFixed(2).replace('.', ',')}</span>
-        </SummaryLine>
-        {loadingSettings ? (
-          <SummaryLine><span>Carregando taxa de entrega...</span></SummaryLine>
-        ) : storeDeliveryFee > 0 && (
-          <SummaryLine>
-            <span>Taxa de Entrega:</span>
-            <span>R$ {storeDeliveryFee.toFixed(2).replace('.', ',')}</span>
-          </SummaryLine>
-        )}
-        <GrandTotalLine>
-          <span>Total Geral:</span>
-          <span>R$ {calculateGrandTotal().toFixed(2).replace('.', ',')}</span>
-        </GrandTotalLine>
-      </TotalsSection>
-
-      <ActionsWrapper>
-        <ActionGroup><Link to="/menu"><Button>Continuar Comprando</Button></Link></ActionGroup>
-        <ActionGroup>
-          <Button onClick={handleClearCart} style={{backgroundColor: '#f59e0b', color: 'white'}}>Limpar Carrinho</Button>
-          <Button onClick={handleProceedToCheckout}>Finalizar Compra</Button>
-        </ActionGroup>
-      </ActionsWrapper>
-    </CartPageWrapper>
-  );
-};
-
-export default CartPage;
+  };
+  
+  export default CartPage;
