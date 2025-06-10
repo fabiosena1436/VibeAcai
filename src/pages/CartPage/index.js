@@ -8,7 +8,7 @@ import Button from '../../components/Button';
 import { db } from '../../services/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS (com regras de responsividade) ---
+// --- STYLED COMPONENTS (com as últimas atualizações) ---
 
 const CartPageWrapper = styled.div`
   padding: 20px;
@@ -18,13 +18,12 @@ const CartPageWrapper = styled.div`
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
-  /* --- Início das Regras de Responsividade --- */
   @media (max-width: 768px) {
-    margin: 20px 0; // Reduz a margem em telas pequenas
+    margin: 20px 0;
     padding: 15px;
-    border-radius: 0; // Remove a borda arredondada para ocupar a tela toda
+    border-radius: 0;
     box-shadow: none;
-    min-height: calc(100vh - 70px); // Garante que a página ocupe a altura da tela (descontando o navbar)
+    min-height: calc(100vh - 70px);
   }
 `;
 
@@ -32,11 +31,19 @@ const Title = styled.h1`
   text-align: center;
   color: #7c3aed;
   margin-bottom: 30px;
+  margin-top: 7%;
 
   @media (max-width: 768px) {
-    font-size: 1.8em; // Diminui o tamanho da fonte do título
+    font-size: 1.8em;
     margin-bottom: 20px;
   }
+`;
+
+const ItemTopRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
 `;
 
 const CartItem = styled.div`
@@ -45,16 +52,16 @@ const CartItem = styled.div`
   align-items: center;
   border-bottom: 1px solid #eee;
   padding: 15px 0;
-  gap: 15px; // Adiciona um espaçamento entre os elementos da linha
+  gap: 15px;
 
   &:last-child {
     border-bottom: none;
   }
 
   @media (max-width: 768px) {
-    flex-direction: column; // Empilha os itens verticalmente
-    align-items: flex-start; // Alinha os itens à esquerda
-    gap: 12px; // Ajusta o espaçamento para o layout em coluna
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 `;
 
@@ -72,10 +79,8 @@ const ItemDetails = styled.div`
   }
 
   @media (max-width: 768px) {
-    width: 100%; // Garante que o container de detalhes ocupe toda a largura
-    
     img {
-      width: 50px; // Diminui a imagem
+      width: 50px;
       height: 50px;
     }
   }
@@ -90,8 +95,8 @@ const ItemName = styled.h4`
   text-overflow: ellipsis;
 
   @media (max-width: 768px) {
-    white-space: normal; // Permite que o texto quebre a linha
-    max-width: 100%; // Remove a largura máxima
+    white-space: normal;
+    max-width: 100%;
   }
 `;
 
@@ -110,7 +115,7 @@ const QuantityControl = styled.div`
   }
 
   @media (max-width: 768px) {
-    justify-content: flex-start; // Alinha à esquerda
+    justify-content: flex-start;
     min-width: auto;
   }
 `;
@@ -124,10 +129,9 @@ const ItemSubtotal = styled.span`
   text-align: right;
 
   @media (max-width: 768px) {
-    text-align: left; // Alinha à esquerda
+    text-align: left;
     min-width: auto;
     font-size: 1.1em;
-    /* Adicionamos um rótulo para clareza no mobile */
     &::before {
       content: 'Subtotal: ';
       font-weight: normal;
@@ -137,17 +141,34 @@ const ItemSubtotal = styled.span`
 `;
 
 const RemoveButton = styled(Button)`
+  /* --- ESTILOS COMUNS PARA O BOTÃO REMOVER --- */
   background-color: #ef4444;
   padding: 6px 12px;
   font-size: 0.9em;
   margin-left: 15px;
 
+  /* --- LÓGICA PARA TEXTO RESPONSIVO --- */
+  .mobile-text { display: none; }
+  .desktop-text { display: inline; }
+
   &:hover { background-color: #dc2626; }
 
   @media (max-width: 768px) {
-    width: 100%; // Ocupa toda a largura para fácil clique
-    margin-left: 0;
-    margin-top: 10px;
+    width: auto;
+    margin-left: 10px;
+    background-color: transparent;
+    color: #ef4444;
+    padding: 5px;
+    font-size: 1.5em;
+    font-weight: bold;
+    line-height: 1;
+
+    .mobile-text { display: inline; }
+    .desktop-text { display: none; }
+
+    &:hover {
+      background-color: #fef2f2;
+    }
   }
 `;
 
@@ -162,7 +183,7 @@ const TotalsSection = styled.div`
   align-items: flex-end;
 
   @media (max-width: 768px) {
-    align-items: stretch; // Faz as linhas de total ocuparem toda a largura
+    align-items: stretch;
   }
 `;
 
@@ -178,7 +199,7 @@ const SummaryLine = styled.div`
   span:last-child { font-weight: 600; color: #333; }
 
   @media (max-width: 768px) {
-    max-width: 100%; // Remove a largura máxima para ocupar todo o espaço
+    max-width: 100%;
   }
 `;
 
@@ -192,37 +213,45 @@ const GrandTotalLine = styled(SummaryLine)`
   span:last-child { color: #7c3aed; }
 `;
 
+// --- ÁREA DE BOTÕES ATUALIZADA ---
 const ActionsWrapper = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; /* Organiza os filhos em coluna */
+  gap: 15px; /* Espaçamento entre a linha de cima e o botão de baixo */
   margin-top: 40px;
-  flex-wrap: wrap;
-  gap: 10px;
-
-  @media (max-width: 768px) {
-    flex-direction: column; // Empilha os grupos de ação
-    gap: 15px;
-    margin-top: 30px;
-  }
 `;
 
-const ActionGroup = styled.div`
+const TopButtonsContainer = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 15px; /* Espaçamento entre os botões */
 
-  @media (max-width: 768px) {
-    width: 100%;
-    flex-direction: column; // Empilha os botões dentro de um grupo
-
-    & > * { // Aplica a todos os filhos diretos (nossos botões e links)
-      width: 100%;
-      text-align: center;
-    }
+  /* Faz com que cada filho (o Link e o Button) ocupe metade do espaço */
+  & > * {
+    flex: 1;
   }
 `;
 
-// --- FIM DOS STYLED COMPONENTS ---
+const CheckoutButton = styled(Button)`
+  width: 100%; /* Botão principal ocupa toda a largura */
+`;
+
+const SecondaryButton = styled(Button)`
+  width: 100%;
+  background-color: #6b7280; // Cor secundária (cinza)
+  &:hover {
+    background-color: #4b5563;
+  }
+`;
+
+const WarningButton = styled(Button)`
+  width: 100%;
+  background-color: #f59e0b; // Cor de aviso (laranja)
+  color: white;
+  &:hover {
+    background-color: #d97706;
+  }
+`;
+
 
 const STORE_SETTINGS_DOC_ID = "mainConfig";
 
@@ -270,7 +299,9 @@ const CartPage = () => {
         <CartPageWrapper>
           <Title>Seu Carrinho de Compras</Title>
           <EmptyCartMessage>Seu carrinho está vazio. Que tal adicionar alguns produtos?</EmptyCartMessage>
-          <ActionsWrapper><Link to="/menu"><Button>Ver Cardápio</Button></Link></ActionsWrapper>
+          <ActionsWrapper>
+            <Link to="/menu"><Button>Ver Cardápio</Button></Link>
+          </ActionsWrapper>
         </CartPageWrapper>
       );
     }
@@ -280,30 +311,35 @@ const CartPage = () => {
         <Title>Seu Carrinho de Compras</Title>
         {cartItems.map(item => (
           <CartItem key={item.id_cart || item.id}>
-            <ItemDetails>
-              <img src={item.imageUrl || 'https://via.placeholder.com/60x60.png?text=Vibe'} alt={item.name} />
-              <div>
-                <ItemName title={item.name}>{item.name}</ItemName>
-                {item.selectedToppings && item.selectedToppings.length > 0 && (
-                  <p style={{ fontSize: '0.8em', color: '#777', margin: '2px 0 0 0', fontStyle: 'italic' }}>
-                    Adicionais: {item.selectedToppings.map(topping => topping.name).join(', ')}
-                  </p>
-                )}
-                <ItemPrice>R$ {item.price.toFixed(2).replace('.', ',')} /un.</ItemPrice>
-              </div>
-            </ItemDetails>
-            
-            {/* Agrupamos controle e subtotal para melhor fluxo no mobile */}
+
+            <ItemTopRow>
+              <ItemDetails>
+                <img src={item.imageUrl || 'https://via.placeholder.com/60x60.png?text=Vibe'} alt={item.name} />
+                <div>
+                  <ItemName title={item.name}>{item.name}</ItemName>
+                  {item.selectedToppings && item.selectedToppings.length > 0 && (
+                    <p style={{ fontSize: '0.8em', color: '#777', margin: '2px 0 0 0', fontStyle: 'italic' }}>
+                      Adicionais: {item.selectedToppings.map(topping => topping.name).join(', ')}
+                    </p>
+                  )}
+                  <ItemPrice>R$ {item.price.toFixed(2).replace('.', ',')} /un.</ItemPrice>
+                </div>
+              </ItemDetails>
+              {/* BOTÃO REMOVER COM TEXTO RESPONSIVO */}
+              <RemoveButton onClick={() => removeFromCart(item.id_cart || item.id)}>
+                <span className="desktop-text">Remover</span>
+               
+              </RemoveButton>
+            </ItemTopRow>
+
             <div style={{display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
                 <QuantityControl>
-                <button onClick={() => decreaseQuantity(item.id_cart || item.id)}>-</button>
-                <ItemQuantityDisplay>{item.quantity}</ItemQuantityDisplay>
-                <button onClick={() => increaseQuantity(item.id_cart || item.id)}>+</button>
+                  <button onClick={() => decreaseQuantity(item.id_cart || item.id)}>-</button>
+                  <ItemQuantityDisplay>{item.quantity}</ItemQuantityDisplay>
+                  <button onClick={() => increaseQuantity(item.id_cart || item.id)}>+</button>
                 </QuantityControl>
                 <ItemSubtotal>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</ItemSubtotal>
             </div>
-            
-            <RemoveButton onClick={() => removeFromCart(item.id_cart || item.id)}>Remover</RemoveButton>
           </CartItem>
         ))}
   
@@ -325,14 +361,18 @@ const CartPage = () => {
             <span>R$ {calculateGrandTotal().toFixed(2).replace('.', ',')}</span>
           </GrandTotalLine>
         </TotalsSection>
-  
+        
+        {/* --- NOVA ESTRUTURA DE BOTÕES DE AÇÃO --- */}
         <ActionsWrapper>
-          <ActionGroup><Link to="/menu"><Button>Continuar Comprando</Button></Link></ActionGroup>
-          <ActionGroup>
-            <Button onClick={handleClearCart} style={{backgroundColor: '#f59e0b', color: 'white'}}>Limpar Carrinho</Button>
-            <Button onClick={handleProceedToCheckout}>Finalizar Compra</Button>
-          </ActionGroup>
+          <TopButtonsContainer>
+            <Link to="/menu" style={{ textDecoration: 'none' }}>
+              <SecondaryButton>Continuar Comprando</SecondaryButton>
+            </Link>
+            <WarningButton onClick={handleClearCart}>Limpar Carrinho</WarningButton>
+          </TopButtonsContainer>
+          <CheckoutButton onClick={handleProceedToCheckout}>Finalizar Compra</CheckoutButton>
         </ActionsWrapper>
+        
       </CartPageWrapper>
     );
   };

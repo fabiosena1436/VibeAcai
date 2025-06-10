@@ -26,7 +26,7 @@ const HeroContent = styled.div`
   display: flex; flex-direction: column; align-items: center; max-width: 90%;
 `;
 const LogoOverlay = styled.div`
-  background-color: rgba(0, 0, 0, 0.5); border-radius: 50%; padding: 20px;
+  background-color: rgb(247 241 241 / 76%); border-radius: 50%; padding: 20px;
   display: flex; justify-content: center; align-items: center;
   box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px;
   img { height: 120px; width: 120px; object-fit: contain; }
