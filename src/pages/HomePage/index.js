@@ -1,5 +1,5 @@
-// src/pages/HomePage.js
-import React, { useState, useEffect } from 'react';
+// src/pages/HomePage/index.js
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { db } from '../../services/firebaseConfig';
@@ -7,13 +7,12 @@ import { collection, getDocs, query, where, documentId } from 'firebase/firestor
 import toast from 'react-hot-toast';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 
-// ▼▼▼ AQUI ESTÁ A CORREÇÃO ▼▼▼
 import Button from '../../components/Button';
 import ProductCard from '../../components/ProductCard';
 import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import PromoCard from '../../components/PromoCard';
 
-// --- STYLED COMPONENTS ---
+// --- STYLED COMPONENTS (sem alterações) ---
 const HomePageWrapper = styled.div`padding-bottom: 50px;`;
 const HeroSection = styled.div`
   width: 100%; height: 45vh; min-height: 350px; max-height: 450px;
@@ -60,6 +59,44 @@ const HomePage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductForCustomization, setSelectedProductForCustomization] = useState(null);
+
+  // ---> INÍCIO DA LÓGICA DO MENU SECRETO <---
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const clickTimeoutRef = useRef(null);
+  const REQUIRED_CLICKS = 5;
+
+  const handleLogoClick = () => {
+    // Limpa o timer anterior para reiniciar a contagem de tempo
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+    
+    const newClickCount = logoClickCount + 1;
+    setLogoClickCount(newClickCount);
+
+    if (newClickCount >= REQUIRED_CLICKS) {
+      toast.success('Acesso secreto liberado!');
+      navigate('/admin/login');
+      // Reseta a contagem após o redirecionamento
+      setLogoClickCount(0);
+    } else {
+      // Cria um novo timer. Se o usuário não clicar novamente em 2 segundos, reseta a contagem.
+      clickTimeoutRef.current = setTimeout(() => {
+        setLogoClickCount(0);
+      }, 2000); // 2 segundos de intervalo entre cliques
+    }
+  };
+
+  // Efeito para limpar o timer quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
+  // ---> FIM DA LÓGICA DO MENU SECRETO <---
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,7 +158,7 @@ const HomePage = () => {
             <HeroSection bgImage={settings.bannerUrl}>
               <HeroContent>
                 {settings.logoUrl ? (
-                  <LogoOverlay>
+                  <LogoOverlay onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
                     <img src={settings.logoUrl} alt="Vibe Açaí" />
                   </LogoOverlay>
                 ) : (

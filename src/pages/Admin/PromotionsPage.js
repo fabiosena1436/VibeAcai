@@ -1,3 +1,4 @@
+// src/pages/Admin/PromotionsPage.js
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Button from '../../components/Button';
@@ -6,27 +7,91 @@ import toast from 'react-hot-toast';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query, where } from 'firebase/firestore';
 
+// --- STYLED COMPONENTS COM RESPONSIVIDADE ---
+const PageWrapper = styled.div`
+  h1 { font-size: 2em; color: #333; margin-bottom: 30px; }
+`;
 const SectionTitle = styled.h2`font-size: 1.5em; color: #555; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; &:not(:first-child){margin-top: 40px;}`;
-const AddForm = styled.form`background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; margin-bottom: 40px; display: flex; flex-direction: column; gap: 15px; border: 1px solid #eee;`;
-const FormGroup = styled.div`display: flex; flex-direction: column; label { margin-bottom: 5px; font-weight: 600; color: #444; } input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; background-color: white; }`;
+
+const AddForm = styled.form`
+  background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; 
+  margin-bottom: 40px; display: grid; gap: 15px 20px; border: 1px solid #eee;
+  
+  /* Layout de 1 coluna por padrão (mobile) */
+  grid-template-columns: 1fr;
+
+  /* Layout de 2 colunas para telas maiores */
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+`;
+
+const FormGroup = styled.div`
+  display: flex; flex-direction: column; 
+  label { margin-bottom: 5px; font-weight: 600; color: #444; } 
+  input, select, textarea { 
+    padding: 10px; border: 1px solid #ccc; border-radius: 6px; 
+    font-size: 1em; background-color: white; width: 100%;
+  }
+  /* Faz o campo ocupar a largura total do grid */
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+`;
+
+const FormActions = styled.div`
+  display: flex;
+  gap: 10px;
+  grid-column: 1 / -1; /* Ocupa a largura total */
+  margin-top: 10px;
+`;
+
 const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 20px;`;
 const PromotionList = styled.ul`list-style: none; padding: 0;`;
+
 const PromotionListItem = styled.li`
-  background-color: #fff; padding: 15px; border: 1px solid #eee; border-radius: 8px;
-  margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.07);
-  .promo-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  background-color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; 
+  box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+  display: flex; justify-content: space-between; align-items: center; gap: 20px;
+
+  .promo-info { flex-grow: 1; }
+  .promo-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 15px; }
   .promo-title { font-size: 1.2em; font-weight: bold; color: #7c3aed; margin: 0; }
-  .promo-status { font-size: 0.8em; padding: 3px 6px; border-radius: 4px; font-weight: bold; flex-shrink: 0;
+  .promo-status { 
+    font-size: 0.8em; padding: 3px 6px; border-radius: 4px; font-weight: bold; flex-shrink: 0;
     &.active { background-color: #dcfce7; color: #166534; }
     &.inactive { background-color: #fee2e2; color: #991b1b; }
   }
-  .promo-description { font-size: 0.95em; color: #333; margin: 0 0 15px 0; }
+  .promo-description { font-size: 0.95em; color: #333; margin: 0 0 15px 0; word-break: break-word; }
   .promo-description strong { color: #5b21b6; }
-  .promo-actions { display: flex; gap: 10px; }
-  .promo-actions button { font-size: 0.9em; padding: 6px 12px; }
+  .promo-actions { 
+    display: flex; gap: 10px; flex-shrink: 0;
+    button { font-size: 0.9em; padding: 6px 12px; }
+  }
+
+  /* Layout do card em telas pequenas */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    
+    .promo-actions {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+    }
+  }
 `;
-const ToppingsGrid = styled.div`display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background-color: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px;`;
-const ToppingCheckboxLabel = styled.label`display: flex; align-items: center; gap: 8px; font-size: 0.9em; input { width: 16px; height: 16px; }`;
+
+const ToppingsGrid = styled.div`
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+  gap: 10px; background-color: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px;
+`;
+const ToppingCheckboxLabel = styled.label`display: flex; align-items: center; gap: 8px; font-size: 0.9em; cursor: pointer; input { width: 16px; height: 16px; }`;
+const InfoText = styled.p`
+  background-color: #f0f4f8; border-left: 4px solid #7c3aed;
+  padding: 15px; border-radius: 4px; color: #333;
+`;
 
 const PromotionsPage = () => {
   const [promotions, setPromotions] = useState([]);
@@ -114,22 +179,33 @@ const PromotionsPage = () => {
 
   return (
     <>
-      <div>
+      <PageWrapper>
         <h1>Gerenciamento de Promoções</h1>
         <SectionTitle>Criar Nova Promoção</SectionTitle>
         <AddForm onSubmit={handleAddPromotion}>
-          <FormGroup><label htmlFor="promoTitle">Título da Promoção:</label><input type="text" id="promoTitle" value={promoTitle} onChange={(e) => setPromoTitle(e.target.value)} required /></FormGroup>
+          <FormGroup className="full-width"><label htmlFor="promoTitle">Título da Promoção:</label><input type="text" id="promoTitle" value={promoTitle} onChange={(e) => setPromoTitle(e.target.value)} required /></FormGroup>
           <FormGroup><label htmlFor="promoType">Tipo de Promoção:</label><select id="promoType" value={promotionType} onChange={(e) => {setPromotionType(e.target.value); setSelectedProductId(''); setPromotionalPrice('');}}>
             <option value="product_discount">Desconto em Produto</option>
             <option value="free_toppings_selection">Adicionais Grátis (Combo)</option>
           </select></FormGroup>
-          {promotionType === 'product_discount' && (<><FormGroup><label htmlFor="productSelect">Produto em Promoção:</label><select id="productSelect" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um produto --</option>{products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup><FormGroup><label htmlFor="promoPrice">Preço Promocional (R$):</label><input type="number" id="promoPrice" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup></>)}
-          {promotionType === 'free_toppings_selection' && (<><FormGroup><label htmlFor="productSelectAcai">Açaí da Promoção:</label><select id="productSelectAcai" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um açaí --</option>{products.filter(p=>p.category==='açaí').map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup><FormGroup><label htmlFor="promoPriceCombo">Preço do Combo (R$):</label><input type="number" id="promoPriceCombo" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup><FormGroup><label>Adicionais Permitidos na Promoção:</label><ToppingsGrid>{toppings.map(t => (<ToppingCheckboxLabel key={t.id}><input type="checkbox" checked={allowedToppingIds.includes(t.id)} onChange={() => handleToppingSelection(t.id)} />{t.name}</ToppingCheckboxLabel>))}</ToppingsGrid></FormGroup><FormGroup><label htmlFor="freeToppingsLimit">Limite de Adicionais Grátis:</label><input type="number" id="freeToppingsLimit" value={freeToppingsLimit} onChange={(e) => setFreeToppingsLimit(e.target.value)} step="1" min="1" required /></FormGroup></>)}
-          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Adicionando...' : 'Adicionar Promoção'}</Button>
+          
+          {promotionType === 'product_discount' && (<>
+            <FormGroup><label htmlFor="productSelect">Produto em Promoção:</label><select id="productSelect" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um produto --</option>{products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
+            <FormGroup className="full-width"><label htmlFor="promoPrice">Preço Promocional (R$):</label><input type="number" id="promoPrice" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
+          </>)}
+          
+          {promotionType === 'free_toppings_selection' && (<>
+            <FormGroup><label htmlFor="productSelectAcai">Açaí da Promoção:</label><select id="productSelectAcai" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um açaí --</option>{products.filter(p=>p.category==='açaí').map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
+            <FormGroup><label htmlFor="promoPriceCombo">Preço do Combo (R$):</label><input type="number" id="promoPriceCombo" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
+            <FormGroup className="full-width"><label>Adicionais Permitidos na Promoção:</label><ToppingsGrid>{toppings.map(t => (<ToppingCheckboxLabel key={t.id}><input type="checkbox" checked={allowedToppingIds.includes(t.id)} onChange={() => handleToppingSelection(t.id)} />{t.name}</ToppingCheckboxLabel>))}</ToppingsGrid></FormGroup>
+            <FormGroup className="full-width"><label htmlFor="freeToppingsLimit">Limite de Adicionais Grátis:</label><input type="number" id="freeToppingsLimit" value={freeToppingsLimit} onChange={(e) => setFreeToppingsLimit(e.target.value)} step="1" min="1" required /></FormGroup>
+          </>)}
+          
+          <FormActions><Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Adicionando...' : 'Adicionar Promoção'}</Button></FormActions>
         </AddForm>
         <SectionTitle>Promoções Cadastradas</SectionTitle>
-        {loading ? ( <LoadingText>Carregando...</LoadingText> ) : promotions.length > 0 ? (<PromotionList>{promotions.map(promo => (<PromotionListItem key={promo.id}><div className="promo-info"><div className="promo-header"><h4 className="promo-title">{promo.title}</h4><span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span></div>{promo.type === 'product_discount' && (<p className="promo-description">Desconto: <strong>{promo.productName}</strong> por <strong>R$ {promo.promotionalPrice?.toFixed(2).replace('.',',') || 'N/A'}</strong></p>)}{promo.type === 'free_toppings_selection' && (<p className="promo-description">Combo: <strong>{promo.target?.productName || ''}</strong> + <strong>{promo.rules?.selection_limit || 0}</strong> adicionais por <strong>R$ {promo.price?.toFixed(2).replace('.',',') || 'N/A'}</strong></p>)}</div><div className="promo-actions"><Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{backgroundColor: promo.isActive ? '#facc15' : '#22c55e', color: promo.isActive ? '#422006' : 'white'}}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button><Button onClick={() => openDeleteConfirmModal(promo)} style={{backgroundColor: '#ef4444'}}>Excluir</Button></div></PromotionListItem>))}</PromotionList>) : ( <p>Nenhuma promoção cadastrada.</p> )}
-      </div>
+        {loading ? ( <LoadingText>Carregando...</LoadingText> ) : promotions.length > 0 ? (<PromotionList>{promotions.map(promo => (<PromotionListItem key={promo.id}><div className="promo-info"><div className="promo-header"><h4 className="promo-title">{promo.title}</h4><span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span></div>{promo.type === 'product_discount' && (<p className="promo-description">Desconto: <strong>{promo.productName}</strong> por <strong>R$ {promo.promotionalPrice?.toFixed(2).replace('.',',') || 'N/A'}</strong></p>)}{promo.type === 'free_toppings_selection' && (<p className="promo-description">Combo: <strong>{promo.target?.productName || ''}</strong> + <strong>{promo.rules?.selection_limit || 0}</strong> adicionais por <strong>R$ {promo.price?.toFixed(2).replace('.',',') || 'N/A'}</strong></p>)}</div><div className="promo-actions"><Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{backgroundColor: promo.isActive ? '#facc15' : '#22c55e', color: promo.isActive ? '#422006' : 'white'}}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button><Button onClick={() => openDeleteConfirmModal(promo)} style={{backgroundColor: '#ef4444'}}>Excluir</Button></div></PromotionListItem>))}</PromotionList>) : ( <InfoText>Nenhuma promoção cadastrada.</InfoText> )}
+      </PageWrapper>
       <ConfirmationModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} onConfirm={handleDeletePromotion} title="Confirmar Exclusão" message={`Tem certeza que deseja excluir a promoção "${itemToDelete?.title}"?`} />
     </>
   );

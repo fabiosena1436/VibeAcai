@@ -2,24 +2,137 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Button from '../../components/Button';
-import ConfirmationModal from '../../components/ConfirmationModal'; // Importa o modal
-import toast from 'react-hot-toast'; // Importa o toast
+import ConfirmationModal from '../../components/ConfirmationModal';
+import toast from 'react-hot-toast';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, query, where } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS ---
-const SectionTitle = styled.h2`font-size: 1.5em; color: #555; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;`;
-const AddForm = styled.form`background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; margin-bottom: 40px; display: flex; flex-direction: column; gap: 15px; border: 1px solid #eee;`;
-const FormGroup = styled.div`display: flex; flex-direction: column; label { margin-bottom: 5px; font-weight: 600; color: #444; } input[type="text"] { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; background-color: white; }`;
-const FormActions = styled.div`display: flex; gap: 10px; margin-top: 10px;`;
-const CategoryList = styled.ul`list-style: none; padding: 0; margin-top: 10px;`;
-const CategoryListItem = styled.li`
-  background-color: #fff; padding: 10px 15px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; 
-  display: flex; justify-content: space-between; align-items: center; font-size: 1em; color: #333;
-  .category-actions button { margin-left: 8px; padding: 5px 8px; font-size: 0.8em; }
+// --- STYLED COMPONENTS COM RESPONSIVIDADE ---
+const PageWrapper = styled.div`
+  h1 {
+    font-size: 2em;
+    color: #333;
+    margin-bottom: 30px;
+  }
 `;
-const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 20px;`;
+
+const SectionTitle = styled.h2`
+  font-size: 1.5em; 
+  color: #555; 
+  margin-top: 0; 
+  margin-bottom: 20px; 
+  border-bottom: 1px solid #ddd; 
+  padding-bottom: 10px;
+`;
+
+const AddForm = styled.form`
+  background-color: #f9f9f9; 
+  padding: 20px; 
+  border-radius: 8px; 
+  margin-top: 10px; 
+  margin-bottom: 40px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+  border: 1px solid #eee;
+`;
+
+const FormGroup = styled.div`
+  display: flex; 
+  flex-direction: column; 
+
+  label { 
+    margin-bottom: 5px; 
+    font-weight: 600; 
+    color: #444; 
+  } 
+
+  input[type="text"] { 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    font-size: 1em; 
+    background-color: white; 
+  }
+`;
+
+const FormActions = styled.div`
+  display: flex; 
+  gap: 10px; 
+  margin-top: 10px;
+
+  /* Em telas pequenas, os botões se empilham */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch; /* Faz os botões ocuparem 100% da largura */
+  }
+`;
+
+const CategoryList = styled.ul`
+  list-style: none; 
+  padding: 0; 
+  margin-top: 10px;
+`;
+
+const CategoryListItem = styled.li`
+  background-color: #fff; 
+  padding: 15px; /* Aumenta um pouco o padding para toque */
+  border: 1px solid #eee; 
+  border-radius: 6px; 
+  margin-bottom: 10px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  font-size: 1em; 
+  color: #333;
+  flex-wrap: wrap; /* Permite que os itens quebrem linha se necessário */
+
+  .category-name {
+    font-weight: 500;
+    word-break: break-word; /* Quebra palavras longas para não estourar o layout */
+    margin-right: 15px; /* Espaço entre o nome e os botões */
+  }
+
+  .category-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0; /* Impede que os botões encolham */
+
+    button { 
+      padding: 6px 10px; 
+      font-size: 0.9em; 
+    }
+  }
+
+  /* Em telas pequenas, o layout do item da lista muda */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start; /* Alinha tudo à esquerda */
+    gap: 15px; /* Espaço entre o nome e a área de botões */
+
+    .category-actions {
+      width: 100%; /* Ocupa toda a largura */
+      justify-content: flex-end; /* Alinha os botões à direita */
+    }
+  }
+`;
+
+const LoadingText = styled.p`
+  text-align: center; 
+  color: #555; 
+  font-style: italic; 
+  margin-top: 20px;
+`;
+
+const InfoText = styled.p`
+  background-color: #f0f4f8;
+  border-left: 4px solid #7c3aed;
+  padding: 15px;
+  border-radius: 4px;
+  color: #333;
+`;
 // --- FIM DOS STYLED COMPONENTS ---
+
 
 const CategoriesPage = () => {
   const formRef = useRef(null);
@@ -31,7 +144,6 @@ const CategoriesPage = () => {
   const [isEditModeCategory, setIsEditModeCategory] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
 
-  // Estados para o modal de confirmação
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
@@ -43,7 +155,11 @@ const CategoriesPage = () => {
       
       const [categoriesSnapshot, productsSnapshot] = await Promise.all([categoriesQuery, productsQuery]);
       
-      setCategories(categoriesSnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      const sortedCategories = categoriesSnapshot.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => a.name.localeCompare(b.name)); // Ordena por nome
+
+      setCategories(sortedCategories);
       setProducts(productsSnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (err) {
       console.error("Erro ao buscar dados:", err);
@@ -63,10 +179,7 @@ const CategoriesPage = () => {
   const handleSubmitForm = async (e) => { 
     e.preventDefault(); 
     const trimmedCategoryName = categoryNameInput.trim(); 
-    if (!trimmedCategoryName) { 
-      toast.error('Por favor, insira um nome para a categoria.'); 
-      return; 
-    } 
+    if (!trimmedCategoryName) { toast.error('Por favor, insira um nome para a categoria.'); return; } 
     setIsSubmittingCategory(true); 
     const normalizedCategoryName = trimmedCategoryName.toLowerCase(); 
     try { 
@@ -105,10 +218,10 @@ const CategoriesPage = () => {
     if (!itemToDelete) return;
 
     try {
-      const categoryInUse = products.some(p => p.category === itemToDelete.name.toLowerCase());
+      const categoryInUse = products.some(p => p.category.toLowerCase() === itemToDelete.name.toLowerCase());
       if (categoryInUse) {
         toast.error(`A categoria "${itemToDelete.name}" está em uso e não pode ser excluída.`);
-        setIsConfirmModalOpen(false); // Fecha o modal mesmo se der erro
+        setIsConfirmModalOpen(false);
         setItemToDelete(null);
         return;
       }
@@ -126,7 +239,7 @@ const CategoriesPage = () => {
 
   return (
     <>
-      <div>
+      <PageWrapper>
         <h1>Gerenciamento de Categorias</h1>
         <SectionTitle ref={formRef}>
           {isEditModeCategory ? 'Editar Categoria' : 'Adicionar Nova Categoria'}
@@ -149,24 +262,23 @@ const CategoriesPage = () => {
           <CategoryList>
             {categories.map(category => (
               <CategoryListItem key={category.id}>
-                <span>{category.name}</span>
+                <span className="category-name">{category.name}</span>
                 <div className="category-actions">
                   <Button onClick={() => handleEditCategory(category)} style={{backgroundColor: '#f59e0b', color: 'white'}}>Editar</Button>
-                  {/* Botão de Excluir agora abre o modal */}
                   <Button onClick={() => openDeleteConfirmModal(category)} style={{backgroundColor: '#dc2626', color: 'white'}}>Excluir</Button>
                 </div>
               </CategoryListItem>
             ))}
           </CategoryList>
-        ) : (<p>Nenhuma categoria cadastrada.</p>)}
-      </div>
+        ) : (<InfoText>Nenhuma categoria cadastrada. Use o formulário acima para começar.</InfoText>)}
+      </PageWrapper>
 
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleDeleteCategory}
-        title="Confirmar Exclusão de Categoria"
-        message={`Você tem certeza que deseja excluir a categoria "${itemToDelete?.name}"? Se algum produto estiver usando esta categoria, a exclusão será bloqueada.`}
+        title="Confirmar Exclusão"
+        message={`Você tem certeza que deseja excluir a categoria "${itemToDelete?.name}"? Esta ação não poderá ser desfeita.`}
       />
     </>
   );
