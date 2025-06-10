@@ -1,19 +1,16 @@
 // src/components/ProductCard/styles.js
 import styled from 'styled-components';
 
-export const CardWrapper = styled.div`
+const CardWrapper = styled.div`
   background-color: #fff;
   border: 1px solid #eee;
   border-radius: 12px;
   padding: 16px;
-  margin: 16px;
-  width: 280px; /* Largura do cartão */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  width: 100%; /* ALTERADO de width: 280px para 100% */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
     transform: translateY(-5px);
