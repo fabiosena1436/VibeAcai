@@ -7,6 +7,7 @@ import { collection, getDocs, query, where, documentId } from 'firebase/firestor
 import toast from 'react-hot-toast';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 
+// ▼▼▼ AQUI ESTÁ A CORREÇÃO ▼▼▼
 import Button from '../../components/Button';
 import ProductCard from '../../components/ProductCard';
 import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
@@ -15,13 +16,15 @@ import PromoCard from '../../components/PromoCard';
 // --- STYLED COMPONENTS ---
 const HomePageWrapper = styled.div`padding-bottom: 50px;`;
 const HeroSection = styled.div`
-  width: 100%; height: 45vh; min-height: 300px; max-height: 450px;
+  width: 100%; height: 45vh; min-height: 350px; max-height: 450px;
   background-image: ${props => props.bgImage ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${props.bgImage})` : 'linear-gradient(45deg, #7c3aed, #5b21b6)'};
-  background-size: cover; background-position: center; position: relative;
-  display: flex; justify-content: center; align-items: center;
-  color: white; text-align: center;
+  background-size: cover; background-position: center;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 20px;
 `;
-const HeroContent = styled.div`position: absolute; top: 93%; left: 15%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;`;
+const HeroContent = styled.div`
+  display: flex; flex-direction: column; align-items: center; max-width: 90%;
+`;
 const LogoOverlay = styled.div`
   background-color: rgba(0, 0, 0, 0.5); border-radius: 50%; padding: 20px;
   display: flex; justify-content: center; align-items: center;
@@ -35,9 +38,15 @@ const StatusInfo = styled.div`
 `;
 const Section = styled.section`max-width: 1200px; margin: 50px auto; padding: 0 20px;`;
 const SectionTitle = styled.h2`font-size: 2.2em; color: #5b21b6; text-align: center; margin-bottom: 30px;`;
-const ContentGrid = styled.div`display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; justify-items: center; align-items: stretch;`;
+const ContentGrid = styled.div`
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  justify-items: center; align-items: stretch;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+  }
+`;
 const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 40px; font-size: 1.2em;`;
-// Definição do Title que estava faltando
 const Title = styled.h1`font-size: 3em; color: #7c3aed; margin-bottom: 20px;`;
 // --- FIM DOS STYLED COMPONENTS ---
 
@@ -81,7 +90,7 @@ const HomePage = () => {
         const featuredQuery = query(productsRef, where("isFeatured", "==", true), where("isAvailable", "==", true));
         const featuredSnapshot = await getDocs(featuredQuery);
         setFeaturedProducts(featuredSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        
+
       } catch (error) {
         console.error("ERRO AO BUSCAR DADOS DA HOME:", error);
         toast.error("Não foi possível carregar as novidades.");
@@ -113,18 +122,18 @@ const HomePage = () => {
               <HeroContent>
                 {settings.logoUrl ? (
                   <LogoOverlay>
-                    <img src={settings.logoUrl} alt="Vibe Açaí"/>
+                    <img src={settings.logoUrl} alt="Vibe Açaí" />
                   </LogoOverlay>
                 ) : (
-                  <Title style={{color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>Vibe Açaí</Title>
+                  <Title style={{ color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Vibe Açaí</Title>
                 )}
                 <StatusInfo isOpen={settings.isStoreOpen}>
                   {settings.isStoreOpen ? '● Loja Aberta' : '● Loja Fechada'}
                 </StatusInfo>
               </HeroContent>
             </HeroSection>
-            
-            {loadingContent ? ( <LoadingText>Carregando novidades...</LoadingText> ) : (
+
+            {loadingContent ? (<LoadingText>Carregando novidades...</LoadingText>) : (
               <>
                 {promotions.length > 0 && (
                   <Section>
@@ -132,10 +141,10 @@ const HomePage = () => {
                     <ContentGrid>
                       {promotions.map(promo => {
                         if (promo.type === 'product_discount' && promo.product) {
-                          return ( <ProductCard key={promo.id} product={promo.product} promotionalPrice={promo.promotionalPrice} onCustomize={handleOpenCustomizationModal} /> );
+                          return (<ProductCard key={promo.id} product={promo.product} promotionalPrice={promo.promotionalPrice} onCustomize={handleOpenCustomizationModal} />);
                         }
                         if (promo.type === 'free_toppings_selection' && promo.product) {
-                          return ( <PromoCard key={promo.id} promotion={promo} onActionClick={(product, promoDetails) => handleOpenCustomizationModal(product, promoDetails)} /> );
+                          return (<PromoCard key={promo.id} promotion={promo} onActionClick={(product, promoDetails) => handleOpenCustomizationModal(product, promoDetails)} />);
                         }
                         return null;
                       })}
@@ -143,30 +152,30 @@ const HomePage = () => {
                   </Section>
                 )}
 
-                {featuredProducts.length > 0 && ( 
-                  <Section> 
-                    <SectionTitle>⭐ Nossos Destaques</SectionTitle> 
-                    <ContentGrid> 
+                {featuredProducts.length > 0 && (
+                  <Section>
+                    <SectionTitle>⭐ Nossos Destaques</SectionTitle>
+                    <ContentGrid>
                       {featuredProducts.map(product => {
                         const discountPromo = promotions.find(p => p.type === 'product_discount' && p.productId === product.id);
                         return (
-                          <ProductCard 
-                            key={`featured-${product.id}`} 
-                            product={product} 
+                          <ProductCard
+                            key={`featured-${product.id}`}
+                            product={product}
                             promotionalPrice={discountPromo ? discountPromo.promotionalPrice : undefined}
-                            onCustomize={handleOpenCustomizationModal} 
+                            onCustomize={handleOpenCustomizationModal}
                           />
                         );
-                      })} 
-                    </ContentGrid> 
-                  </Section> 
+                      })}
+                    </ContentGrid>
+                  </Section>
                 )}
-                
+
                 {!loadingContent && promotions.length === 0 && featuredProducts.length === 0 && (
-                    <Section style={{textAlign: 'center'}}>
-                        <p style={{fontSize: '1.2em', color: '#666'}}>Fique de olho! Em breve teremos novidades e promoções especiais para você.</p>
-                        <Button onClick={() => navigate('/menu')}>Ver Cardápio Completo</Button>
-                    </Section>
+                  <Section style={{ textAlign: 'center' }}>
+                    <p style={{ fontSize: '1.2em', color: '#666' }}>Fique de olho! Em breve teremos novidades e promoções especiais para você.</p>
+                    <Button onClick={() => navigate('/menu')}>Ver Cardápio Completo</Button>
+                  </Section>
                 )}
               </>
             )}

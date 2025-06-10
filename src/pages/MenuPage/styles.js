@@ -68,14 +68,14 @@ export const CategorySectionTitle = styled.h2`
 
 export const ProductListContainer = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 27px; /* ▼ AUMENTADO de 24px para 32px */
-  justify-items: center;
-  align-items: stretch;
   width: 100%;
   max-width: 1200px;
-  padding: 0 20px;
+  padding: 0 16px;
   margin: 0 auto;
+  justify-items: center;
+  align-items: stretch;
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(2, 1fr);
