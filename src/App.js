@@ -15,20 +15,29 @@ import DashboardOverviewPage from './pages/Admin/DashboardOverviewPage';
 import ProductsPage from './pages/Admin/ProductsPage';
 import CategoriesPage from './pages/Admin/CategoriesPage';
 import ToppingsPage from './pages/Admin/ToppingsPage';
-import SettingsPage from './pages/Admin/SettingsPage'; // Importação da página de configurações
-import PromotionsPage from './pages/Admin/PromotionsPage'
+import SettingsPage from './pages/Admin/SettingsPage';
+import PromotionsPage from './pages/Admin/PromotionsPage';
 
 // Importações de Componentes e Contextos
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import styled, { createGlobalStyle } from 'styled-components';
+import styled from 'styled-components';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { StoreSettingsProvider } from './contexts/StoreSettingsContext';
 import StoreStatusBanner from './components/StoreStatusBanner';
 
-const GlobalStyle = createGlobalStyle`/* ... (Seus estilos globais aqui) ... */`;
-const AppWrapper = styled.div``;
+// Importação dos estilos globais
+import GlobalStyles from './styles/GlobalStyles';
+
+const AppWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+`;
 
 function App() {
   return (
@@ -36,7 +45,7 @@ function App() {
       <StoreSettingsProvider>
         <CartProvider>
           <Router>
-            <GlobalStyle />
+            <GlobalStyles />
             <StoreStatusBanner />
             <Navbar />
             <AppWrapper>
@@ -48,7 +57,7 @@ function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />
 
-                {/* ROTAS PROTEGIDAS DO ADMIN */}
+                {/* Rotas Protegidas do Admin */}
                 <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                   <Route index element={<DashboardOverviewPage />} />
                   <Route path="dashboard" element={<DashboardOverviewPage />} />
@@ -56,7 +65,6 @@ function App() {
                   <Route path="categories" element={<CategoriesPage />} />
                   <Route path="toppings" element={<ToppingsPage />} />
                   <Route path="promotions" element={<PromotionsPage />} />
-                  {/* CORREÇÃO AQUI: */}
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
               </Routes>

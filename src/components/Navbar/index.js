@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 
-// Removida a importação de 'react-icons'
-
 // Importando todos os nossos componentes de estilo
 import {
   NavWrapper,
@@ -15,7 +13,8 @@ import {
   NavLink,
   CartItemCount,
   MobileIcon,
-  MobileMenuWrapper
+  MobileMenuWrapper,
+  MobileMenuOverlay
 } from './styles';
 
 const Navbar = () => {
@@ -54,11 +53,14 @@ const Navbar = () => {
           </NavLink>
         </NavLinksContainer>
 
-        {/* Ícone do Menu Hambúrguer (agora com texto/emoji) */}
+        {/* Ícone do Menu Hambúrguer */}
         <MobileIcon onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? 'X' : '☰'}
+          {isMenuOpen ? '✕' : '☰'}
         </MobileIcon>
       </NavWrapper>
+
+      {/* Overlay para fechar menu ao clicar fora */}
+      <MobileMenuOverlay isOpen={isMenuOpen} onClick={closeMenu} />
 
       {/* Menu Mobile */}
       <MobileMenuWrapper isOpen={isMenuOpen}>

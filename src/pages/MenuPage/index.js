@@ -1,26 +1,21 @@
-// src/pages/MenuPage/index.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
-// Importações da biblioteca Swiper para o carrossel
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css'; // Importa os estilos base da Swiper
+import 'swiper/css';
 
-// Componentes reutilizáveis
 import ProductCard from '../../components/ProductCard';
 import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import Button from '../../components/Button';
 
-// Importando os componentes de estilo do arquivo styles.js
 import {
   MenuPageWrapper,
   MenuHeader,
   MenuTitle,
-  CategoryCarouselWrapper, // Usando o novo wrapper para o carrossel
+  CategoryCarouselWrapper,
   CategoryButton,
   CategorySectionTitle,
   ProductListContainer,
@@ -114,11 +109,7 @@ const MenuPage = () => {
             </SearchContainer>
             
             <CategoryCarouselWrapper>
-              <Swiper
-                slidesPerView="auto"
-                spaceBetween={10}
-                freeMode={true}
-              >
+              <Swiper slidesPerView="auto" spaceBetween={10} freeMode={true}>
                 <SwiperSlide>
                   <CategoryButton isActive={selectedCategory === 'Todos'} onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
                 </SwiperSlide>
