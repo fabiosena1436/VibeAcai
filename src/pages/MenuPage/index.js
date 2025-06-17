@@ -83,7 +83,7 @@ const MenuPage = () => {
     setSelectedProductForCustomization(productWithContext);
     setIsModalOpen(true);
   };
-  
+
   const handleCloseCustomizationModal = () => {
     setIsModalOpen(false);
     setSelectedProductForCustomization(null);
@@ -102,20 +102,20 @@ const MenuPage = () => {
           <MenuTitle>Nosso Cardápio</MenuTitle>
           <Link to="/"><Button>Voltar para Home</Button></Link>
         </MenuHeader>
-        {loading ? ( <LoadingText>Carregando cardápio...</LoadingText> ) : (
+        {loading ? (<LoadingText>Carregando cardápio...</LoadingText>) : (
           <>
             <SearchContainer>
               <SearchInput type="text" placeholder="🔎 Buscar pelo nome do produto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </SearchContainer>
-            
+
             <CategoryCarouselWrapper>
               <Swiper slidesPerView="auto" spaceBetween={10} freeMode={true}>
                 <SwiperSlide>
-                <CategoryButton $isActive={selectedCategory === 'Todos'}  onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
+                  <CategoryButton $isActive={selectedCategory === 'Todos'} onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
                 </SwiperSlide>
                 {categories.map(category => (
                   <SwiperSlide key={category.id}>
-                    <CategoryButton isActive={selectedCategory === category.name} onClick={() => setSelectedCategory(category.name)}>{category.name}</CategoryButton>
+                    <CategoryButton $isActive={selectedCategory === category.name} onClick={() => setSelectedCategory(category.name)}>{category.name}</CategoryButton>
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -132,7 +132,7 @@ const MenuPage = () => {
                       <ProductListContainer>
                         {productsInCategory.map(product => {
                           const promotionalPrice = activePromotions.get(product.id);
-                          return ( <ProductCard key={product.id} product={product} promotionalPrice={promotionalPrice} onCustomize={handleOpenCustomizationModal} /> );
+                          return (<ProductCard key={product.id} product={product} promotionalPrice={promotionalPrice} onCustomize={handleOpenCustomizationModal} />);
                         })}
                       </ProductListContainer>
                     </section>
@@ -144,9 +144,9 @@ const MenuPage = () => {
                 {filteredProducts.length > 0 ? (
                   filteredProducts.map(product => {
                     const promotionalPrice = activePromotions.get(product.id);
-                    return ( <ProductCard key={product.id} product={product} promotionalPrice={promotionalPrice} onCustomize={handleOpenCustomizationModal} /> );
+                    return (<ProductCard key={product.id} product={product} promotionalPrice={promotionalPrice} onCustomize={handleOpenCustomizationModal} />);
                   })
-                ) : ( <NoProductsText>Nenhum produto encontrado com os filtros selecionados.</NoProductsText> )}
+                ) : (<NoProductsText>Nenhum produto encontrado com os filtros selecionados.</NoProductsText>)}
               </ProductListContainer>
             )}
           </>

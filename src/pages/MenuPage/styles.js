@@ -42,15 +42,15 @@ export const CategoryCarouselWrapper = styled.div`
 `;
 
 export const CategoryButton = styled.button`
-  padding: 10px 25px;
-  border-radius: 50px;
+  padding: 8px 16px;
+  border-radius: 20px;
   border: 1px solid #8e44ad;
   cursor: pointer;
-  font-weight: bold;
-  background-color: ${({ $isActive }) => ($isActive ? '#8e44ad' : '#fff')};
-  color: ${({ $isActive }) => ($isActive ? '#fff' : '#8e44ad')};
   transition: all 0.3s ease;
-  white-space: nowrap;
+  font-weight: 500;
+
+  background-color: ${({ $active }) => ($active ? '#8e44ad' : '#fff')};
+  color: ${({ $active }) => ($active ? '#fff' : '#8e44ad')};
 
   &:hover {
     background-color: #9b59b6;
