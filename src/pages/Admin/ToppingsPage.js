@@ -1,264 +1,165 @@
 // src/pages/Admin/ToppingsPage.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
+import { db } from '../../services/firebaseConfig';
+import { collection, getDocs, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import Button from '../../components/Button';
+import Modal from '../../components/Modal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import toast from 'react-hot-toast';
-import { db } from '../../services/firebaseConfig';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS COM RESPONSIVIDADE ---
-const PageWrapper = styled.div`
-  h1 { font-size: 2em; color: #333; margin-bottom: 30px; }
-`;
-const SectionTitle = styled.h2`font-size: 1.5em; color: #555; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; &:not(:first-child){margin-top: 40px;}`;
-
-const AddForm = styled.form`
-  background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; 
-  margin-bottom: 40px; display: grid; gap: 15px 20px; border: 1px solid #eee;
-  
-  /* 1 coluna por padrão (mobile) */
-  grid-template-columns: 1fr;
-
-  /* 2 colunas para telas maiores */
-  @media (min-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-  }
-`;
-
-const FormGroup = styled.div`
-  display: flex; flex-direction: column; 
-  label { margin-bottom: 5px; font-weight: 600; color: #444; } 
-  input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; background-color: white; }
-`;
-
-const FormActions = styled.div`
-  display: flex; gap: 10px; margin-top: 10px;
-  
-  /* Em telas de desktop, alinha as ações sob as duas colunas */
-  @media (min-width: 768px) {
-    grid-column: 1 / -1;
-  }
-  @media (max-width: 767px) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-`;
-
-const ToppingList = styled.ul`list-style: none; padding: 0;`;
-
-const ToppingListItem = styled.li`
-  background-color: #fff; padding: 15px; border-radius: 6px;
-  margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-  gap: 15px;
-
-  .topping-info { 
-    flex-grow: 1; display: flex; justify-content: space-between; align-items: center; 
-    gap: 15px; flex-wrap: wrap;
-  }
-  .topping-name { font-weight: 500; }
-  .topping-price { color: #7c3aed; font-weight: 500; }
-  .topping-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-  .topping-status { 
-    font-size: 0.8em; padding: 4px 8px; border-radius: 4px; font-weight: bold;
-    &.available { background-color: #dcfce7; color: #166534; }
-    &.unavailable { background-color: #fee2e2; color: #991b1b; }
-  }
-  .topping-actions button { padding: 6px 10px; font-size: 0.85em; }
-  
-  /* Media query para o card de adicional */
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-    
-    .topping-info {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .topping-actions {
-      flex-wrap: wrap;
-      
-      .topping-status, button {
-        flex-basis: calc(50% - 4px); /* Base para grade 2x2 */
-        flex-grow: 1;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-    }
-  }
-`;
-
-const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 20px;`;
-const InfoText = styled.p`
-  background-color: #f0f4f8; border-left: 4px solid #7c3aed;
-  padding: 15px; border-radius: 4px; color: #333;
-`;
-
-// --- FIM DOS STYLED COMPONENTS ---
+// --- STYLED COMPONENTS ---
+const Title = styled.h2` color: #333; margin-bottom: 20px; `;
+const FormContainer = styled.div` background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; `;
+const FormRow = styled.div` display: flex; gap: 15px; margin-bottom: 15px; @media (max-width: 768px) { flex-direction: column; gap: 0; } `;
+const InputGroup = styled.div` flex: 1; display: flex; flex-direction: column; @media (max-width: 768px) { margin-bottom: 15px; } `;
+const Label = styled.label` margin-bottom: 5px; font-weight: 500; color: #555; `;
+const Input = styled.input` padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; `;
+const CheckboxGroup = styled.div` display: flex; align-items: center; gap: 10px; margin-top: 10px; `;
+const Table = styled.table` width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);`;
+const Thead = styled.thead` background-color: #f8f9fa;`;
+const Tr = styled.tr` &:nth-child(even) { background-color: #f2f2f2; }`;
+const Th = styled.th` padding: 12px 15px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;`;
+const Td = styled.td` padding: 12px 15px; border-bottom: 1px solid #dee2e6; vertical-align: middle; `;
+const ActionsTd = styled(Td)` display: flex; gap: 10px; align-items: center; height: 74px;`;
+const ActionButton = styled.button` background: none; border: none; cursor: pointer; font-size: 1.1em; color: ${props => props.color || '#333'}; &:hover { opacity: 0.7; }`;
+const LoadingMessage = styled.p` color: #555; font-style: italic;`;
+const ImagePreview = styled.img` width: 50px; height: 50px; object-fit: cover; border-radius: 4px; `;
 
 const ToppingsPage = () => {
-    const formRef = useRef(null);
-    const [toppings, setToppings] = useState([]);
-    const [loadingToppings, setLoadingToppings] = useState(true);
-    const [toppingNameInput, setToppingNameInput] = useState('');
-    const [toppingPriceInput, setToppingPriceInput] = useState('');
-    const [isSubmittingTopping, setIsSubmittingTopping] = useState(false);
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [editingToppingId, setEditingToppingId] = useState(null);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
-  
-    const fetchToppings = async () => {
-      setLoadingToppings(true);
-      try {
-        const toppingsQuery = query(collection(db, 'toppings'), orderBy("name"));
-        const querySnapshot = await getDocs(toppingsQuery);
-        setToppings(querySnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (error) {
-        console.error("Erro ao buscar adicionais:", error);
-        toast.error("Não foi possível carregar os adicionais.");
-        setToppings([]);
-      } finally {
-        setLoadingToppings(false);
-      }
-    };
-  
-    useEffect(() => { fetchToppings(); }, []);
-    
-    const clearForm = () => { setToppingNameInput(''); setToppingPriceInput(''); setIsEditMode(false); setEditingToppingId(null); };
-  
-    const handleEditTopping = (topping) => {
-      setIsEditMode(true); setEditingToppingId(topping.id);
-      setToppingNameInput(topping.name); setToppingPriceInput(topping.price.toString());
-      formRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-  
-    const handleSubmitForm = async (e) => {
-      e.preventDefault();
-      const trimmedName = toppingNameInput.trim();
-      const priceValue = parseFloat(toppingPriceInput);
-      if (!trimmedName || isNaN(priceValue) || priceValue < 0) {
-        toast.error('Por favor, preencha nome e preço válidos para o adicional.');
-        return;
-      }
-      setIsSubmittingTopping(true);
-      
-      const toppingData = {
-        name: trimmedName,
-        price: priceValue,
-        isAvailable: isEditMode ? (toppings.find(t => t.id === editingToppingId)?.isAvailable ?? true) : true
-      };
-  
-      try {
-        if (isEditMode && editingToppingId) {
-          await updateDoc(doc(db, 'toppings', editingToppingId), toppingData);
-          toast.success('Adicional atualizado com sucesso!');
-        } else {
-          await addDoc(collection(db, 'toppings'), toppingData);
-          toast.success('Adicional cadastrado com sucesso!');
-        }
-        clearForm(); fetchToppings();
-      } catch (error) {
-        console.error("Erro ao salvar adicional:", error);
-        toast.error(`Falha ao ${isEditMode ? 'atualizar' : 'adicionar'} adicional.`);
-      } finally {
-        setIsSubmittingTopping(false);
-      }
-    };
-    
-    const openDeleteConfirmModal = (topping) => { setItemToDelete(topping); setIsConfirmModalOpen(true); };
-  
-    const handleDeleteTopping = async () => {
-      if (!itemToDelete) return;
-      try {
-        await deleteDoc(doc(db, 'toppings', itemToDelete.id));
-        toast.success(`Adicional "${itemToDelete.name}" excluído com sucesso!`);
-        fetchToppings();
-      } catch (error) {
-        console.error("Erro ao excluir adicional:", error);
-        toast.error('Falha ao excluir adicional.');
-      } finally {
-        setIsConfirmModalOpen(false); setItemToDelete(null);
-      }
-    };
-  
-    const handleToggleToppingAvailability = async (toppingId, currentAvailability) => {
-      try {
-        const toppingDocRef = doc(db, 'toppings', toppingId);
-        await updateDoc(toppingDocRef, { isAvailable: !currentAvailability });
-        toast.success('Disponibilidade alterada!');
-        fetchToppings();
-      } catch (error) {
-        console.error("Erro ao alterar disponibilidade do adicional:", error);
-        toast.error('Falha ao alterar disponibilidade do adicional.');
-      }
-    };
-  
-    return (
-      <>
-        <PageWrapper>
-          <h1>Gerenciamento de Adicionais (Toppings)</h1>
-          <SectionTitle ref={formRef}>
-            {isEditMode ? 'Editar Adicional' : 'Adicionar Novo Adicional'}
-          </SectionTitle>
-          <AddForm onSubmit={handleSubmitForm}>
-            <FormGroup>
-              <label htmlFor="toppingNameInput">Nome do Adicional:</label>
-              <input type="text" id="toppingNameInput" value={toppingNameInput} onChange={(e) => setToppingNameInput(e.target.value)} required />
-            </FormGroup>
-            <FormGroup>
-              <label htmlFor="toppingPriceInput">Preço (R$):</label>
-              <input type="number" id="toppingPriceInput" value={toppingPriceInput} onChange={(e) => setToppingPriceInput(e.target.value)} step="0.01" min="0" required />
-            </FormGroup>
-            <FormActions>
-              <Button type="submit" disabled={isSubmittingTopping}>
-                {isSubmittingTopping ? (isEditMode ? 'Salvando...' : 'Adicionando...') : (isEditMode ? 'Salvar Alterações' : 'Adicionar Adicional')}
-              </Button>
-              {isEditMode && (<Button type="button" onClick={clearForm} style={{backgroundColor: '#6b7280'}}>Cancelar Edição</Button>)}
-            </FormActions>
-          </AddForm>
-  
-          <SectionTitle>Adicionais Cadastrados</SectionTitle>
-          {loadingToppings ? (
-            <LoadingText>Carregando adicionais...</LoadingText>
-          ) : toppings.length > 0 ? (
-            <ToppingList>
-              {toppings.map(topping => (
-                <ToppingListItem key={topping.id}>
-                  <div className="topping-info">
-                    <span className="topping-name">{topping.name}</span>
-                    <span className="topping-price">R$ {topping.price.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                  <div className="topping-actions">
-                    <span className={`topping-status ${topping.isAvailable === false ? 'unavailable' : 'available'}`}>
-                      {topping.isAvailable === false ? 'Indisponível' : 'Disponível'}
-                    </span>
-                    <Button onClick={() => handleToggleToppingAvailability(topping.id, topping.isAvailable === undefined ? true : topping.isAvailable)} style={{backgroundColor: topping.isAvailable === false ? '#22c55e' : '#facc15', color: topping.isAvailable === false ? 'white' : '#422006'}}>
-                      {topping.isAvailable === false ? 'Ativar' : 'Desativar'}
-                    </Button>
-                    <Button onClick={() => handleEditTopping(topping)} style={{backgroundColor: '#f59e0b', color: 'white'}}>Editar</Button>
-                    <Button onClick={() => openDeleteConfirmModal(topping)} style={{backgroundColor: '#dc2626', color: 'white'}}>Excluir</Button>
-                  </div>
-                </ToppingListItem>
-              ))}
-            </ToppingList>
-          ) : (
-            <InfoText>Nenhum adicional cadastrado.</InfoText>
-          )}
-        </PageWrapper>
-  
-        <ConfirmationModal
-          isOpen={isConfirmModalOpen}
-          onClose={() => setIsConfirmModalOpen(false)}
-          onConfirm={handleDeleteTopping}
-          title="Confirmar Exclusão"
-          message={`Você tem certeza que deseja excluir o adicional "${itemToDelete?.name}"?`}
-        />
-      </>
-    );
+  const [toppings, setToppings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newName, setNewName] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [newIsAvailable, setNewIsAvailable] = useState(true);
+  const [newImageUrl, setNewImageUrl] = useState(''); // <-- NOVO ESTADO para URL da imagem
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTopping, setEditingTopping] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  const fetchToppings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'toppings'), orderBy('name', 'asc'));
+      const querySnapshot = await getDocs(q);
+      setToppings(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (error) { toast.error("Não foi possível carregar os adicionais."); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchToppings(); }, [fetchToppings]);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!newName || newPrice === '') { toast.error("Preencha o nome e o preço."); return; }
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'toppings'), {
+        name: newName,
+        price: parseFloat(newPrice),
+        isAvailable: newIsAvailable,
+        imageUrl: newImageUrl, // <-- Adiciona o campo
+      });
+      toast.success("Adicional adicionado!");
+      setNewName(''); setNewPrice(''); setNewIsAvailable(true); setNewImageUrl('');
+      fetchToppings();
+    } catch (error) { toast.error("Erro ao adicionar."); }
+    finally { setIsSubmitting(false); }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editingTopping) return;
+    setIsUpdating(true);
+    try {
+      const toppingDocRef = doc(db, 'toppings', editingTopping.id);
+      await updateDoc(toppingDocRef, {
+        name: editingTopping.name,
+        price: parseFloat(editingTopping.price),
+        isAvailable: editingTopping.isAvailable,
+        imageUrl: editingTopping.imageUrl, // <-- Atualiza o campo
+      });
+      toast.success("Adicional atualizado!");
+      setEditingTopping(null);
+      fetchToppings();
+    } catch (error) { toast.error("Erro ao atualizar."); }
+    finally { setIsUpdating(false); }
+  };
+
+  const executeDelete = async () => {
+    if (!itemToDelete) return;
+    try {
+      await deleteDoc(doc(db, 'toppings', itemToDelete));
+      toast.success("Adicional excluído!");
+      fetchToppings();
+    } catch (error) { toast.error("Erro ao excluir."); }
+    finally { setItemToDelete(null); }
   };
   
-  export default ToppingsPage;
+  const handleEditInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditingTopping(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  return (
+    <div>
+      <Title>Gerir Adicionais</Title>
+      <FormContainer>
+        <form onSubmit={handleAdd}>
+          <FormRow>
+            <InputGroup><Label>Nome</Label><Input value={newName} onChange={e => setNewName(e.target.value)} /></InputGroup>
+            <InputGroup><Label>Preço (R$)</Label><Input type="number" step="0.01" value={newPrice} onChange={e => setNewPrice(e.target.value)} /></InputGroup>
+          </FormRow>
+          {/* NOVO CAMPO DE URL */}
+          <FormRow>
+            <InputGroup><Label>URL da Imagem</Label><Input placeholder='Opcional' value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} /></InputGroup>
+          </FormRow>
+          <CheckboxGroup><input type="checkbox" id="isAvailable" checked={newIsAvailable} onChange={e => setNewIsAvailable(e.target.checked)} /><Label htmlFor="isAvailable">Disponível para venda</Label></CheckboxGroup>
+          <Button type="submit" variant="success" disabled={isSubmitting} style={{marginTop: '20px'}}>{isSubmitting ? 'A adicionar...' : 'Adicionar Adicional'}</Button>
+        </form>
+      </FormContainer>
+
+      {loading ? <LoadingMessage>A carregar...</LoadingMessage> : (
+        <Table>
+          <Thead><Tr><Th>Imagem</Th><Th>Nome</Th><Th>Preço</Th><Th>Disponível</Th><Th>Ações</Th></Tr></Thead>
+          <tbody>
+            {toppings.map(topping => (
+              <Tr key={topping.id}>
+                <Td>{topping.imageUrl ? <ImagePreview src={topping.imageUrl} alt={topping.name} /> : 'Sem imagem'}</Td>
+                <Td>{topping.name}</Td>
+                <Td>R$ {topping.price.toFixed(2).replace('.', ',')}</Td>
+                <Td>{topping.isAvailable ? 'Sim' : 'Não'}</Td>
+                <ActionsTd>
+                  <ActionButton color="#007bff" onClick={() => setEditingTopping(topping)}><FaEdit /></ActionButton>
+                  <ActionButton color="#dc3545" onClick={() => setItemToDelete(topping.id)}><FaTrash /></ActionButton>
+                </ActionsTd>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+
+      <Modal isOpen={!!editingTopping} onClose={() => setEditingTopping(null)} title="Editar Adicional">
+        {editingTopping && (
+          <form onSubmit={handleUpdate}>
+            <InputGroup><Label>Nome</Label><Input name="name" value={editingTopping.name} onChange={handleEditInputChange} /></InputGroup>
+            <InputGroup style={{marginTop: '15px'}}><Label>Preço (R$)</Label><Input name="price" type="number" step="0.01" value={editingTopping.price} onChange={handleEditInputChange} /></InputGroup>
+            {/* NOVO CAMPO DE URL NO MODAL DE EDIÇÃO */}
+            <InputGroup style={{marginTop: '15px'}}><Label>URL da Imagem</Label><Input name="imageUrl" placeholder='Opcional' value={editingTopping.imageUrl || ''} onChange={handleEditInputChange} /></InputGroup>
+            <CheckboxGroup><input type="checkbox" id="editIsAvailable" name="isAvailable" checked={editingTopping.isAvailable} onChange={handleEditInputChange} /><Label htmlFor="editIsAvailable">Disponível para venda</Label></CheckboxGroup>
+            <div style={{marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px'}}>
+              <Button type="button" variant="secondary" onClick={() => setEditingTopping(null)}>Cancelar</Button>
+              <Button type="submit" variant="primary" disabled={isUpdating}>{isUpdating ? "A salvar..." : "Salvar Alterações"}</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <ConfirmationModal isOpen={!!itemToDelete} onClose={() => setItemToDelete(null)} onConfirm={executeDelete} title="Confirmar Exclusão" message="Tem a certeza de que deseja excluir este adicional?"/>
+    </div>
+  );
+};
+
+export default ToppingsPage;
