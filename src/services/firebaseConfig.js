@@ -1,25 +1,22 @@
-// src/services/firebaseConfig.js
-import { initializeApp } from "firebase/app"; // Esta é a única que deve ficar
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-// Se formos usar o Storage no futuro (para upload de imagens diretamente do app, por exemplo):
-// import { getStorage } from "firebase/storage";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
+// A configuração da sua aplicação Firebase é lida a partir das variáveis de ambiente
 const firebaseConfig = {
-  apiKey: "AIzaSyBpJ5g8boqujqO9hBUbf9ON9PGGc7xbwPM",
-  authDomain: "vibe-acai.firebaseapp.com",
-  projectId: "vibe-acai",
-  storageBucket: "vibe-acai.firebasestorage.app",
-  messagingSenderId: "99706982649",
-  appId: "1:99706982649:web:687c98dae7c273fdecd228"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
+// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
-
-// Exporta os serviços do Firebase que vamos usar
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { db, auth };
+export { auth, db, storage };

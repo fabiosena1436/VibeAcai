@@ -47,8 +47,8 @@ export const CategoryButton = styled.button`
   border: 1px solid #8e44ad;
   cursor: pointer;
   font-weight: bold;
-  background-color: ${({ active }) => (active ? '#8e44ad' : '#fff')};
-  color: ${({ active }) => (active ? '#fff' : '#8e44ad')};
+  background-color: ${({ $isActive }) => ($isActive ? '#8e44ad' : '#fff')};
+  color: ${({ $isActive }) => ($isActive ? '#fff' : '#8e44ad')};
   transition: all 0.3s ease;
   white-space: nowrap;
 

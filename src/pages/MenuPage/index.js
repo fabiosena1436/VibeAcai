@@ -111,7 +111,7 @@ const MenuPage = () => {
             <CategoryCarouselWrapper>
               <Swiper slidesPerView="auto" spaceBetween={10} freeMode={true}>
                 <SwiperSlide>
-                  <CategoryButton isActive={selectedCategory === 'Todos'} onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
+                <CategoryButton $isActive={selectedCategory === 'Todos'}  onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
                 </SwiperSlide>
                 {categories.map(category => (
                   <SwiperSlide key={category.id}>
