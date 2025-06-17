@@ -1,62 +1,83 @@
 // src/components/AcaiCustomizationModal/styles.js
 import styled from 'styled-components';
 
-export const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000; // Para ficar sobre outros elementos
-`;
-
-export const ModalContent = styled.div`
-  background-color: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  width: 90%;
-  max-width: 500px; // Largura máxima do modal
-  max-height: 80vh; // Altura máxima
-  overflow-y: auto; // Barra de rolagem se o conteúdo for grande
-  position: relative;
-`;
-
-export const ModalHeader = styled.h2`
-  color: #7c3aed;
-  margin-top: 0;
+export const SizeOptionsContainer = styled.div`
   margin-bottom: 20px;
-  text-align: center;
-`;
-
-export const ModalCloseButton = styled.button`
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: transparent;
-  border: none;
-  font-size: 1.8em;
-  cursor: pointer;
-  color: #888;
-  &:hover {
-    color: #333;
+  h4 {
+    margin-bottom: 10px;
+    color: #555;
   }
 `;
 
-export const OptionsSection = styled.div`
-  margin-bottom: 20px;
-  // Estilos para seções de opções (tamanho, adicionais) virão aqui
+export const SizeButton = styled.button`
+  background-color: ${props => props.selected ? '#7c3aed' : '#eee'};
+  color: ${props => props.selected ? '#fff' : '#333'};
+  border: 1px solid ${props => props.selected ? '#7c3aed' : '#ddd'};
+  padding: 10px 15px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+  &:hover {
+    background-color: ${props => props.selected ? '#6d28d9' : '#ddd'};
+  }
 `;
 
-export const ModalFooter = styled.div`
+export const PriceInfo = styled.div`
+  margin-top: 20px;
+  font-size: 1.2em;
+  text-align: right;
+  color: #333;
+  font-weight: 500;
+  strong {
+    color: #7c3aed;
+    font-weight: bold;
+  }
+`;
+
+export const ToppingOptionsContainer = styled.div`
+  margin-bottom: 20px;
+  h4 {
+    margin-bottom: 10px;
+    color: #555;
+  }
+  .promo-title {
+    font-size: 1em;
+    color: #7c3aed;
+    font-weight: bold;
+  }
+`;
+
+export const ToppingLabel = styled.label`
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 30px;
-  border-top: 1px solid #eee;
-  padding-top: 20px;
+  align-items: center;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 0.95em;
+  justify-content: space-between;
+  &.disabled {
+    cursor: not-allowed;
+    color: #aaa;
+  }
+  .topping-name {
+    margin-left: 10px;
+  }
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #7c3aed;
+    margin-right: 10px;
+  }
+`;
+
+export const ToppingPriceText = styled.span`
+  color: #555;
+  font-weight: 500;
+  &.free {
+    color: #16a34a;
+    font-weight: bold;
+  }
 `;

@@ -1,6 +1,5 @@
 // src/components/AcaiCustomizationModal/index.js
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
 import Button from '../Button';
 import { useCart } from '../../contexts/CartContext';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
@@ -9,15 +8,14 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import Modal from '../Modal';
 import { calculateAcaiPrice } from '../../utils/priceCalculator';
-
-// --- ESTILOS ESPECÍFICOS PARA ESTE MODAL ---
-const SizeOptionsContainer = styled.div` margin-bottom: 20px; h4 { margin-bottom: 10px; color: #555; }`;
-const SizeButton = styled.button` background-color: ${props => props.selected ? '#7c3aed' : '#eee'}; color: ${props => props.selected ? '#fff' : '#333'}; border: 1px solid ${props => props.selected ? '#7c3aed' : '#ddd'}; padding: 10px 15px; margin-right: 10px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: background-color 0.2s, color 0.2s; &:hover { background-color: ${props => props.selected ? '#6d28d9' : '#ddd'};}`;
-const PriceInfo = styled.div` margin-top: 20px; font-size: 1.2em; text-align: right; color: #333; font-weight: 500; strong { color: #7c3aed; font-weight: bold; }`;
-const ToppingOptionsContainer = styled.div` margin-bottom: 20px; h4 { margin-bottom: 10px; color: #555; } .promo-title { font-size: 1em; color: #7c3aed; font-weight: bold; }`;
-const ToppingLabel = styled.label` display: flex; align-items: center; margin-bottom: 8px; cursor: pointer; font-size: 0.95em; justify-content: space-between; &.disabled { cursor: not-allowed; color: #aaa; } .topping-name { margin-left: 10px; } input[type="checkbox"] { width: 18px; height: 18px; accent-color: #7c3aed; margin-right: 10px; }`;
-const ToppingPriceText = styled.span` color: #555; font-weight: 500; &.free { color: #16a34a; font-weight: bold; }`;
-// --- FIM DOS ESTILOS ESPECÍFICOS ---
+import {
+  SizeOptionsContainer,
+  SizeButton,
+  PriceInfo,
+  ToppingOptionsContainer,
+  ToppingLabel,
+  ToppingPriceText,
+} from './styles'; // Importando os estilos do novo ficheiro
 
 const AÇAI_SIZES = [
   { id: 'P', name: 'Pequeno (300ml)', priceModifier: 0 },
@@ -26,6 +24,7 @@ const AÇAI_SIZES = [
 ];
 
 const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
+  // ... TODA A LÓGICA DO COMPONENTE PERMANECE IGUAL ...
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
@@ -109,9 +108,8 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
   const promoToppingIds = activePromo?.rules?.allowed_topping_ids || [];
   const promoSelectionsCount = selectedToppings.filter(id => promoToppingIds.includes(id)).length;
   const limitReached = promoSelectionsCount >= promoLimit;
-
-  // Montagem do rodapé para o modal genérico
-  const modalFooter = (
+  
+    const modalFooter = (
     <>
       <Button onClick={onClose} variant="secondary">
         Cancelar
