@@ -5,28 +5,26 @@ import styled from 'styled-components';
 import { auth } from '../../services/firebaseConfig';
 import { signOut } from 'firebase/auth';
 import Button from '../../components/Button';
-import { FaBars, FaTimes } from 'react-icons/fa'; // Ícones para o menu
+import { FaBars, FaTimes } from 'react-icons/fa';
 
-// --- COMPONENTES ESTILIZADOS COM RESPONSIVIDADE ---
-
+// --- STYLED COMPONENTS (sem alterações) ---
 const AdminWrapper = styled.div`
   display: flex;
-  position: relative; /* Necessário para posicionar a sidebar em telas pequenas */
-  min-height: calc(100vh - 70px); // Subtrai a altura da Navbar principal
+  position: relative;
+  min-height: calc(100vh - 70px);
 `;
 
 const Sidebar = styled.div`
   width: 240px;
-  background-color: #4a044e; // Roxo escuro
+  background-color: #4a044e;
   color: #e0d6ff;
   padding: 20px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease-in-out;
-  z-index: 1000; // Garante que a sidebar fique sobre o conteúdo
+  z-index: 1000;
 
-  /* Estilos para telas pequenas (mobile) */
   @media (max-width: 768px) {
     position: fixed;
     left: 0;
@@ -84,14 +82,14 @@ const ContentArea = styled.main`
 `;
 
 const MenuButton = styled.button`
-  display: none; /* Escondido por padrão em telas grandes */
+  display: none;
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 1100; // Fica acima de tudo
+  z-index: 1100;
   
   @media (max-width: 768px) {
-    display: block; /* Visível apenas em telas pequenas */
+    display: block;
     position: fixed;
     top: 80px;
     right: 15px;
@@ -106,7 +104,7 @@ const MenuButton = styled.button`
 `;
 
 const Overlay = styled.div`
-  display: none; /* Escondido por padrão */
+  display: none;
   @media (max-width: 768px) {
     display: ${props => props.show ? 'block' : 'none'};
     position: fixed;
@@ -115,7 +113,7 @@ const Overlay = styled.div`
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999; /* Fica entre a sidebar e o conteúdo */
+    z-index: 999;
   }
 `;
 
@@ -145,22 +143,20 @@ const AdminLayout = () => {
       <Sidebar isOpen={isSidebarOpen}>
         <SidebarTitle>Vibe Açaí ADM</SidebarTitle>
         <NavList>
-          {/* Ao clicar em um link, a sidebar fecha */}
-          <li><StyledNavLink to="/admin/dashboard" onClick={closeSidebar}>Visão Geral & Pedidos</StyledNavLink></li>
-          <li><StyledNavLink to="/admin/products" onClick={closeSidebar}>Produtos</StyledNavLink></li>
-          <li><StyledNavLink to="/admin/categories" onClick={closeSidebar}>Categorias</StyledNavLink></li>
-          <li><StyledNavLink to="/admin/toppings" onClick={closeSidebar}>Adicionais</StyledNavLink></li>
-          <li><StyledNavLink to="/admin/promotions" onClick={closeSidebar}>Promoções</StyledNavLink></li>
-          <li><StyledNavLink to="/admin/settings" onClick={closeSidebar}>Configurações</StyledNavLink></li>
+          <li onClick={closeSidebar}><StyledNavLink to="/admin/dashboard">Visão Geral & Pedidos</StyledNavLink></li>
+          <li onClick={closeSidebar}><StyledNavLink to="/admin/products">Produtos</StyledNavLink></li>
+          <li onClick={closeSidebar}><StyledNavLink to="/admin/categories">Categorias</StyledNavLink></li>
+          <li onClick={closeSidebar}><StyledNavLink to="/admin/toppings">Adicionais</StyledNavLink></li>
+          <li onClick={closeSidebar}><StyledNavLink to="/admin/promotions">Promoções</StyledNavLink></li>
+          <li onClick={closeSidebar}><StyledNavLink to="/admin/settings">Configurações</StyledNavLink></li>
         </NavList>
-        <Button onClick={handleLogout} style={{backgroundColor: '#ef4444'}}>Sair (Logout)</Button>
+        <Button onClick={handleLogout} variant="danger">Sair (Logout)</Button>
       </Sidebar>
 
       <ContentArea>
-        <Outlet /> {/* As páginas específicas do admin aparecerão aqui */}
+        <Outlet />
       </ContentArea>
 
-      {/* Botão de Menu e Overlay só aparecem em telas menores */}
       <MenuButton onClick={toggleSidebar}>
         {isSidebarOpen ? <FaTimes /> : <FaBars />}
       </MenuButton>

@@ -212,6 +212,7 @@ const HomePage = () => {
                   <Section style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: '1.2em', color: '#666' }}>Fique de olho! Em breve teremos novidades e promoções especiais para você.</p>
                     <Button onClick={() => navigate('/menu')}>Ver Cardápio Completo</Button>
+                   
                   </Section>
                 )}
               </>

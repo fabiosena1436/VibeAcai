@@ -1,22 +1,66 @@
 // src/components/Button/styles.js
 import styled from 'styled-components';
 
+// Mapeamento das variantes para as suas cores
+const variantStyles = {
+  primary: {
+    background: '#7c3aed',
+    color: '#fff',
+    hoverBackground: '#6d28d9',
+  },
+  danger: {
+    background: '#dc2626',
+    color: '#fff',
+    hoverBackground: '#b91c1c',
+  },
+  secondary: {
+    background: '#6b7280',
+    color: '#fff',
+    hoverBackground: '#4b5563',
+  },
+  // Adicionando variantes que faltavam para outros botões que vi no código
+  success: {
+    background: '#22c55e',
+    color: '#fff',
+    hoverBackground: '#16a34a',
+  },
+  warning: {
+    background: '#f59e0b',
+    color: '#fff',
+    hoverBackground: '#d97706',
+  },
+  // Variante especial para o botão de "Desativar"
+  toggleOff: {
+    background: '#facc15',
+    color: '#422006',
+    hoverBackground: '#eab308',
+  }
+};
+
 export const StyledButton = styled.button`
-  background-color: #7c3aed; /* Um roxo vibrante, como a vibe do açaí! */
-  color: white;
-  font-size: 1em;
-  margin: 1em;
-  padding: 0.5em 1.5em;
   border: none;
   border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1em;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
 
-  &:hover {
-    background-color: #6d28d9; /* Um tom de roxo um pouco mais escuro para o hover */
+  /* Aplica os estilos com base na prop 'variant' */
+  background-color: ${({ variant }) => variantStyles[variant]?.background || variantStyles.primary.background};
+  color: ${({ variant }) => variantStyles[variant]?.color || variantStyles.primary.color};
+
+  &:hover:not(:disabled) {
+    background-color: ${({ variant }) => variantStyles[variant]?.hoverBackground || variantStyles.primary.hoverBackground};
   }
 
-  &:active {
-    background-color: #5b21b6; /* Um tom ainda mais escuro para quando clicado */
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
   }
 `;

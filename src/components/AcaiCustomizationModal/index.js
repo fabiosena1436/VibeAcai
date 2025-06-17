@@ -8,7 +8,7 @@ import { db } from '../../services/firebaseConfig';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import Modal from '../Modal';
-import { calculateAcaiPrice } from '../../utils/priceCalculator'; // <-- NOSSA NOVA IMPORTAÇÃO
+import { calculateAcaiPrice } from '../../utils/priceCalculator';
 
 // --- ESTILOS ESPECÍFICOS PARA ESTE MODAL ---
 const SizeOptionsContainer = styled.div` margin-bottom: 20px; h4 { margin-bottom: 10px; color: #555; }`;
@@ -56,7 +56,7 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
     }
   }, [isOpen, productToCustomize, activePromo]);
 
-  // Efeito para calcular o preço - AGORA SIMPLIFICADO
+  // Efeito para calcular o preço
   useEffect(() => {
     const newPrice = calculateAcaiPrice(
       productToCustomize,
@@ -113,8 +113,10 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
   // Montagem do rodapé para o modal genérico
   const modalFooter = (
     <>
-      <Button onClick={onClose} style={{ backgroundColor: '#ccc' }}>Cancelar</Button>
-      <Button onClick={handleAddToCartConfigured} disabled={!settings.isStoreOpen}>
+      <Button onClick={onClose} variant="secondary">
+        Cancelar
+      </Button>
+      <Button onClick={handleAddToCartConfigured} disabled={!settings.isStoreOpen} variant="primary">
         {settings.isStoreOpen ? 'Adicionar ao Carrinho' : 'Loja Fechada'}
       </Button>
     </>
