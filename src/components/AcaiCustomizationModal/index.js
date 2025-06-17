@@ -7,7 +7,8 @@ import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import { db } from '../../services/firebaseConfig';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-import Modal from '../Modal'; // Importa nosso novo Modal genérico
+import Modal from '../Modal';
+import { calculateAcaiPrice } from '../../utils/priceCalculator'; // <-- NOSSA NOVA IMPORTAÇÃO
 
 // --- ESTILOS ESPECÍFICOS PARA ESTE MODAL ---
 const SizeOptionsContainer = styled.div` margin-bottom: 20px; h4 { margin-bottom: 10px; color: #555; }`;
@@ -34,7 +35,7 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
   const { settings } = useStoreSettings();
   const activePromo = productToCustomize?.appliedPromo;
 
-  // Lógica de busca de dados e cálculo de preço (INTOCADA)
+  // Lógica de busca de dados (INTOCADA)
   useEffect(() => {
     const fetchAvailableToppings = async () => {
       if (!isOpen) return;
@@ -49,23 +50,24 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
     };
     fetchAvailableToppings();
     if (isOpen) {
-      if (activePromo) { setSelectedSize({ name: 'Promoção', priceModifier: 0 }); } 
+      if (activePromo) { setSelectedSize({ name: 'Promoção', priceModifier: 0 }); }
       else { setSelectedSize(AÇAI_SIZES[0]); }
       setSelectedToppings([]);
     }
   }, [isOpen, productToCustomize, activePromo]);
+
+  // Efeito para calcular o preço - AGORA SIMPLIFICADO
   useEffect(() => {
-    if (!productToCustomize) return;
-    let finalPrice;
-    if (activePromo && activePromo.price !== undefined) { finalPrice = activePromo.price; } 
-    else if (selectedSize) { finalPrice = productToCustomize.price + (selectedSize.priceModifier || 0); } 
-    else { finalPrice = productToCustomize.price; }
-    const selectedToppingsObjects = selectedToppings.map(id => availableToppings.find(t => t.id === id)).filter(Boolean);
-    const promoToppingIds = activePromo?.rules?.allowed_topping_ids || [];
-    selectedToppingsObjects.forEach(topping => { if (!promoToppingIds.includes(topping.id)) { finalPrice += topping.price; } });
-    setCurrentPrice(finalPrice);
+    const newPrice = calculateAcaiPrice(
+      productToCustomize,
+      selectedSize,
+      selectedToppings,
+      availableToppings,
+      activePromo
+    );
+    setCurrentPrice(newPrice);
   }, [selectedSize, selectedToppings, productToCustomize, availableToppings, activePromo]);
-  // Fim da lógica intocada
+
 
   if (!isOpen || !productToCustomize) { return null; }
 
@@ -152,7 +154,7 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
           })
         )}
       </ToppingOptionsContainer>
-      
+
       <PriceInfo>Preço Atual: <strong>R$ {currentPrice.toFixed(2).replace('.', ',')}</strong></PriceInfo>
     </Modal>
   );
