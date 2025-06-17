@@ -5,7 +5,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalTitle,
-  ModalCloseButton,
+  ModalCloseButton, // <-- Corrigido de 'CloseButton' para 'ModalCloseButton'
   ModalBody,
   ModalFooter
 } from './styles';

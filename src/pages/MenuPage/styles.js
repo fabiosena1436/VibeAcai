@@ -34,6 +34,7 @@ export const CategoryCarouselWrapper = styled.div`
   .swiper-wrapper {
     justify-content: center; 
     padding: 0 20px;
+  
   }
 
   .swiper-slide {
