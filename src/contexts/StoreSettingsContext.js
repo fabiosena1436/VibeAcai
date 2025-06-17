@@ -1,46 +1,37 @@
 // src/contexts/StoreSettingsContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../services/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { STORE_SETTINGS_DOC_ID } from '../constants'; // <-- IMPORTANDO A CONSTANTE
 
 const StoreSettingsContext = createContext();
 
-const STORE_SETTINGS_DOC_ID = "mainConfig";
+export const useStoreSettings = () => useContext(StoreSettingsContext);
 
 export const StoreSettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState({
-    isStoreOpen: true,
-    openingHoursText: '',
+    isStoreOpen: false,
+    message: '',
     deliveryFee: 0,
-    pixKey: '',
-    logoUrl: '',
-    bannerUrl: '',
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const settingsDocRef = doc(db, 'storeSettings', STORE_SETTINGS_DOC_ID);
-        const docSnap = await getDoc(settingsDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setSettings({
-            isStoreOpen: data.isStoreOpen !== undefined ? data.isStoreOpen : true,
-            openingHoursText: data.openingHoursText || '',
-            deliveryFee: data.deliveryFee || 0,
-            pixKey: data.pixKey || '',
-            logoUrl: data.logoUrl || '',
-            bannerUrl: data.bannerUrl || '',
-          });
-        }
-      } catch (error) {
-        console.error("Erro ao carregar configurações da loja:", error);
-      } finally {
-        setLoading(false);
+    const settingsDocRef = doc(db, 'storeSettings', STORE_SETTINGS_DOC_ID);
+
+    const unsubscribe = onSnapshot(settingsDocRef, (doc) => {
+      if (doc.exists()) {
+        setSettings(doc.data());
+      } else {
+        console.log("Documento de configurações não encontrado!");
       }
-    };
-    fetchSettings();
+      setLoading(false);
+    }, (error) => {
+      console.error("Erro ao buscar configurações em tempo real:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -48,8 +39,4 @@ export const StoreSettingsProvider = ({ children }) => {
       {children}
     </StoreSettingsContext.Provider>
   );
-};
-
-export const useStoreSettings = () => {
-  return useContext(StoreSettingsContext);
 };

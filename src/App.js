@@ -26,6 +26,7 @@ import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { StoreSettingsProvider } from './contexts/StoreSettingsContext';
 import StoreStatusBanner from './components/StoreStatusBanner';
+import SizesPage from './pages/Admin/SizesPage';
 
 // Importação dos estilos globais
 import GlobalStyles from './styles/GlobalStyles';
@@ -66,6 +67,7 @@ function App() {
                   <Route path="toppings" element={<ToppingsPage />} />
                   <Route path="promotions" element={<PromotionsPage />} />
                   <Route path="settings" element={<SettingsPage />} />
+                  <Route path="sizes" element={<SizesPage />} />
                 </Route>
               </Routes>
             </AppWrapper>
