@@ -24,6 +24,7 @@ import {
   SearchInput,
   NoProductsText
 } from './styles';
+import Footer from '../../components/Footer';
 
 const MenuPage = () => {
   const [products, setProducts] = useState([]);
@@ -153,6 +154,7 @@ const MenuPage = () => {
         )}
       </MenuPageWrapper>
       <AcaiCustomizationModal isOpen={isModalOpen} onClose={handleCloseCustomizationModal} productToCustomize={selectedProductForCustomization} />
+      <Footer />
     </>
   );
 };
