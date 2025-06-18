@@ -331,7 +331,7 @@ const ProductsPage = () => {
                     <Button onClick={() => handleToggleProductAvailability(product.id, product.isAvailable === undefined ? true : product.isAvailable)} style={{backgroundColor: product.isAvailable === false ? '#22c55e' : '#facc15', color: product.isAvailable === false ? 'white' : '#422006'}}>
                       {product.isAvailable === false ? 'Ativar' : 'Desativar'}
                     </Button>
-                    <Button onClick={() => handleEditProduct(product)} style={{backgroundColor: '#f59e0b', color: 'white'}}>Editar</Button>
+                    <Button onClick={() => handleEditProduct(product)} style={{backgroundColor: '#7c3aed', color: 'white'}}>Editar</Button>
                     <Button onClick={() => openDeleteConfirmModal(product)} style={{backgroundColor: '#dc2626', color: 'white'}}>Excluir</Button>
                   </div>
                 </ProductListItem> 

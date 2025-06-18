@@ -25,15 +25,15 @@ const variantStyles = {
     hoverBackground: '#16a34a',
   },
   warning: {
-    background: '#f59e0b',
+    background: '#7c3aed',
     color: '#fff',
-    hoverBackground: '#d97706',
+    hoverBackground: '#7c3aed',
   },
   // Variante especial para o botão de "Desativar"
   toggleOff: {
-    background: '#facc15',
+    background: '#7c3aed',
     color: '#422006',
-    hoverBackground: '#eab308',
+    hoverBackground: '#7c3aed',
   }
 };
 

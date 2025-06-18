@@ -264,7 +264,7 @@ const CategoriesPage = () => {
               <CategoryListItem key={category.id}>
                 <span className="category-name">{category.name}</span>
                 <div className="category-actions">
-                  <Button onClick={() => handleEditCategory(category)} style={{backgroundColor: '#f59e0b', color: 'white'}}>Editar</Button>
+                  <Button onClick={() => handleEditCategory(category)} style={{backgroundColor: '#7c3aed', color: 'white'}}>Editar</Button>
                   <Button onClick={() => openDeleteConfirmModal(category)} style={{backgroundColor: '#dc2626', color: 'white'}}>Excluir</Button>
                 </div>
               </CategoryListItem>

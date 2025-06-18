@@ -21,10 +21,15 @@ const Actions = styled.div`
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   const footerContent = (
     <Actions>
-      <Button onClick={onClose} style={{ backgroundColor: '#6b7280' }}>
+      {/* Aqui está a mudança!
+        - Usamos a variante 'secondary' para o botão de cancelar.
+        - Usamos a variante 'danger' para o botão de confirmar.
+        - Removemos a prop 'style' que continha cores hardcoded.
+      */}
+      <Button onClick={onClose} variant="secondary">
         Cancelar
       </Button>
-      <Button onClick={onConfirm} style={{ backgroundColor: '#dc2626' }}>
+      <Button onClick={onConfirm} variant="danger">
         Confirmar
       </Button>
     </Actions>
