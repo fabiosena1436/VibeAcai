@@ -13,7 +13,6 @@ import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import PromoCard from '../../components/PromoCard';
 import Footer from '../../components/Footer';
 
-// --- CORREÇÃO: Bloco de importação de estilos adicionado de volta ---
 const HomePageWrapper = styled.div`padding-bottom: 50px;`;
 const HeroSection = styled.div`
   width: 100%; height: 45vh; min-height: 350px; max-height: 450px;
@@ -48,20 +47,39 @@ const ContentGrid = styled.div`
 `;
 const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 40px; font-size: 1.2em;`;
 const Title = styled.h1`font-size: 3em; color: #7c3aed; margin-bottom: 20px;`;
-// --- FIM DA CORREÇÃO ---
+
+const StoreClosedWarning = styled.div`
+  background-color: #fffbe6;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 16px;
+  margin: -20px auto 40px auto;
+  max-width: 1160px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+
+  h3 {
+    margin-top: 0;
+    font-size: 1.4em;
+    color: #b45309;
+  }
+
+  p {
+    margin: 5px 0 0 0;
+    white-space: pre-wrap;
+  }
+`;
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { settings, loading: loadingSettings } = useStoreSettings();
   const { addToCart } = useCart();
-
   const [promotions, setPromotions] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingContent, setLoadingContent] = useState(true);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductForCustomization, setSelectedProductForCustomization] = useState(null);
-
   const [logoClickCount, setLogoClickCount] = useState(0);
   const clickTimeoutRef = useRef(null);
   const REQUIRED_CLICKS = 5;
@@ -155,7 +173,11 @@ const HomePage = () => {
   };
 
   const handleProductAction = (product, promoDetails = null) => {
-    if (product.category === 'açaí') {
+    if (!settings.isStoreOpen) {
+      toast.error("A loja está fechada no momento.");
+      return;
+    }
+    if (product.category.toLowerCase() === 'açaí') {
       handleOpenCustomizationModal(product, promoDetails);
     } else {
       handleDirectAddToCart(product, promoDetails);
@@ -184,6 +206,14 @@ const HomePage = () => {
               </HeroContent>
             </HeroSection>
 
+            {!settings.isStoreOpen && settings.openingHoursText && (
+              <StoreClosedWarning>
+                <h3>Ops! Estamos Fechados</h3>
+                <p>Nosso delivery não está funcionando no momento.</p>
+                <p><strong>Nosso horário é:</strong><br/>{settings.openingHoursText}</p>
+              </StoreClosedWarning>
+            )}
+
             {loadingContent ? (<LoadingText>Carregando novidades...</LoadingText>) : (
               <>
                 {promotions.length > 0 && (
@@ -192,12 +222,11 @@ const HomePage = () => {
                     <ContentGrid>
                       {promotions.map(promo => {
                         const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
-
                         if (promo.type === 'product_discount' && promo.product) {
-                          return (<ProductCard key={promo.id} product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} />);
+                          return (<ProductCard key={promo.id} product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />);
                         }
                         if (promo.type === 'free_toppings_selection' && promo.product) {
-                          return (<PromoCard key={promo.id} promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} />);
+                          return (<PromoCard key={promo.id} promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />);
                         }
                         return null;
                       })}
@@ -219,6 +248,7 @@ const HomePage = () => {
                             originalPrice={discountPromo ? discountPromo.originalPrice : undefined}
                             promotionalPrice={discountPromo ? discountPromo.promotionalPrice : undefined}
                             onCustomize={(product) => handleProductAction(product, promoDetails)}
+                            isStoreOpen={settings.isStoreOpen}
                           />
                         );
                       })}
@@ -230,7 +260,6 @@ const HomePage = () => {
                   <Section style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: '1.2em', color: '#666' }}>Fique de olho! Em breve teremos novidades e promoções especiais para você.</p>
                     <Button onClick={() => navigate('/menu')}>Ver Cardápio Completo</Button>
-                    
                   </Section>
                 )}
               </>

@@ -1,19 +1,29 @@
-// src/components/Button/index.js
 import React from 'react';
-import { StyledButton } from './styles';
+// --- ERRO CORRIGIDO: Importa ButtonWrapper, o nome correto do componente de estilo ---
+import { ButtonWrapper } from './styles';
 
 /**
- * Componente de Botão reutilizável com variantes de estilo.
- * @param {object} props
- * @param {'primary'|'danger'|'secondary'|'success'|'warning'|'toggleOff'} [props.variant='primary'] - A variante de estilo do botão.
- * @param {React.ReactNode} props.children - O conteúdo do botão.
- * Outras props como `onClick`, `disabled`, etc., são passadas diretamente para o elemento button.
+ * Um componente de botão reutilizável com variantes.
+ * @param {object} props - As props do componente.
+ * @param {function} props.onClick - A função a ser chamada quando o botão é clicado.
+ * @param {React.ReactNode} props.children - O conteúdo do botão (texto, ícone, etc.).
+ * @param {('primary'|'secondary'|'danger')} [props.variant='primary'] - A variante visual do botão.
+ * @param {boolean} [props.disabled=false] - Se o botão está desabilitado.
+ * @param {string} [props.type='button'] - O tipo do botão (ex: 'button', 'submit').
+ * @param {object} [props.style] - Estilos inline para o botão.
  */
-const Button = ({ children, variant = 'primary', ...props }) => {
+const Button = ({ onClick, children, variant = 'primary', disabled = false, type = 'button', style }) => {
   return (
-    <StyledButton variant={variant} {...props}>
+    // --- ERRO CORRIGIDO: Usa ButtonWrapper ---
+    <ButtonWrapper
+      onClick={onClick}
+      variant={variant}
+      disabled={disabled}
+      type={type}
+      style={style}
+    >
       {children}
-    </StyledButton>
+    </ButtonWrapper>
   );
 };
 

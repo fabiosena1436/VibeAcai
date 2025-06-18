@@ -2,17 +2,20 @@ import React from 'react';
 import Button from '../Button';
 import { CardWrapper, CardImage, CardContent, ProductName, ProductDescription, PriceWrapper, OriginalPrice, PromotionalPrice } from './styles';
 
-const ProductCard = ({ product, originalPrice, promotionalPrice, onCustomize }) => {
-  // Define o preço que será exibido em destaque. Se houver preço promocional, usa ele.
+const ProductCard = ({ product, originalPrice, promotionalPrice, onCustomize, isStoreOpen }) => {
   const displayPrice = promotionalPrice !== undefined ? promotionalPrice : product.price;
-
-  // Verifica se a promoção é válida (preço promocional menor que o original)
   const isDiscountValid = promotionalPrice !== undefined && originalPrice > promotionalPrice;
 
-  const handleCustomizeClick = (e) => {
+  const getButtonText = () => {
+    if (!isStoreOpen) {
+      return 'Loja Fechada';
+    }
+    return product.category.toLowerCase() === 'açaí' ? 'Montar Açaí' : 'Adicionar';
+  };
+
+  const handleActionClick = (e) => {
     e.stopPropagation();
-    if (onCustomize) {
-      // Informa ao modal de customização que existe uma promoção de desconto aplicada
+    if (onCustomize && isStoreOpen) {
       const promoDetails = isDiscountValid ? {
         type: 'product_discount',
         promotionalPrice: promotionalPrice,
@@ -23,20 +26,19 @@ const ProductCard = ({ product, originalPrice, promotionalPrice, onCustomize }) 
   };
   
   return (
-    <CardWrapper onClick={handleCustomizeClick}>
+    <CardWrapper onClick={handleActionClick}>
       {product.imageUrl && <CardImage src={product.imageUrl} alt={product.name} />}
       <CardContent>
         <ProductName>{product.name}</ProductName>
         <ProductDescription>{product.description}</ProductDescription>
         <PriceWrapper>
-          {/* Mostra o preço original riscado apenas se a promoção for válida */}
           {isDiscountValid && (
             <OriginalPrice>R$ {originalPrice.toFixed(2).replace('.', ',')}</OriginalPrice>
           )}
           <PromotionalPrice>R$ {displayPrice.toFixed(2).replace('.', ',')}</PromotionalPrice>
         </PriceWrapper>
-        <Button onClick={handleCustomizeClick} style={{ width: '100%', marginTop: 'auto' }}>
-          {product.category === 'açaí' ? 'Montar Açaí' : 'Adicionar'}
+        <Button onClick={handleActionClick} style={{ width: '100%', marginTop: 'auto' }} disabled={!isStoreOpen}>
+          {getButtonText()}
         </Button>
       </CardContent>
     </CardWrapper>

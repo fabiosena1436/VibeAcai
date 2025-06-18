@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import styled from 'styled-components';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-
-// --- PASSO 1: Importar o hook useCart do contexto do carrinho ---
-import { useCart } from '../../contexts/CartContext'; 
+import { useCart } from '../../contexts/CartContext';
+import { useStoreSettings } from '../../contexts/StoreSettingsContext'; 
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -13,25 +13,19 @@ import 'swiper/css';
 import ProductCard from '../../components/ProductCard';
 import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import Button from '../../components/Button';
+import { MenuPageWrapper, MenuHeader, MenuTitle, CategoryCarouselWrapper, CategoryButton, CategorySectionTitle, ProductListContainer, LoadingText, SearchContainer, SearchInput, NoProductsText } from './styles';
 
-import {
-  MenuPageWrapper,
-  MenuHeader,
-  MenuTitle,
-  CategoryCarouselWrapper,
-  CategoryButton,
-  CategorySectionTitle,
-  ProductListContainer,
-  LoadingText,
-  SearchContainer,
-  SearchInput,
-  NoProductsText
-} from './styles';
+const StoreClosedWarning = styled.div`
+  background-color: #fffbe6; color: #92400e; border: 1px solid #fde68a;
+  border-radius: 8px; padding: 16px; margin: 0 20px 30px 20px; text-align: center;
+  width: calc(100% - 40px); max-width: 1160px;
+  h3 { margin-top: 0; font-size: 1.4em; color: #b45309; }
+  p { margin: 5px 0 0 0; white-space: pre-wrap; }
+`;
 
 const MenuPage = () => {
-  // --- PASSO 1 (Continuação): Inicializar a função addToCart do hook ---
   const { addToCart } = useCart();
-
+  const { settings, loading: loadingSettings } = useStoreSettings();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activePromotions, setActivePromotions] = useState(new Map());
@@ -73,7 +67,7 @@ const MenuPage = () => {
           const promo = doc.data();
           promoMap.set(promo.productId, { 
             promotionalPrice: promo.promotionalPrice, 
-            originalPrice: promo.originalPrice, // Guardamos o preço original para referência
+            originalPrice: promo.originalPrice,
             title: promo.title 
           });
         });
@@ -98,19 +92,12 @@ const MenuPage = () => {
     setIsModalOpen(false);
     setSelectedProductForCustomization(null);
   };
-  
-  // --- PASSO 3: Função para adicionar item que não é açaí diretamente ao carrinho ---
-  /**
-   * Documentação: Adiciona um produto que não requer personalização diretamente ao carrinho.
-   * @param {object} product - O objeto do produto a ser adicionado.
-   * @param {object | null} promoDetails - Detalhes da promoção, se aplicável.
-   */
+
   const handleDirectAddToCart = (product, promoDetails = null) => {
     const finalPrice = promoDetails ? promoDetails.promotionalPrice : product.price;
-
     const cartItem = {
       ...product,
-      id_cart: `${product.id}-${Date.now()}`, // Cria um ID único para o item no carrinho
+      id_cart: `${product.id}-${Date.now()}`,
       price: finalPrice,
       quantity: 1,
       appliedPromotion: promoDetails ? promoDetails.title : null, 
@@ -119,16 +106,11 @@ const MenuPage = () => {
     toast.success(`${product.name} foi adicionado ao carrinho!`);
   };
 
-  // --- PASSO 2: Lógica unificada para decidir a ação com base na categoria ---
-  /**
-   * Documentação: Verifica a categoria do produto e decide a ação a ser tomada.
-   * Se a categoria for 'açaí', abre o modal de personalização.
-   * Caso contrário, adiciona o produto diretamente ao carrinho.
-   * @param {object} product - O objeto do produto.
-   * @param {object | null} promoDetails - Detalhes da promoção, se aplicável.
-   */
   const handleProductAction = (product, promoDetails = null) => {
-    // Verificamos a categoria do produto em minúsculas para evitar erros
+    if (!settings.isStoreOpen) {
+      toast.error("A loja está fechada no momento.");
+      return;
+    }
     if (product.category.toLowerCase() === 'açaí') {
       handleOpenCustomizationModal(product, promoDetails);
     } else {
@@ -136,18 +118,12 @@ const MenuPage = () => {
     }
   };
 
-
   const filteredProducts = products.filter(product => {
     const categoryMatch = selectedCategory === 'Todos' || product.category === selectedCategory.toLowerCase();
     const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return categoryMatch && searchMatch;
   });
-  
-  /**
-   * Documentação: Função auxiliar para renderizar uma lista de produtos.
-   * Isso evita repetição de código na renderização principal.
-   * @param {Array<object>} productList - A lista de produtos a ser renderizada.
-   */
+
   const renderProductList = (productList) => {
     return productList.map(product => {
         const promo = activePromotions.get(product.id);
@@ -156,19 +132,22 @@ const MenuPage = () => {
             promotionalPrice: promo.promotionalPrice, 
             originalPrice: product.price 
         } : null;
-
         return (
             <ProductCard
                 key={product.id}
                 product={product}
                 originalPrice={promo ? product.price : undefined}
                 promotionalPrice={promo ? promo.promotionalPrice : undefined}
-                // --- PASSO 4: Passamos a nova função de decisão para o componente ProductCard ---
                 onCustomize={(product) => handleProductAction(product, promoDetails)}
+                isStoreOpen={settings.isStoreOpen}
             />
         );
     });
   };
+
+  if (loading || loadingSettings) {
+    return <LoadingText>Carregando cardápio...</LoadingText>;
+  }
 
   return (
     <>
@@ -177,48 +156,49 @@ const MenuPage = () => {
           <MenuTitle>Nosso Cardápio</MenuTitle>
           <Link to="/"><Button>Voltar para Home</Button></Link>
         </MenuHeader>
-        {loading ? (<LoadingText>Carregando cardápio...</LoadingText>) : (
-          <>
-            <SearchContainer>
-              <SearchInput type="text" placeholder="🔎 Buscar pelo nome do produto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-            </SearchContainer>
-
-            <CategoryCarouselWrapper>
-              <Swiper slidesPerView="auto" spaceBetween={10} freeMode={true}>
-                <SwiperSlide>
-                  <CategoryButton $isActive={selectedCategory === 'Todos'} onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
-                </SwiperSlide>
-                {categories.map(category => (
-                  <SwiperSlide key={category.id}>
-                    <CategoryButton $isActive={selectedCategory === category.name} onClick={() => setSelectedCategory(category.name)}>{category.name}</CategoryButton>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </CategoryCarouselWrapper>
-
-            {selectedCategory === 'Todos' && !searchTerm ? (
-              <div>
-                {categories.map(category => {
-                  const productsInCategory = products.filter(p => p.category === category.name.toLowerCase());
-                  if (productsInCategory.length === 0) return null;
-                  return (
-                    <section key={category.id}>
-                      <CategorySectionTitle>{category.name}</CategorySectionTitle>
-                      <ProductListContainer>
-                        {renderProductList(productsInCategory)}
-                      </ProductListContainer>
-                    </section>
-                  );
-                })}
-              </div>
-            ) : (
-              <ProductListContainer>
-                {filteredProducts.length > 0 ? (
-                    renderProductList(filteredProducts)
-                ) : (<NoProductsText>Nenhum produto encontrado com os filtros selecionados.</NoProductsText>)}
-              </ProductListContainer>
-            )}
-          </>
+        {!settings.isStoreOpen && settings.openingHoursText && (
+          <StoreClosedWarning>
+            <h3>Ops! Estamos Fechados</h3>
+            <p>Nosso delivery não está funcionando no momento.</p>
+            <p><strong>Nosso horário é:</strong><br/>{settings.openingHoursText}</p>
+          </StoreClosedWarning>
+        )}
+        <SearchContainer>
+          <SearchInput type="text" placeholder="🔎 Buscar pelo nome do produto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        </SearchContainer>
+        <CategoryCarouselWrapper>
+          <Swiper slidesPerView="auto" spaceBetween={10} freeMode={true}>
+            <SwiperSlide>
+              <CategoryButton $isActive={selectedCategory === 'Todos'} onClick={() => setSelectedCategory('Todos')}>Todos</CategoryButton>
+            </SwiperSlide>
+            {categories.map(category => (
+              <SwiperSlide key={category.id}>
+                <CategoryButton $isActive={selectedCategory === category.name} onClick={() => setSelectedCategory(category.name)}>{category.name}</CategoryButton>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </CategoryCarouselWrapper>
+        {selectedCategory === 'Todos' && !searchTerm ? (
+          <div>
+            {categories.map(category => {
+              const productsInCategory = products.filter(p => p.category === category.name.toLowerCase());
+              if (productsInCategory.length === 0) return null;
+              return (
+                <section key={category.id}>
+                  <CategorySectionTitle>{category.name}</CategorySectionTitle>
+                  <ProductListContainer>
+                    {renderProductList(productsInCategory)}
+                  </ProductListContainer>
+                </section>
+              );
+            })}
+          </div>
+        ) : (
+          <ProductListContainer>
+            {filteredProducts.length > 0 ? (
+                renderProductList(filteredProducts)
+            ) : (<NoProductsText>Nenhum produto encontrado com os filtros selecionados.</NoProductsText>)}
+          </ProductListContainer>
         )}
       </MenuPageWrapper>
       <AcaiCustomizationModal isOpen={isModalOpen} onClose={handleCloseCustomizationModal} productToCustomize={selectedProductForCustomization} />

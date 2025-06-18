@@ -1,66 +1,48 @@
-// src/components/Button/styles.js
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
-// Mapeamento das variantes para as suas cores
-const variantStyles = {
-  primary: {
-    background: '#7c3aed',
-    color: '#fff',
-    hoverBackground: '#6d28d9',
-  },
-  danger: {
-    background: '#dc2626',
-    color: '#fff',
-    hoverBackground: '#b91c1c',
-  },
-  secondary: {
-    background: '#6b7280',
-    color: '#fff',
-    hoverBackground: '#4b5563',
-  },
-  // Adicionando variantes que faltavam para outros botões que vi no código
-  success: {
-    background: '#22c55e',
-    color: '#fff',
-    hoverBackground: '#16a34a',
-  },
-  warning: {
-    background: '#7c3aed',
-    color: '#fff',
-    hoverBackground: '#7c3aed',
-  },
-  // Variante especial para o botão de "Desativar"
-  toggleOff: {
-    background: '#7c3aed',
-    color: '#422006',
-    hoverBackground: '#7c3aed',
-  }
+const variants = {
+  primary: css`
+    background-color: #7c3aed;
+    color: white;
+    &:hover:not(:disabled) {
+      background-color: #6d28d9;
+    }
+  `,
+  secondary: css`
+    background-color: #e5e7eb;
+    color: #4b5563;
+    &:hover:not(:disabled) {
+      background-color: #d1d5db;
+    }
+  `,
+  danger: css`
+    background-color: #ef4444;
+    color: white;
+    &:hover:not(:disabled) {
+      background-color: #dc2626;
+    }
+  `,
 };
 
-export const StyledButton = styled.button`
+export const ButtonWrapper = styled.button`
+  padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  padding: 12px 24px;
   font-size: 1em;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-
-  /* Aplica os estilos com base na prop 'variant' */
-  background-color: ${({ variant }) => variantStyles[variant]?.background || variantStyles.primary.background};
-  color: ${({ variant }) => variantStyles[variant]?.color || variantStyles.primary.color};
-
-  &:hover:not(:disabled) {
-    background-color: ${({ variant }) => variantStyles[variant]?.hoverBackground || variantStyles.primary.hoverBackground};
-  }
-
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
+  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out, transform 0.1s ease-in-out;
+  
+  ${({ variant }) => variants[variant] || variants.primary}
 
   &:active:not(:disabled) {
     transform: scale(0.98);
+  }
+  
+  &:disabled {
+    background-color: #9ca3af;
+    color: #e5e7eb;
+    cursor: not-allowed;
+    opacity: 0.8;
   }
 `;

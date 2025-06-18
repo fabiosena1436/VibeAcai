@@ -1,46 +1,41 @@
-// src/utils/priceCalculator.js
+// Nenhum erro aqui, apenas confirmando o nome da função exportada
+export const calculateAcaiPrice = (product, selectedSize, selectedToppings, toppings, promotion) => {
+  let total = 0;
 
-/**
- * Calcula o preço final de um item com base no tamanho e adicionais.
- * @param {object | null} product - O objeto do produto base (pode ser nulo para combos).
- * @param {object | null} selectedSize - O objeto do tamanho selecionado.
- * @param {number} selectedSize.price - O PREÇO TOTAL para este tamanho.
- * @param {string[]} selectedToppings - Um array com os IDs dos adicionais selecionados.
- * @param {object[]} availableToppings - A lista completa de todos os adicionais disponíveis.
- * @param {object | null} activePromo - A promoção ativa para este item, se houver.
- * @returns {number} - O preço final calculado.
- */
-export const calculateAcaiPrice = (product, selectedSize, selectedToppings, availableToppings, activePromo) => {
-  let finalPrice = 0;
-
-  // 1. Define o preço base.
-  // Se for uma promoção com preço fixo, usa esse preço.
-  if (activePromo && activePromo.price !== undefined) {
-    finalPrice = activePromo.price;
-  } 
-  // Senão, o preço base é o preço do tamanho selecionado.
-  else if (selectedSize && selectedSize.price !== undefined) {
-    finalPrice = selectedSize.price;
-  }
-  // Fallback para o preço do produto caso não haja tamanho (itens que não são açaí)
-  else if (product) {
-    finalPrice = product.price;
+  // Se houver promoção de preço fixo para o combo, use-a.
+  if (promotion?.type === 'free_toppings_selection' && promotion.promotionalPrice) {
+    return promotion.promotionalPrice;
   }
   
-  // 2. Adiciona o preço dos adicionais que não fazem parte da promoção
-  if (selectedToppings.length > 0 && availableToppings.length > 0) {
-    const selectedToppingsObjects = selectedToppings
-      .map(id => availableToppings.find(t => t.id === id))
-      .filter(Boolean);
-
-    const promoToppingIds = activePromo?.rules?.allowed_topping_ids || [];
-
-    selectedToppingsObjects.forEach(topping => {
-      if (!promoToppingIds.includes(topping.id)) {
-        finalPrice += topping.price;
-      }
-    });
+  // Se for um desconto de produto e tiver um tamanho selecionado, comece com o preço do tamanho.
+  // Caso contrário, comece com o preço base do produto (que pode ser promocional).
+  if (selectedSize) {
+    total += selectedSize.price;
+  } else if (product) {
+    total += promotion?.type === 'product_discount' ? promotion.promotionalPrice : product.price;
   }
 
-  return finalPrice;
+  // Adicionar o preço dos adicionais
+  const isFreeToppingPromo = promotion?.type === 'free_toppings_selection';
+  const freeToppingsLimit = isFreeToppingPromo ? promotion.rules.selection_limit : 0;
+  let toppingsCount = 0;
+
+  for (const toppingId in selectedToppings) {
+    const quantity = selectedToppings[toppingId];
+    if (quantity > 0) {
+      const toppingDetails = toppings.find(t => t.id === toppingId);
+      if (toppingDetails) {
+        for (let i = 0; i < quantity; i++) {
+          toppingsCount++;
+          // Adiciona o preço apenas se não for uma promoção de adicionais grátis
+          // ou se o limite de adicionais grátis já foi ultrapassado.
+          if (!isFreeToppingPromo || toppingsCount > freeToppingsLimit) {
+            total += toppingDetails.price;
+          }
+        }
+      }
+    }
+  }
+
+  return total;
 };

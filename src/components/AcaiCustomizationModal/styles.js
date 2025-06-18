@@ -1,87 +1,103 @@
-// src/components/AcaiCustomizationModal/styles.js
 import styled from 'styled-components';
 
-export const SizeOptionsContainer = styled.div`
-  margin-bottom: 20px;
-  h4 { margin-bottom: 10px; color: #555; }
-`;
+export const SectionTitle = styled.h2`
+  font-size: 1.4em;
+  color: #4a4a4a;
+  margin: 25px 0 15px 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
 
-export const SizeButton = styled.button`
-  background-color: ${props => props.selected ? '#7c3aed' : '#eee'};
-  color: ${props => props.selected ? '#fff' : '#333'};
-  border: 1px solid ${props => props.selected ? '#7c3aed' : '#ddd'};
-  padding: 10px 15px;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9em;
-  font-weight: 500;
-  transition: background-color 0.2s, color 0.2s;
-  &:hover {
-    background-color: ${props => props.selected ? '#6d28d9' : '#ddd'};
+  &:first-of-type {
+    margin-top: 0;
   }
 `;
 
-export const PriceInfo = styled.div`
-  margin-top: 20px;
-  font-size: 1.2em;
-  text-align: right;
-  color: #333;
-  font-weight: 500;
-  strong { color: #7c3aed; font-weight: bold; }
-`;
-
-export const ToppingOptionsContainer = styled.div`
-  margin-bottom: 20px;
-  h4 { margin-bottom: 10px; color: #555; }
-  .promo-title { font-size: 1em; color: #7c3aed; font-weight: bold; }
-`;
-
-export const ToppingLabel = styled.label`
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px; // Aumentamos um pouco o espaço
-  cursor: pointer;
-  font-size: 0.95em;
-  justify-content: space-between;
-
-  &.disabled {
-    cursor: not-allowed;
-    color: #aaa;
-  }
-`;
-
-// NOVO: Div para agrupar imagem, checkbox e nome
-export const ToppingInfo = styled.div`
-  display: flex;
-  align-items: center;
+export const OptionsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 10px;
 `;
 
-// NOVO: Estilo para a imagem do adicional
-export const ToppingImage = styled.img`
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 6px;
-`;
+export const OptionItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid ${({ $isSelected }) => ($isSelected ? '#7c3aed' : '#ddd')};
+  background-color: ${({ $isSelected }) => ($isSelected ? '#f3e8ff' : '#fff')};
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-weight: ${({ $isSelected }) => ($isSelected ? 'bold' : 'normal')};
+  color: ${({ $isSelected }) => ($isSelected ? '#5b21b6' : '#333')};
 
-export const ToppingName = styled.span`
-  margin-left: 5px;
-`;
+  ${({ $isTopping }) =>
+    $isTopping &&
+    `
+    flex-direction: column;
+    align-items: flex-start;
+    cursor: default;
+    border-color: #eee;
+    background-color: #fafafa;
+  `}
 
-export const ToppingPriceText = styled.span`
-  color: #555;
-  font-weight: 500;
-  &.free {
-    color: #16a34a;
-    font-weight: bold;
+  &:hover {
+    border-color: #7c3aed;
+  }
+
+  span {
+    flex-grow: 1;
   }
 `;
 
-export const CheckboxInput = styled.input.attrs({ type: 'checkbox' })`
-  width: 18px;
-  height: 18px;
-  accent-color: #7c3aed;
+export const Counter = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+
+  button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #5b21b6;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:disabled {
+      background-color: #f0f0f0;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    font-size: 1.1em;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+  }
+`;
+
+export const ToppingCategory = styled.h3`
+  font-size: 1.1em;
+  color: #666;
+  margin: 20px 0 10px 0;
+  text-transform: capitalize;
+`;
+
+export const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2em;
+  color: #666;
+  font-style: italic;
 `;

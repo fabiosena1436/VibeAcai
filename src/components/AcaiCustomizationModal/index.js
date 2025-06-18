@@ -1,214 +1,199 @@
-import React, { useState, useEffect } from 'react';
-import Button from '../Button';
+import React, { useState, useEffect, useCallback } from 'react';
+import { db } from '../../services/firebaseConfig';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import toast from 'react-hot-toast';
+
 import { useCart } from '../../contexts/CartContext';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
-import { db } from '../../services/firebaseConfig';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import toast from 'react-hot-toast';
-import Modal from '../Modal';
-// --- CORREÇÃO 1: Usando o nome correto da função de cálculo ---
+// --- ERRO CORRIGIDO: Importa o nome correto da função ---
 import { calculateAcaiPrice } from '../../utils/priceCalculator';
-// --- CORREÇÃO 2: Usando os seus componentes de estilo existentes ---
-import {
-  SizeOptionsContainer,
-  SizeButton,
-  PriceInfo,
-  ToppingOptionsContainer,
-  ToppingLabel,
-  ToppingInfo,
-  ToppingImage,
-  ToppingName,
-  CheckboxInput,
-  ToppingPriceText,
-} from './styles';
+
+import Modal from '../Modal';
+import Button from '../Button';
+// --- ERRO CORRIGIDO: Importa os componentes de estilo corretos ---
+import { SectionTitle, OptionsGrid, OptionItem, Counter, ToppingCategory, LoadingContainer } from './styles';
 
 const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
-  // --- CORREÇÃO 3: Todos os Hooks são chamados no início, incondicionalmente ---
   const { addToCart } = useCart();
   const { settings } = useStoreSettings();
 
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedToppings, setSelectedToppings] = useState([]);
-  const [currentPrice, setCurrentPrice] = useState(0);
-  const [availableToppings, setAvailableToppings] = useState([]);
-  const [availableSizes, setAvailableSizes] = useState([]);
+  const [sizes, setSizes] = useState([]);
+  const [toppings, setToppings] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  // A promoção aplicada é extraída do produto
-  const activePromo = productToCustomize?.appliedPromo;
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedToppings, setSelectedToppings] = useState({});
+  const [currentPrice, setCurrentPrice] = useState(0);
 
-  // Busca os dados (tamanhos, adicionais) quando o modal abre
+  const promotion = productToCustomize?.appliedPromo;
+  const isFreeToppingPromo = promotion?.type === 'free_toppings_selection';
+  const freeToppingsLimit = isFreeToppingPromo ? promotion.rules.selection_limit : 0;
+  const totalSelectedToppings = Object.values(selectedToppings).reduce((acc, count) => acc + count, 0);
+
   useEffect(() => {
-    const fetchModalData = async () => {
+    const fetchData = async () => {
+      if (!isOpen) return;
       setLoadingData(true);
       try {
-        const toppingsQuery = query(collection(db, 'toppings'), where("isAvailable", "==", true), orderBy("name"));
-        const sizesQuery = query(collection(db, 'sizes'), orderBy('order', 'asc'));
-        
-        const [toppingsSnapshot, sizesSnapshot] = await Promise.all([
-          getDocs(toppingsQuery),
-          getDocs(sizesQuery)
+        const sizesRef = collection(db, 'sizes');
+        const toppingsRef = collection(db, 'toppings');
+        const qSizes = query(sizesRef, orderBy('price'));
+        const qToppings = query(toppingsRef, orderBy('name'));
+
+        const [sizesSnapshot, toppingsSnapshot] = await Promise.all([
+          getDocs(qSizes),
+          getDocs(qToppings)
         ]);
+        
+        const sizesData = sizesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const toppingsData = toppingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        setSizes(sizesData);
+        setToppings(toppingsData);
 
-        const toppingsList = toppingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAvailableToppings(toppingsList);
-
-        const sizesList = sizesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAvailableSizes(sizesList);
-
-        // Define um tamanho padrão se não for uma promoção
-        if (sizesList.length > 0 && !activePromo) {
-          setSelectedSize(sizesList[0]);
-        } else if (activePromo) {
-          // Em promoções, o "tamanho" é definido pelo preço promocional
-          setSelectedSize({ name: 'Promoção', price: activePromo.promotionalPrice });
+        const initialSize = sizesData.find(s => s.name.replace('ml', '') === productToCustomize?.size) || sizesData[0];
+        if (initialSize) {
+          setSelectedSize(initialSize);
         }
-        // Reseta os adicionais selecionados
-        setSelectedToppings([]);
+
       } catch (error) {
-        toast.error("Não foi possível carregar as opções.");
-        console.error("Erro ao carregar dados do modal:", error);
-        onClose();
+        console.error("Erro ao buscar dados de personalização:", error);
+        toast.error("Não foi possível carregar as opções de personalização.");
       } finally {
         setLoadingData(false);
       }
     };
+    fetchData();
+  }, [isOpen, productToCustomize]);
 
-    if (isOpen) {
-      fetchModalData();
-    }
-  }, [isOpen, productToCustomize, activePromo, onClose]);
-
-  // Recalcula o preço total sempre que uma opção muda
   useEffect(() => {
-    // Só calcula se o produto existir
     if (productToCustomize) {
-        const newPrice = calculateAcaiPrice(
-            productToCustomize,
-            selectedSize,
-            selectedToppings,
-            availableToppings,
-            activePromo
-        );
-        setCurrentPrice(newPrice);
+      // --- ERRO CORRIGIDO: Usa o nome correto da função ---
+      const newPrice = calculateAcaiPrice(productToCustomize, selectedSize, selectedToppings, toppings, promotion);
+      setCurrentPrice(newPrice);
     }
-  }, [selectedSize, selectedToppings, productToCustomize, availableToppings, activePromo]);
+  }, [selectedSize, selectedToppings, productToCustomize, toppings, promotion]);
 
-  // --- CORREÇÃO 4: A trava de segurança vem DEPOIS dos hooks ---
-  // Se o modal não deve estar aberto ou não tem produto, não renderiza nada.
-  if (!isOpen || !productToCustomize) {
-    return null;
-  }
+  const handleToppingChange = (topping, change) => {
+    const currentCount = selectedToppings[topping.id] || 0;
+    const newCount = Math.max(0, currentCount + change);
 
-  const handleToppingToggle = (toppingId) => {
-    const isAlreadySelected = selectedToppings.includes(toppingId);
-    
-    // Verifica se o adicional faz parte da promoção
-    const isPromotional = activePromo && activePromo.rules.allowed_topping_ids.includes(toppingId);
-
-    if (isAlreadySelected) {
-      setSelectedToppings(prev => prev.filter(id => id !== toppingId));
-    } else {
-      // Se for um adicional da promoção, verifica o limite
-      if (isPromotional) {
-        const promoSelections = selectedToppings.filter(id => activePromo.rules.allowed_topping_ids.includes(id));
-        if (promoSelections.length >= activePromo.rules.selection_limit) {
-          toast.error(`Você pode escolher no máximo ${activePromo.rules.selection_limit} adicionais desta promoção.`);
-          return; // Impede de adicionar mais que o limite
-        }
-      }
-      setSelectedToppings(prev => [...prev, toppingId]);
+    if (change > 0 && isFreeToppingPromo && totalSelectedToppings >= freeToppingsLimit) {
+      toast.error(`Você já selecionou o limite de ${freeToppingsLimit} adicionais grátis.`);
+      return;
     }
+
+    setSelectedToppings(prev => ({ ...prev, [topping.id]: newCount }));
   };
 
   const handleAddToCartConfigured = () => {
-    if (!activePromo && !selectedSize) {
+    if (!selectedSize) {
       toast.error('Por favor, selecione um tamanho.');
       return;
     }
 
-    const toppingsDetails = availableToppings.filter(t => selectedToppings.includes(t.id));
-    
-    // Define um nome mais claro para o item no carrinho
-    const sizeName = activePromo ? '' : ` (${selectedSize.name})`;
-    const configuredAcai = {
+    const toppingsList = Object.entries(selectedToppings)
+      .filter(([, qty]) => qty > 0)
+      .map(([id, qty]) => {
+        const toppingDetails = toppings.find(t => t.id === id);
+        return { ...toppingDetails, quantity: qty };
+      });
+      
+    const cartItem = {
       ...productToCustomize,
-      id_cart: `${productToCustomize.id}-${selectedSize?.id || 'promo'}-${Date.now()}`,
-      name: `${activePromo ? activePromo.title : productToCustomize.name + sizeName}`,
-      selectedSize: activePromo ? 'Promoção' : selectedSize.name,
-      selectedToppings: toppingsDetails,
+      id_cart: `${productToCustomize.id}-${Date.now()}`,
+      name: `${productToCustomize.name} ${selectedSize.name}`,
       price: currentPrice,
-      quantity: 1, // A quantidade será controlada no carrinho
-      appliedPromotion: activePromo ? activePromo.title : null,
+      quantity: 1,
+      size: selectedSize,
+      toppings: toppingsList,
+      appliedPromotion: promotion ? promotion.title : null
     };
-    
-    addToCart(configuredAcai);
-    onClose();
+
+    addToCart(cartItem);
+    toast.success(`${cartItem.name} foi adicionado ao carrinho!`);
+    resetAndClose();
   };
 
-  // Lógica para o rodapé do modal
+  const resetAndClose = useCallback(() => {
+    setSelectedSize(null);
+    setSelectedToppings({});
+    setCurrentPrice(0);
+    onClose();
+  }, [onClose]);
+
+  const groupToppingsByCategory = () => {
+    return toppings.reduce((acc, topping) => {
+      const category = topping.category || 'Outros';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(topping);
+      return acc;
+    }, {});
+  };
+
+  const groupedToppings = groupToppingsByCategory();
+
   const modalFooter = (
     <>
-      <Button onClick={onClose} variant="secondary">Cancelar</Button>
-      <Button onClick={handleAddToCartConfigured} disabled={!settings.isStoreOpen || loadingData} variant="primary">
-        {settings.isStoreOpen ? `Adicionar (R$ ${currentPrice.toFixed(2).replace('.', ',')})` : 'Loja Fechada'}
+      <Button onClick={resetAndClose} variant="secondary">Cancelar</Button>
+      <Button 
+        onClick={handleAddToCartConfigured} 
+        disabled={!settings.isStoreOpen || loadingData || !selectedSize} 
+        variant="primary"
+      >
+        {loadingData ? 'Carregando...' : (settings.isStoreOpen ? `Adicionar (R$ ${currentPrice.toFixed(2).replace('.', ',')})` : 'Loja Fechada')}
       </Button>
     </>
   );
 
-  const promoLimit = activePromo?.rules?.selection_limit || 0;
-  const promoToppingIds = activePromo?.rules?.allowed_topping_ids || [];
-  const promoSelectionsCount = selectedToppings.filter(id => promoToppingIds.includes(id)).length;
-  const limitReached = promoSelectionsCount >= promoLimit;
-
-  // Usa o productName do alvo da promoção se for uma promo, senão o nome do produto
-  const modalTitle = `Personalize seu ${activePromo ? productToCustomize.name : productToCustomize.name}`;
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} footer={modalFooter}>
-      {loadingData ? <p>A carregar opções...</p> : (
+    <Modal 
+      isOpen={isOpen} 
+      onClose={resetAndClose} 
+      title={`Monte seu ${productToCustomize?.name || 'Açaí'}`}
+      footer={modalFooter}
+    >
+      {loadingData ? (
+        <LoadingContainer>Carregando opções...</LoadingContainer>
+      ) : (
         <>
-          {/* SEÇÃO DE TAMANHOS: renderiza apenas se NÃO for uma promoção de combo */}
-          {!activePromo && (
-            <SizeOptionsContainer>
-              <h4>Escolha o Tamanho:</h4>
-              {availableSizes.length > 0 ? (
-                availableSizes.map(size => (
-                  <SizeButton key={size.id} selected={selectedSize?.id === size.id} onClick={() => setSelectedSize(size)}>
-                    {size.name} - R$ {size.price.toFixed(2).replace('.', ',')}
-                  </SizeButton>
-                ))
-              ) : <p>Nenhum tamanho disponível.</p>}
-            </SizeOptionsContainer>
-          )}
+          <SectionTitle>1. Escolha o Tamanho</SectionTitle>
+          <OptionsGrid>
+            {sizes.map(size => (
+              <OptionItem 
+                key={size.id} 
+                $isSelected={selectedSize?.id === size.id}
+                onClick={() => setSelectedSize(size)}
+              >
+                {size.name} (+ R$ {size.price.toFixed(2).replace('.', ',')})
+              </OptionItem>
+            ))}
+          </OptionsGrid>
           
-          {/* SEÇÃO DE ADICIONAIS: usa a estrutura do seu código original */}
-          <ToppingOptionsContainer>
-            <h4>{activePromo ? `Escolha até ${promoLimit} dos adicionais abaixo (inclusos no combo):` : "Escolha os Adicionais:"}</h4>
-            {availableToppings.map(topping => {
-              const isPromotional = activePromo && promoToppingIds.includes(topping.id);
-              // Desabilita o checkbox se o limite da promoção foi atingido e o item não está selecionado
-              const isDisabled = isPromotional && limitReached && !selectedToppings.includes(topping.id);
-              
-              // Em uma promoção, só mostra os adicionais permitidos
-              if(activePromo && !isPromotional) return null;
-
-              return (
-                <ToppingLabel key={topping.id} className={isDisabled ? 'disabled' : ''}>
-                  <ToppingInfo>
-                    {topping.imageUrl && <ToppingImage src={topping.imageUrl} alt={topping.name} />}
-                    <CheckboxInput type="checkbox" checked={selectedToppings.includes(topping.id)} onChange={() => handleToppingToggle(topping.id)} disabled={isDisabled} />
-                    <ToppingName>{topping.name}</ToppingName>
-                  </ToppingInfo>
-                  <ToppingPriceText className={isPromotional ? 'free' : ''}>
-                    {isPromotional ? <strong>Grátis</strong> : `+ R$ ${topping.price.toFixed(2).replace('.', ',')}`}
-                  </ToppingPriceText>
-                </ToppingLabel>
-              );
-            })}
-          </ToppingOptionsContainer>
-
-          <PriceInfo>Preço Atual: <strong>R$ {currentPrice.toFixed(2).replace('.', ',')}</strong></PriceInfo>
+          <SectionTitle>
+            2. Adicionais
+            {isFreeToppingPromo && ` (Escolha ${freeToppingsLimit} grátis - ${totalSelectedToppings}/${freeToppingsLimit})`}
+          </SectionTitle>
+          
+          {Object.entries(groupedToppings).map(([category, items]) => (
+            <div key={category}>
+              <ToppingCategory>{category}</ToppingCategory>
+              <OptionsGrid>
+                {items.map(topping => (
+                  <OptionItem key={topping.id} $isTopping={true}>
+                    <span>{topping.name} (+ R$ {topping.price.toFixed(2).replace('.', ',')})</span>
+                    <Counter>
+                      <button onClick={() => handleToppingChange(topping, -1)} disabled={(selectedToppings[topping.id] || 0) === 0}>-</button>
+                      <span>{selectedToppings[topping.id] || 0}</span>
+                      <button onClick={() => handleToppingChange(topping, 1)} disabled={isFreeToppingPromo && totalSelectedToppings >= freeToppingsLimit}>+</button>
+                    </Counter>
+                  </OptionItem>
+                ))}
+              </OptionsGrid>
+            </div>
+          ))}
         </>
       )}
     </Modal>

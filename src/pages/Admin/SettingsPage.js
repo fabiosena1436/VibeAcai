@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import { db } from '../../services/firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS (Mantidos como no seu código) ---
 const PageWrapper = styled.div`
   h1 { font-size: 2em; color: #333; margin-bottom: 30px; }
 `;
@@ -60,12 +59,10 @@ const SettingsGrid = styled.div`
     grid-template-columns: 1fr 1fr;
   }
 `;
-// --- FIM DOS STYLED COMPONENTS ---
 
 const STORE_SETTINGS_DOC_ID = "mainConfig";
 
 const SettingsPage = () => {
-  // Estados existentes
   const [pixKey, setPixKey] = useState('');
   const [newPixKeyInput, setNewPixKeyInput] = useState('');
   const [deliveryFee, setDeliveryFee] = useState(0);
@@ -74,8 +71,6 @@ const SettingsPage = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
   const [isStoreOpen, setIsStoreOpen] = useState(true);
-  
-  // --- ADICIONADO: Novos estados para os campos de contato ---
   const [whatsapp, setWhatsapp] = useState('');
   const [instagram, setInstagram] = useState('');
   const [address, setAddress] = useState('');
@@ -98,7 +93,6 @@ const SettingsPage = () => {
           setOpeningHoursText(d.openingHoursText || '');
           setLogoUrl(d.logoUrl || '');
           setBannerUrl(d.bannerUrl || '');
-          // --- ADICIONADO: Carrega os dados de contato do Firestore ---
           setWhatsapp(d.whatsapp || '');
           setInstagram(d.instagram || '');
           setAddress(d.address || '');
@@ -122,7 +116,6 @@ const SettingsPage = () => {
       await setDoc(settingsDocRef, dataToUpdate, { merge: true });
       toast.success(successMessage || 'Configurações atualizadas!');
       
-      // Atualiza o estado local para refletir a mudança imediatamente
       if (dataToUpdate.pixKey !== undefined) setPixKey(dataToUpdate.pixKey);
       if (dataToUpdate.deliveryFee !== undefined) {
         setDeliveryFee(dataToUpdate.deliveryFee);
@@ -132,7 +125,6 @@ const SettingsPage = () => {
       if (dataToUpdate.isStoreOpen !== undefined) setIsStoreOpen(dataToUpdate.isStoreOpen);
       if (dataToUpdate.logoUrl !== undefined) setLogoUrl(dataToUpdate.logoUrl);
       if (dataToUpdate.bannerUrl !== undefined) setBannerUrl(dataToUpdate.bannerUrl);
-      // --- ADICIONADO: Atualiza o estado local dos campos de contato ---
       if (dataToUpdate.whatsapp !== undefined) setWhatsapp(dataToUpdate.whatsapp);
       if (dataToUpdate.instagram !== undefined) setInstagram(dataToUpdate.instagram);
       if (dataToUpdate.address !== undefined) setAddress(dataToUpdate.address);
@@ -145,7 +137,6 @@ const SettingsPage = () => {
     }
   };
 
-  // Funções de Handler existentes
   const handleConfirmRemovePixKey = async () => {
     await handleUpdateSetting({ pixKey: "" }, 'Chave PIX removida!');
     setNewPixKeyInput('');
@@ -190,7 +181,6 @@ const SettingsPage = () => {
     handleUpdateSetting({ bannerUrl: bannerUrl.trim() }, 'URL do Banner salvo!');
   };
 
-  // --- ADICIONADO: Nova função para salvar as informações de contato ---
   const handleUpdateContactInfo = (e) => {
     e.preventDefault();
     const contactData = {
@@ -244,8 +234,7 @@ const SettingsPage = () => {
             <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : 'Salvar Banner'}</Button>
           </Form>
         </SettingsGrid>
-
-        {/* --- ADICIONADO: Nova seção para Contato e Redes Sociais --- */}
+        
         <SectionTitle>Contato e Redes Sociais</SectionTitle>
         <Form onSubmit={handleUpdateContactInfo}>
             <FormGroup>
