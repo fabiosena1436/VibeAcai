@@ -4,6 +4,9 @@ import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
+// --- PASSO 1: Importar o hook useCart do contexto do carrinho ---
+import { useCart } from '../../contexts/CartContext'; 
+
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 
@@ -24,9 +27,11 @@ import {
   SearchInput,
   NoProductsText
 } from './styles';
-import Footer from '../../components/Footer';
 
 const MenuPage = () => {
+  // --- PASSO 1 (Continuação): Inicializar a função addToCart do hook ---
+  const { addToCart } = useCart();
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activePromotions, setActivePromotions] = useState(new Map());
@@ -66,7 +71,11 @@ const MenuPage = () => {
         const promoMap = new Map();
         promotionsSnapshot.forEach(doc => {
           const promo = doc.data();
-          promoMap.set(promo.productId, promo.promotionalPrice);
+          promoMap.set(promo.productId, { 
+            promotionalPrice: promo.promotionalPrice, 
+            originalPrice: promo.originalPrice, // Guardamos o preço original para referência
+            title: promo.title 
+          });
         });
         setActivePromotions(promoMap);
       } catch (error) {
@@ -89,12 +98,77 @@ const MenuPage = () => {
     setIsModalOpen(false);
     setSelectedProductForCustomization(null);
   };
+  
+  // --- PASSO 3: Função para adicionar item que não é açaí diretamente ao carrinho ---
+  /**
+   * Documentação: Adiciona um produto que não requer personalização diretamente ao carrinho.
+   * @param {object} product - O objeto do produto a ser adicionado.
+   * @param {object | null} promoDetails - Detalhes da promoção, se aplicável.
+   */
+  const handleDirectAddToCart = (product, promoDetails = null) => {
+    const finalPrice = promoDetails ? promoDetails.promotionalPrice : product.price;
+
+    const cartItem = {
+      ...product,
+      id_cart: `${product.id}-${Date.now()}`, // Cria um ID único para o item no carrinho
+      price: finalPrice,
+      quantity: 1,
+      appliedPromotion: promoDetails ? promoDetails.title : null, 
+    };
+    addToCart(cartItem);
+    toast.success(`${product.name} foi adicionado ao carrinho!`);
+  };
+
+  // --- PASSO 2: Lógica unificada para decidir a ação com base na categoria ---
+  /**
+   * Documentação: Verifica a categoria do produto e decide a ação a ser tomada.
+   * Se a categoria for 'açaí', abre o modal de personalização.
+   * Caso contrário, adiciona o produto diretamente ao carrinho.
+   * @param {object} product - O objeto do produto.
+   * @param {object | null} promoDetails - Detalhes da promoção, se aplicável.
+   */
+  const handleProductAction = (product, promoDetails = null) => {
+    // Verificamos a categoria do produto em minúsculas para evitar erros
+    if (product.category.toLowerCase() === 'açaí') {
+      handleOpenCustomizationModal(product, promoDetails);
+    } else {
+      handleDirectAddToCart(product, promoDetails);
+    }
+  };
+
 
   const filteredProducts = products.filter(product => {
     const categoryMatch = selectedCategory === 'Todos' || product.category === selectedCategory.toLowerCase();
     const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return categoryMatch && searchMatch;
   });
+  
+  /**
+   * Documentação: Função auxiliar para renderizar uma lista de produtos.
+   * Isso evita repetição de código na renderização principal.
+   * @param {Array<object>} productList - A lista de produtos a ser renderizada.
+   */
+  const renderProductList = (productList) => {
+    return productList.map(product => {
+        const promo = activePromotions.get(product.id);
+        const promoDetails = promo ? { 
+            title: promo.title, 
+            promotionalPrice: promo.promotionalPrice, 
+            originalPrice: product.price 
+        } : null;
+
+        return (
+            <ProductCard
+                key={product.id}
+                product={product}
+                originalPrice={promo ? product.price : undefined}
+                promotionalPrice={promo ? promo.promotionalPrice : undefined}
+                // --- PASSO 4: Passamos a nova função de decisão para o componente ProductCard ---
+                onCustomize={(product) => handleProductAction(product, promoDetails)}
+            />
+        );
+    });
+  };
 
   return (
     <>
@@ -131,10 +205,7 @@ const MenuPage = () => {
                     <section key={category.id}>
                       <CategorySectionTitle>{category.name}</CategorySectionTitle>
                       <ProductListContainer>
-                        {productsInCategory.map(product => {
-                          const promotionalPrice = activePromotions.get(product.id);
-                          return (<ProductCard key={product.id} product={product} promotionalPrice={promotionalPrice} onCustomize={handleOpenCustomizationModal} />);
-                        })}
+                        {renderProductList(productsInCategory)}
                       </ProductListContainer>
                     </section>
                   );
@@ -143,10 +214,7 @@ const MenuPage = () => {
             ) : (
               <ProductListContainer>
                 {filteredProducts.length > 0 ? (
-                  filteredProducts.map(product => {
-                    const promotionalPrice = activePromotions.get(product.id);
-                    return (<ProductCard key={product.id} product={product} promotionalPrice={promotionalPrice} onCustomize={handleOpenCustomizationModal} />);
-                  })
+                    renderProductList(filteredProducts)
                 ) : (<NoProductsText>Nenhum produto encontrado com os filtros selecionados.</NoProductsText>)}
               </ProductListContainer>
             )}
@@ -154,7 +222,6 @@ const MenuPage = () => {
         )}
       </MenuPageWrapper>
       <AcaiCustomizationModal isOpen={isModalOpen} onClose={handleCloseCustomizationModal} productToCustomize={selectedProductForCustomization} />
-      <Footer />
     </>
   );
 };

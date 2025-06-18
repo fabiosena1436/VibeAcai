@@ -1,4 +1,3 @@
-// src/pages/HomePage/index.js
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -6,6 +5,7 @@ import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
+import { useCart } from '../../contexts/CartContext'; 
 
 import Button from '../../components/Button';
 import ProductCard from '../../components/ProductCard';
@@ -13,7 +13,7 @@ import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import PromoCard from '../../components/PromoCard';
 import Footer from '../../components/Footer';
 
-// --- STYLED COMPONENTS (sem alterações) ---
+// --- CORREÇÃO: Bloco de importação de estilos adicionado de volta ---
 const HomePageWrapper = styled.div`padding-bottom: 50px;`;
 const HeroSection = styled.div`
   width: 100%; height: 45vh; min-height: 350px; max-height: 450px;
@@ -48,11 +48,12 @@ const ContentGrid = styled.div`
 `;
 const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 40px; font-size: 1.2em;`;
 const Title = styled.h1`font-size: 3em; color: #7c3aed; margin-bottom: 20px;`;
-// --- FIM DOS STYLED COMPONENTS ---
+// --- FIM DA CORREÇÃO ---
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { settings, loading: loadingSettings } = useStoreSettings();
+  const { addToCart } = useCart();
 
   const [promotions, setPromotions] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -61,34 +62,27 @@ const HomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductForCustomization, setSelectedProductForCustomization] = useState(null);
 
-  // ---> INÍCIO DA LÓGICA DO MENU SECRETO <---
   const [logoClickCount, setLogoClickCount] = useState(0);
   const clickTimeoutRef = useRef(null);
   const REQUIRED_CLICKS = 5;
 
   const handleLogoClick = () => {
-    // Limpa o timer anterior para reiniciar a contagem de tempo
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
     }
-    
     const newClickCount = logoClickCount + 1;
     setLogoClickCount(newClickCount);
-
     if (newClickCount >= REQUIRED_CLICKS) {
       toast.success('Acesso secreto liberado!');
       navigate('/admin/login');
-      // Reseta a contagem após o redirecionamento
       setLogoClickCount(0);
     } else {
-      // Cria um novo timer. Se o usuário não clicar novamente em 2 segundos, reseta a contagem.
       clickTimeoutRef.current = setTimeout(() => {
         setLogoClickCount(0);
-      }, 2000); // 2 segundos de intervalo entre cliques
+      }, 2000);
     }
   };
 
-  // Efeito para limpar o timer quando o componente é desmontado
   useEffect(() => {
     return () => {
       if (clickTimeoutRef.current) {
@@ -96,8 +90,6 @@ const HomePage = () => {
       }
     };
   }, []);
-  // ---> FIM DA LÓGICA DO MENU SECRETO <---
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,7 +100,7 @@ const HomePage = () => {
         const promoSnapshot = await getDocs(promoQuery);
         const activePromos = promoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        const productIdsInPromos = activePromos.map(p => p.productId || p.target?.productId).filter(Boolean);
+        const productIdsInPromos = activePromos.map(p => p.productId).filter(Boolean);
         let productsForPromos = [];
         if (productIdsInPromos.length > 0) {
           const productsRef = collection(db, 'products');
@@ -118,8 +110,7 @@ const HomePage = () => {
         }
 
         const finalPromotions = activePromos.map(promo => {
-          const productId = promo.productId || promo.target?.productId;
-          const productDetails = productsForPromos.find(p => p.id === productId);
+          const productDetails = productsForPromos.find(p => p.id === promo.productId);
           return (productDetails && productDetails.isAvailable) ? { ...promo, product: productDetails } : null;
         }).filter(Boolean);
         setPromotions(finalPromotions);
@@ -147,6 +138,28 @@ const HomePage = () => {
   const handleCloseCustomizationModal = () => {
     setIsModalOpen(false);
     setSelectedProductForCustomization(null);
+  };
+
+  const handleDirectAddToCart = (product, promoDetails = null) => {
+    const finalPrice = promoDetails ? promoDetails.promotionalPrice : product.price;
+
+    const cartItem = {
+      ...product,
+      id_cart: `${product.id}-${Date.now()}`,
+      price: finalPrice,
+      quantity: 1,
+      appliedPromotion: promoDetails ? promoDetails.title : null,
+    };
+    addToCart(cartItem);
+    toast.success(`${product.name} foi adicionado ao carrinho!`);
+  };
+
+  const handleProductAction = (product, promoDetails = null) => {
+    if (product.category === 'açaí') {
+      handleOpenCustomizationModal(product, promoDetails);
+    } else {
+      handleDirectAddToCart(product, promoDetails);
+    }
   };
 
   return (
@@ -178,11 +191,13 @@ const HomePage = () => {
                     <SectionTitle>🔥 Promoções Imperdíveis!</SectionTitle>
                     <ContentGrid>
                       {promotions.map(promo => {
+                        const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
+
                         if (promo.type === 'product_discount' && promo.product) {
-                          return (<ProductCard key={promo.id} product={promo.product} promotionalPrice={promo.promotionalPrice} onCustomize={handleOpenCustomizationModal} />);
+                          return (<ProductCard key={promo.id} product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} />);
                         }
                         if (promo.type === 'free_toppings_selection' && promo.product) {
-                          return (<PromoCard key={promo.id} promotion={promo} onActionClick={(product, promoDetails) => handleOpenCustomizationModal(product, promoDetails)} />);
+                          return (<PromoCard key={promo.id} promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} />);
                         }
                         return null;
                       })}
@@ -196,12 +211,14 @@ const HomePage = () => {
                     <ContentGrid>
                       {featuredProducts.map(product => {
                         const discountPromo = promotions.find(p => p.type === 'product_discount' && p.productId === product.id);
+                        const promoDetails = discountPromo ? { title: discountPromo.title, promotionalPrice: discountPromo.promotionalPrice, originalPrice: discountPromo.originalPrice } : null;
                         return (
                           <ProductCard
                             key={`featured-${product.id}`}
                             product={product}
+                            originalPrice={discountPromo ? discountPromo.originalPrice : undefined}
                             promotionalPrice={discountPromo ? discountPromo.promotionalPrice : undefined}
-                            onCustomize={handleOpenCustomizationModal}
+                            onCustomize={(product) => handleProductAction(product, promoDetails)}
                           />
                         );
                       })}
@@ -213,7 +230,7 @@ const HomePage = () => {
                   <Section style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: '1.2em', color: '#666' }}>Fique de olho! Em breve teremos novidades e promoções especiais para você.</p>
                     <Button onClick={() => navigate('/menu')}>Ver Cardápio Completo</Button>
-                   
+                    
                   </Section>
                 )}
               </>

@@ -1,4 +1,3 @@
-// src/pages/Admin/PromotionsPage.js
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Button from '../../components/Button';
@@ -7,7 +6,7 @@ import toast from 'react-hot-toast';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query, where } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS COM RESPONSIVIDADE ---
+// --- STYLED COMPONENTS (Mantidos como no seu código) ---
 const PageWrapper = styled.div`
   h1 { font-size: 2em; color: #333; margin-bottom: 30px; }
 `;
@@ -17,10 +16,8 @@ const AddForm = styled.form`
   background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; 
   margin-bottom: 40px; display: grid; gap: 15px 20px; border: 1px solid #eee;
   
-  /* Layout de 1 coluna por padrão (mobile) */
   grid-template-columns: 1fr;
 
-  /* Layout de 2 colunas para telas maiores */
   @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
   }
@@ -33,7 +30,6 @@ const FormGroup = styled.div`
     padding: 10px; border: 1px solid #ccc; border-radius: 6px; 
     font-size: 1em; background-color: white; width: 100%;
   }
-  /* Faz o campo ocupar a largura total do grid */
   &.full-width {
     grid-column: 1 / -1;
   }
@@ -42,7 +38,7 @@ const FormGroup = styled.div`
 const FormActions = styled.div`
   display: flex;
   gap: 10px;
-  grid-column: 1 / -1; /* Ocupa a largura total */
+  grid-column: 1 / -1;
   margin-top: 10px;
 `;
 
@@ -69,7 +65,6 @@ const PromotionListItem = styled.li`
     button { font-size: 0.9em; padding: 6px 12px; }
   }
 
-  /* Layout do card em telas pequenas */
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
@@ -92,6 +87,8 @@ const InfoText = styled.p`
   background-color: #f0f4f8; border-left: 4px solid #7c3aed;
   padding: 15px; border-radius: 4px; color: #333;
 `;
+// --- FIM DOS STYLED COMPONENTS ---
+
 
 const PromotionsPage = () => {
   const [promotions, setPromotions] = useState([]);
@@ -136,6 +133,7 @@ const PromotionsPage = () => {
 
   const handleToppingSelection = (toppingId) => setAllowedToppingIds(prev => prev.includes(toppingId) ? prev.filter(id => id !== toppingId) : [...prev, toppingId]);
   
+  // --- INÍCIO DA ATUALIZAÇÃO ---
   const handleAddPromotion = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -148,23 +146,57 @@ const PromotionsPage = () => {
         toast.error('Preencha todos os campos para a promoção de desconto.');
         setIsSubmitting(false); return;
       }
-      newPromoData = { title: promoTitle.trim(), isActive: true, createdAt: serverTimestamp(), type: promotionType, productId: product.id, productName: product.name, originalPrice: product.price, promotionalPrice: priceValue };
+      newPromoData = { 
+        title: promoTitle.trim(), 
+        isActive: true, 
+        createdAt: serverTimestamp(), 
+        type: promotionType, 
+        productId: product.id, 
+        productName: product.name, 
+        originalPrice: product.price, // Salva o preço original do produto
+        promotionalPrice: priceValue 
+      };
     } else if (promotionType === 'free_toppings_selection') {
       const limit = parseInt(freeToppingsLimit, 10);
       const product = products.find(p => p.id === selectedProductId);
       const priceValue = parseFloat(promotionalPrice);
       if (!promoTitle.trim() || !selectedProductId || allowedToppingIds.length === 0 || isNaN(limit) || limit <= 0 || !product || isNaN(priceValue) || priceValue < 0) {
-        toast.error('Preencha todos os campos, incluindo o preço do combo.');
+        toast.error('Preencha todos os campos, incluindo o preço do combo e adicionais.');
         setIsSubmitting(false); return;
       }
-      newPromoData = { title: promoTitle.trim(), isActive: true, createdAt: serverTimestamp(), type: promotionType, target: { type: 'product', productId: product.id, productName: product.name }, rules: { selection_limit: limit, allowed_topping_ids: allowedToppingIds }, price: priceValue };
+      
+      // Padronizamos a estrutura de dados para ser semelhante à de desconto.
+      newPromoData = {
+        title: promoTitle.trim(),
+        isActive: true,
+        createdAt: serverTimestamp(),
+        type: promotionType,
+        productId: product.id,          // Campo padronizado
+        productName: product.name,      // Campo padronizado
+        originalPrice: product.price,   // Campo padronizado (preço do açaí base)
+        promotionalPrice: priceValue,   // Campo padronizado (preço do combo)
+        rules: { 
+          selection_limit: limit, 
+          allowed_topping_ids: allowedToppingIds 
+        },
+      };
+    }
+
+    if (!newPromoData) {
+        setIsSubmitting(false);
+        return;
     }
 
     try {
       await addDoc(collection(db, 'promotions'), newPromoData);
       toast.success('Promoção adicionada com sucesso!');
-      fetchData();
-      setPromoTitle(''); setSelectedProductId(''); setPromotionalPrice(''); setFreeToppingsLimit(1); setAllowedToppingIds([]);
+      fetchData(); // Recarrega a lista de promoções
+      // Limpa o formulário
+      setPromoTitle(''); 
+      setSelectedProductId(''); 
+      setPromotionalPrice(''); 
+      setFreeToppingsLimit(1); 
+      setAllowedToppingIds([]);
     } catch (error) {
       console.error("Erro ao adicionar promoção:", error);
       toast.error('Falha ao adicionar promoção.');
@@ -172,10 +204,33 @@ const PromotionsPage = () => {
       setIsSubmitting(false);
     }
   };
+  // --- FIM DA ATUALIZAÇÃO ---
 
   const openDeleteConfirmModal = (promo) => { setItemToDelete(promo); setIsConfirmModalOpen(true); };
   const handleDeletePromotion = async () => { if (!itemToDelete) return; try { await deleteDoc(doc(db, 'promotions', itemToDelete.id)); toast.success(`Promoção "${itemToDelete.title}" excluída.`); fetchData(); } catch(error) { console.error("Erro ao excluir:", error); toast.error("Falha ao excluir promoção."); } finally { setIsConfirmModalOpen(false); setItemToDelete(null); }};
   const handleToggleActive = async (id, status) => { try { await updateDoc(doc(db, 'promotions', id), { isActive: !status }); fetchData(); } catch(error) { console.error("Erro ao alterar status:", error); toast.error("Falha ao alterar status."); }};
+
+  // --- Função para renderizar a descrição da promoção na lista ---
+  const renderPromoDescription = (promo) => {
+    const originalPriceText = `(de R$ ${promo.originalPrice?.toFixed(2).replace('.',',')})`;
+    const promotionalPriceText = `por R$ ${promo.promotionalPrice?.toFixed(2).replace('.',',') || 'N/A'}`;
+    
+    if (promo.type === 'product_discount') {
+        return (
+            <p className="promo-description">
+                Desconto: <strong>{promo.productName}</strong> {originalPriceText} {promotionalPriceText}
+            </p>
+        );
+    }
+    if (promo.type === 'free_toppings_selection') {
+        return (
+            <p className="promo-description">
+                Combo: <strong>{promo.productName}</strong> + <strong>{promo.rules?.selection_limit || 0}</strong> adicionais grátis {originalPriceText} {promotionalPriceText}
+            </p>
+        );
+    }
+    return null;
+  };
 
   return (
     <>
@@ -183,28 +238,45 @@ const PromotionsPage = () => {
         <h1>Gerenciamento de Promoções</h1>
         <SectionTitle>Criar Nova Promoção</SectionTitle>
         <AddForm onSubmit={handleAddPromotion}>
-          <FormGroup className="full-width"><label htmlFor="promoTitle">Título da Promoção:</label><input type="text" id="promoTitle" value={promoTitle} onChange={(e) => setPromoTitle(e.target.value)} required /></FormGroup>
-          <FormGroup><label htmlFor="promoType">Tipo de Promoção:</label><select id="promoType" value={promotionType} onChange={(e) => {setPromotionType(e.target.value); setSelectedProductId(''); setPromotionalPrice('');}}>
-            <option value="product_discount">Desconto em Produto</option>
-            <option value="free_toppings_selection">Adicionais Grátis (Combo)</option>
-          </select></FormGroup>
-          
-          {promotionType === 'product_discount' && (<>
-            <FormGroup><label htmlFor="productSelect">Produto em Promoção:</label><select id="productSelect" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um produto --</option>{products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
-            <FormGroup className="full-width"><label htmlFor="promoPrice">Preço Promocional (R$):</label><input type="number" id="promoPrice" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
-          </>)}
-          
-          {promotionType === 'free_toppings_selection' && (<>
-            <FormGroup><label htmlFor="productSelectAcai">Açaí da Promoção:</label><select id="productSelectAcai" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um açaí --</option>{products.filter(p=>p.category==='açaí').map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
-            <FormGroup><label htmlFor="promoPriceCombo">Preço do Combo (R$):</label><input type="number" id="promoPriceCombo" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
-            <FormGroup className="full-width"><label>Adicionais Permitidos na Promoção:</label><ToppingsGrid>{toppings.map(t => (<ToppingCheckboxLabel key={t.id}><input type="checkbox" checked={allowedToppingIds.includes(t.id)} onChange={() => handleToppingSelection(t.id)} />{t.name}</ToppingCheckboxLabel>))}</ToppingsGrid></FormGroup>
-            <FormGroup className="full-width"><label htmlFor="freeToppingsLimit">Limite de Adicionais Grátis:</label><input type="number" id="freeToppingsLimit" value={freeToppingsLimit} onChange={(e) => setFreeToppingsLimit(e.target.value)} step="1" min="1" required /></FormGroup>
-          </>)}
-          
-          <FormActions><Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Adicionando...' : 'Adicionar Promoção'}</Button></FormActions>
+            {/* O formulário de criação permanece o mesmo */}
+            <FormGroup className="full-width"><label htmlFor="promoTitle">Título da Promoção:</label><input type="text" id="promoTitle" value={promoTitle} onChange={(e) => setPromoTitle(e.target.value)} required /></FormGroup>
+            <FormGroup><label htmlFor="promoType">Tipo de Promoção:</label><select id="promoType" value={promotionType} onChange={(e) => {setPromotionType(e.target.value); setSelectedProductId(''); setPromotionalPrice('');}}>
+                <option value="product_discount">Desconto em Produto</option>
+                <option value="free_toppings_selection">Adicionais Grátis (Combo)</option>
+            </select></FormGroup>
+            
+            {promotionType === 'product_discount' && (<>
+                <FormGroup><label htmlFor="productSelect">Produto em Promoção:</label><select id="productSelect" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um produto --</option>{products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
+                <FormGroup className="full-width"><label htmlFor="promoPrice">Preço Promocional (R$):</label><input type="number" id="promoPrice" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
+            </>)}
+            
+            {promotionType === 'free_toppings_selection' && (<>
+                <FormGroup><label htmlFor="productSelectAcai">Açaí da Promoção:</label><select id="productSelectAcai" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required><option value="">-- Escolha um açaí --</option>{products.filter(p=>p.category==='açaí').map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
+                <FormGroup><label htmlFor="promoPriceCombo">Preço do Combo (R$):</label><input type="number" id="promoPriceCombo" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
+                <FormGroup className="full-width"><label>Adicionais Permitidos na Promoção:</label><ToppingsGrid>{toppings.map(t => (<ToppingCheckboxLabel key={t.id}><input type="checkbox" checked={allowedToppingIds.includes(t.id)} onChange={() => handleToppingSelection(t.id)} />{t.name}</ToppingCheckboxLabel>))}</ToppingsGrid></FormGroup>
+                <FormGroup className="full-width"><label htmlFor="freeToppingsLimit">Limite de Adicionais Grátis:</label><input type="number" id="freeToppingsLimit" value={freeToppingsLimit} onChange={(e) => setFreeToppingsLimit(e.target.value)} step="1" min="1" required /></FormGroup>
+            </>)}
+            
+            <FormActions><Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Adicionando...' : 'Adicionar Promoção'}</Button></FormActions>
         </AddForm>
         <SectionTitle>Promoções Cadastradas</SectionTitle>
-        {loading ? ( <LoadingText>Carregando...</LoadingText> ) : promotions.length > 0 ? (<PromotionList>{promotions.map(promo => (<PromotionListItem key={promo.id}><div className="promo-info"><div className="promo-header"><h4 className="promo-title">{promo.title}</h4><span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span></div>{promo.type === 'product_discount' && (<p className="promo-description">Desconto: <strong>{promo.productName}</strong> por <strong>R$ {promo.promotionalPrice?.toFixed(2).replace('.',',') || 'N/A'}</strong></p>)}{promo.type === 'free_toppings_selection' && (<p className="promo-description">Combo: <strong>{promo.target?.productName || ''}</strong> + <strong>{promo.rules?.selection_limit || 0}</strong> adicionais por <strong>R$ {promo.price?.toFixed(2).replace('.',',') || 'N/A'}</strong></p>)}</div><div className="promo-actions"><Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{backgroundColor: promo.isActive ? '#facc15' : '#22c55e', color: promo.isActive ? '#422006' : 'white'}}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button><Button onClick={() => openDeleteConfirmModal(promo)} style={{backgroundColor: '#ef4444'}}>Excluir</Button></div></PromotionListItem>))}</PromotionList>) : ( <InfoText>Nenhuma promoção cadastrada.</InfoText> )}
+        {loading ? ( <LoadingText>Carregando...</LoadingText> ) : promotions.length > 0 ? (
+            <PromotionList>{promotions.map(promo => (
+                <PromotionListItem key={promo.id}>
+                    <div className="promo-info">
+                        <div className="promo-header">
+                            <h4 className="promo-title">{promo.title}</h4>
+                            <span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span>
+                        </div>
+                        {renderPromoDescription(promo)}
+                    </div>
+                    <div className="promo-actions">
+                        <Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{backgroundColor: promo.isActive ? '#facc15' : '#22c55e', color: promo.isActive ? '#422006' : 'white'}}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button>
+                        <Button onClick={() => openDeleteConfirmModal(promo)} style={{backgroundColor: '#ef4444'}}>Excluir</Button>
+                    </div>
+                </PromotionListItem>
+            ))}</PromotionList>
+        ) : ( <InfoText>Nenhuma promoção cadastrada.</InfoText> )}
       </PageWrapper>
       <ConfirmationModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} onConfirm={handleDeletePromotion} title="Confirmar Exclusão" message={`Tem certeza que deseja excluir a promoção "${itemToDelete?.title}"?`} />
     </>

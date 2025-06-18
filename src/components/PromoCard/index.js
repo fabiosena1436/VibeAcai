@@ -1,38 +1,31 @@
 import React from 'react';
-import {
-  PromoCardContainer,
-  PromoImage,
-  PromoTitle,
-  PromoDescription,
-  PromoPrice,
-} from './styles';
-import Button from '../Button';
+import { CardWrapper, CardImage, CardContent, PromoTitle, PromoDescription, PriceInfo, ButtonStyled } from './styles';
 
-const PromoCard = ({ promotion, onAddToCart }) => {
-  // Verificação de segurança: garante que a promoção e o preço promocional existem
-  if (!promotion || typeof promotion.promotionalPrice !== 'number') {
-    // Não renderiza nada ou pode renderizar uma mensagem de erro se preferir
-    // Isto evita que a aplicação quebre.
-    console.error("PromoCard recebeu uma promoção inválida:", promotion);
-    return null; 
-  }
+const PromoCard = ({ promotion, onActionClick }) => {
+  const { product, rules, promotionalPrice, title } = promotion;
 
-  const { title, description, imageUrl, originalPrice, promotionalPrice } = promotion;
+  const handleAction = () => {
+    if (onActionClick) {
+      onActionClick(product, promotion);
+    }
+  };
 
   return (
-    <PromoCardContainer>
-      <PromoImage src={imageUrl} alt={title} />
-      <PromoTitle>{title}</PromoTitle>
-      <PromoDescription>{description}</PromoDescription>
-      <PromoPrice>
-        {/* Adiciona uma verificação para garantir que originalPrice também é um número antes de o mostrar */}
-        {originalPrice && typeof originalPrice === 'number' && (
-          <span>R$ {originalPrice.toFixed(2)}</span>
-        )}
-        <strong>R$ {promotionalPrice.toFixed(2)}</strong>
-      </PromoPrice>
-      <Button onClick={() => onAddToCart(promotion)}>Adicionar ao Carrinho</Button>
-    </PromoCardContainer>
+    <CardWrapper>
+      {product.imageUrl && <CardImage src={product.imageUrl} alt={product.name} />}
+      <CardContent>
+        <PromoTitle>{title}</PromoTitle>
+        <PromoDescription>
+          Leve <strong>{product.name}</strong> + <strong>{rules.selection_limit} adicionais</strong> da sua escolha!
+        </PromoDescription>
+        <PriceInfo>
+          Por apenas <span>R$ {promotionalPrice?.toFixed(2).replace('.', ',')}</span>
+        </PriceInfo>
+        <ButtonStyled onClick={handleAction}>
+          Montar Combo
+        </ButtonStyled>
+      </CardContent>
+    </CardWrapper>
   );
 };
 
