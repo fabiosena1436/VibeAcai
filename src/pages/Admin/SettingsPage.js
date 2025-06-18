@@ -1,4 +1,3 @@
-// src/pages/Admin/SettingsPage.js
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Button from '../../components/Button';
@@ -7,7 +6,7 @@ import toast from 'react-hot-toast';
 import { db } from '../../services/firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-// --- STYLED COMPONENTS COM RESPONSIVIDADE ---
+// --- STYLED COMPONENTS (Mantidos como no seu código) ---
 const PageWrapper = styled.div`
   h1 { font-size: 2em; color: #333; margin-bottom: 30px; }
 `;
@@ -18,10 +17,9 @@ const SectionTitle = styled.h2`
   &:not(:first-child){ margin-top: 40px; }
 `;
 
-const Form = styled.form` /* Renomeado de AddForm para Form para uso mais genérico */
+const Form = styled.form`
   background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; 
   display: flex; flex-direction: column; gap: 15px; border: 1px solid #eee;
-  /* Garante que o formulário ocupe toda a altura do seu container de grid */
   height: 100%; 
 `;
 
@@ -35,8 +33,7 @@ const FormGroup = styled.div`
   textarea { min-height: 100px; resize: vertical; }
   p { font-size: 0.9em; margin-top: 5px; color: #666; }
   img {
-    max-width: 100%; /* Imagem se ajusta à largura do container */
-    height: auto;
+    max-width: 100%; height: auto;
     margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;
   }
 `;
@@ -53,15 +50,14 @@ const SettingsBlock = styled.div`
   border-radius: 8px; border: 1px solid #eee;
 `;
 
-// Novo container para organizar os forms de identidade visual
 const SettingsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr; /* 1 coluna por padrão (mobile) */
+  grid-template-columns: 1fr;
   gap: 20px;
   margin-bottom: 40px;
 
   @media (min-width: 768px) {
-    grid-template-columns: 1fr 1fr; /* 2 colunas para desktop */
+    grid-template-columns: 1fr 1fr;
   }
 `;
 // --- FIM DOS STYLED COMPONENTS ---
@@ -69,6 +65,7 @@ const SettingsGrid = styled.div`
 const STORE_SETTINGS_DOC_ID = "mainConfig";
 
 const SettingsPage = () => {
+  // Estados existentes
   const [pixKey, setPixKey] = useState('');
   const [newPixKeyInput, setNewPixKeyInput] = useState('');
   const [deliveryFee, setDeliveryFee] = useState(0);
@@ -77,6 +74,11 @@ const SettingsPage = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
   const [isStoreOpen, setIsStoreOpen] = useState(true);
+  
+  // --- ADICIONADO: Novos estados para os campos de contato ---
+  const [whatsapp, setWhatsapp] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [address, setAddress] = useState('');
   
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -96,6 +98,10 @@ const SettingsPage = () => {
           setOpeningHoursText(d.openingHoursText || '');
           setLogoUrl(d.logoUrl || '');
           setBannerUrl(d.bannerUrl || '');
+          // --- ADICIONADO: Carrega os dados de contato do Firestore ---
+          setWhatsapp(d.whatsapp || '');
+          setInstagram(d.instagram || '');
+          setAddress(d.address || '');
         } else {
           console.log("Documento de configurações não encontrado!");
         }
@@ -116,6 +122,7 @@ const SettingsPage = () => {
       await setDoc(settingsDocRef, dataToUpdate, { merge: true });
       toast.success(successMessage || 'Configurações atualizadas!');
       
+      // Atualiza o estado local para refletir a mudança imediatamente
       if (dataToUpdate.pixKey !== undefined) setPixKey(dataToUpdate.pixKey);
       if (dataToUpdate.deliveryFee !== undefined) {
         setDeliveryFee(dataToUpdate.deliveryFee);
@@ -125,6 +132,10 @@ const SettingsPage = () => {
       if (dataToUpdate.isStoreOpen !== undefined) setIsStoreOpen(dataToUpdate.isStoreOpen);
       if (dataToUpdate.logoUrl !== undefined) setLogoUrl(dataToUpdate.logoUrl);
       if (dataToUpdate.bannerUrl !== undefined) setBannerUrl(dataToUpdate.bannerUrl);
+      // --- ADICIONADO: Atualiza o estado local dos campos de contato ---
+      if (dataToUpdate.whatsapp !== undefined) setWhatsapp(dataToUpdate.whatsapp);
+      if (dataToUpdate.instagram !== undefined) setInstagram(dataToUpdate.instagram);
+      if (dataToUpdate.address !== undefined) setAddress(dataToUpdate.address);
 
     } catch (error) {
       console.error("Erro ao atualizar configuração:", error);
@@ -134,6 +145,7 @@ const SettingsPage = () => {
     }
   };
 
+  // Funções de Handler existentes
   const handleConfirmRemovePixKey = async () => {
     await handleUpdateSetting({ pixKey: "" }, 'Chave PIX removida!');
     setNewPixKeyInput('');
@@ -176,6 +188,17 @@ const SettingsPage = () => {
   const handleUpdateBanner = (e) => {
     e.preventDefault();
     handleUpdateSetting({ bannerUrl: bannerUrl.trim() }, 'URL do Banner salvo!');
+  };
+
+  // --- ADICIONADO: Nova função para salvar as informações de contato ---
+  const handleUpdateContactInfo = (e) => {
+    e.preventDefault();
+    const contactData = {
+      whatsapp: whatsapp.trim(),
+      instagram: instagram.trim(),
+      address: address.trim(),
+    };
+    handleUpdateSetting(contactData, 'Informações de contato salvas com sucesso!');
   };
 
   return (
@@ -222,6 +245,44 @@ const SettingsPage = () => {
           </Form>
         </SettingsGrid>
 
+        {/* --- ADICIONADO: Nova seção para Contato e Redes Sociais --- */}
+        <SectionTitle>Contato e Redes Sociais</SectionTitle>
+        <Form onSubmit={handleUpdateContactInfo}>
+            <FormGroup>
+                <label htmlFor="whatsapp">WhatsApp</label>
+                <input 
+                    id="whatsapp" 
+                    type="text" 
+                    value={whatsapp} 
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="Ex: 5511999998888 (só números com código do país)"
+                />
+            </FormGroup>
+            <FormGroup>
+                <label htmlFor="instagram">Instagram</label>
+                <input 
+                    id="instagram" 
+                    type="text" 
+                    value={instagram} 
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="Ex: seuusuario (sem o @)"
+                />
+            </FormGroup>
+            <FormGroup>
+                <label htmlFor="address">Endereço</label>
+                <input 
+                    id="address" 
+                    type="text" 
+                    value={address} 
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Ex: Rua Exemplo, 123, Bairro, Cidade - SP"
+                />
+            </FormGroup>
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Salvando...' : 'Salvar Informações de Contato'}
+            </Button>
+        </Form>
+        
         <SectionTitle>Pagamento e Entrega</SectionTitle>
         <SettingsGrid>
           <Form onSubmit={handleUpdatePixKey}>

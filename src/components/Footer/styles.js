@@ -2,47 +2,35 @@
 import styled from 'styled-components';
 
 export const FooterContainer = styled.footer`
-  background-color: #2c2c2c; /* Um cinza escuro e discreto */
-  color: #a0a0a0; /* Cor do texto suave */
-  padding: 30px 20px;
+  background-color: #333;
+  color: white;
+  padding: 2rem 1rem;
   text-align: center;
-  border-top: 3px solid #BF1B36; /* Detalhe com a cor do tema */
 `;
 
-export const ContentWrapper = styled.div`
+export const FooterContent = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 1rem;
 `;
 
 export const SocialLinks = styled.div`
   display: flex;
-  gap: 25px;
-  margin-bottom: 10px;
-`;
+  gap: 1.5rem;
 
-export const SocialLink = styled.a`
-  color: #a0a0a0;
-  font-size: 28px; /* Tamanho dos ícones */
-  transition: color 0.3s ease, transform 0.3s ease;
-
-  &:hover {
-    color: #fff; /* Ícone fica branco ao passar o mouse */
-    transform: scale(1.1);
+  a {
+    color: white;
+    transition: color 0.3s;
+    &:hover {
+      color: #a94a9d; /* Um roxo para combinar com açaí */
+    }
   }
 `;
 
-export const AddressText = styled.p`
-  margin: 0;
-  font-size: 0.9em;
-  line-height: 1.5;
-`;
-
-export const CopyrightText = styled.p`
-  margin-top: 20px;
-  font-size: 0.8em;
-  color: #777;
+export const Address = styled.div`
+  font-size: 0.9rem;
+  opacity: 0.8;
 `;
