@@ -85,34 +85,49 @@ export const CheckboxWrapper = styled.div`
   margin-left: 15px;
 
   input[type="checkbox"] {
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    cursor: pointer;
+    opacity: 0; width: 100%; height: 100%; position: absolute; cursor: pointer;
   }
 
   &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 4px;
-    transition: all 0.2s;
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    border-radius: 4px; transition: all 0.2s;
     background-color: ${({ $isSelected }) => ($isSelected ? '#7c3aed' : '#fff')};
     border: 2px solid ${({ $isSelected }) => ($isSelected ? '#7c3aed' : '#aaa')};
   }
 
   &::after {
-    content: '✔';
-    position: absolute;
-    top: -2px;
-    left: 4px;
-    font-size: 18px;
-    color: #fff;
+    content: '✔'; position: absolute; top: -2px; left: 4px; font-size: 18px; color: #fff;
     transition: opacity 0.2s;
     opacity: ${({ $isSelected }) => ($isSelected ? '1' : '0')};
+  }
+`;
+
+// --- [NOVO] Estilos para o container e botões de filtro de categoria ---
+
+export const CategoryFilterContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+`;
+
+export const CategoryFilterButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  
+  /* Estilo condicional baseado na propriedade $isActive */
+  background-color: ${({ $isActive }) => ($isActive ? '#7c3aed' : '#f3f4f6')};
+  color: ${({ $isActive }) => ($isActive ? '#fff' : '#374151')};
+  border: 2px solid ${({ $isActive }) => ($isActive ? '#7c3aed' : 'transparent')};
+
+  &:hover {
+    background-color: ${({ $isActive }) => ($isActive ? '#7c3aed' : '#e5e7eb')};
+    border-color: #7c3aed;
   }
 `;
