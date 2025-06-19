@@ -14,7 +14,7 @@ export const SectionTitle = styled.h2`
 
 export const OptionsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 `;
 
@@ -22,23 +22,19 @@ export const OptionItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 10px 15px;
   border: 2px solid ${({ $isSelected }) => ($isSelected ? '#7c3aed' : '#ddd')};
   background-color: ${({ $isSelected }) => ($isSelected ? '#f3e8ff' : '#fff')};
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  font-weight: ${({ $isSelected }) => ($isSelected ? 'bold' : 'normal')};
+  font-weight: 500;
   color: ${({ $isSelected }) => ($isSelected ? '#5b21b6' : '#333')};
 
   ${({ $isTopping }) =>
     $isTopping &&
     `
-    flex-direction: column;
-    align-items: flex-start;
-    cursor: default;
-    border-color: #eee;
-    background-color: #fafafa;
+    cursor: pointer; 
   `}
 
   &:hover {
@@ -47,41 +43,6 @@ export const OptionItem = styled.div`
 
   span {
     flex-grow: 1;
-  }
-`;
-
-export const Counter = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-
-  button {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    color: #5b21b6;
-    font-size: 1.2em;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    &:disabled {
-      background-color: #f0f0f0;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-  }
-
-  span {
-    font-size: 1.1em;
-    font-weight: bold;
-    min-width: 20px;
-    text-align: center;
   }
 `;
 
@@ -100,4 +61,58 @@ export const LoadingContainer = styled.div`
   font-size: 1.2em;
   color: #666;
   font-style: italic;
+`;
+
+export const ToppingInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+export const ToppingImage = styled.img`
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+`;
+
+export const CheckboxWrapper = styled.div`
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-left: 15px;
+
+  input[type="checkbox"] {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    cursor: pointer;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    transition: all 0.2s;
+    background-color: ${({ $isSelected }) => ($isSelected ? '#7c3aed' : '#fff')};
+    border: 2px solid ${({ $isSelected }) => ($isSelected ? '#7c3aed' : '#aaa')};
+  }
+
+  &::after {
+    content: '✔';
+    position: absolute;
+    top: -2px;
+    left: 4px;
+    font-size: 18px;
+    color: #fff;
+    transition: opacity 0.2s;
+    opacity: ${({ $isSelected }) => ($isSelected ? '1' : '0')};
+  }
 `;
