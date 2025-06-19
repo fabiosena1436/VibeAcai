@@ -6,13 +6,11 @@ import { collection, getDocs, query, where, documentId } from 'firebase/firestor
 import toast from 'react-hot-toast';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import { useCart } from '../../contexts/CartContext'; 
-// MUDANÇA: Módulo 'Pagination' foi adicionado de volta
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, A11y } from 'swiper/modules';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
-// MUDANÇA: CSS da paginação foi adicionado de volta
 import 'swiper/css/pagination';
 
 import Button from '../../components/Button';
@@ -56,6 +54,28 @@ const StatusInfo = styled.div`
   color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px;
 `;
+
+// NOVO: Componente de estilo para o botão do cardápio.
+// Ele compartilha os estilos de 'StatusInfo' para manter a consistência visual.
+const HeroMenuButton = styled.div`
+  background-color: #5b21b6; /* Cor roxa solicitada */
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px; /* Adiciona um espaço entre o status e o botão */
+  cursor: pointer; /* Muda o cursor para indicar que é clicável */
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05); /* Efeito de zoom suave ao passar o mouse */
+  }
+`;
+
 const Section = styled.section`
     max-width: 1200px; margin: 50px auto; padding: 0 20px;
     @media (max-width: 768px) {
@@ -96,16 +116,10 @@ const StoreClosedWarning = styled.div`
   p { margin: 5px 0 0 0; white-space: pre-wrap; }
 `;
 
-// MUDANÇA: Estilos e padding da paginação foram restaurados
-
-
 const CarouselWrapper = styled.div`
   position: relative;
-  // Padding horizontal para que as setas não fiquem coladas nas bordas em telas maiores
   padding: 0 10px;
 
-  // MUDANÇA: Aplicamos um padding inferior diretamente no container do swiper.
-  // Isso cria o espaço necessário ABAIXO dos cards.
   .swiper {
     padding-bottom: 40px;
   }
@@ -124,10 +138,9 @@ const CarouselWrapper = styled.div`
     }
   }
 
-  // MUDANÇA: Ajustamos a posição da paginação para ficar dentro do novo espaço.
   .swiper-pagination {
     position: absolute;
-    bottom: 8px; // Posição mais baixa, dentro da área de 40px
+    bottom: 8px; 
     left: 0;
     width: 100%;
   }
@@ -144,7 +157,6 @@ const CarouselWrapper = styled.div`
     opacity: 1;
   }
   
-  // No celular, removemos o padding lateral do wrapper, pois as setas não existem
   @media (max-width: 768px) {
     padding: 0 5px;
   }
@@ -283,6 +295,13 @@ const HomePage = () => {
                 <StatusInfo isOpen={settings.isStoreOpen}>
                   {settings.isStoreOpen ? '● Loja Aberta' : '● Loja Fechada'}
                 </StatusInfo>
+
+                {/* NOVO: Botão do cardápio adicionado aqui. */}
+                {/* A função 'navigate' do react-router-dom é usada para ir para a página '/menu'. */}
+                <HeroMenuButton onClick={() => navigate('/menu')}>
+                  Ver Cardápio
+                </HeroMenuButton>
+                
               </HeroContent>
             </HeroSection>
 
@@ -301,12 +320,10 @@ const HomePage = () => {
                     <SectionTitle>🔥 Promoções Imperdíveis!</SectionTitle>
                     <CarouselWrapper>
                       <Swiper
-                        // MUDANÇA: Módulo Pagination adicionado de volta
                         modules={[Navigation, Pagination, A11y]}
                         spaceBetween={12}
                         slidesPerView={2}
                         navigation
-                        // MUDANÇA: Propriedade pagination adicionada de volta
                         pagination={{ clickable: true }}
                         breakpoints={{
                           768: {
@@ -325,13 +342,13 @@ const HomePage = () => {
                             <SwiperSlide key={promo.id} style={{ height: 'auto', display: 'flex' }}>
                                {
                                  (() => {
-                                    if (promo.type === 'product_discount' && promo.product) {
-                                        return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
-                                    }
-                                    if (promo.type === 'free_toppings_selection' && promo.product) {
-                                        return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;
-                                    }
-                                    return null;
+                                   if (promo.type === 'product_discount' && promo.product) {
+                                       return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
+                                   }
+                                   if (promo.type === 'free_toppings_selection' && promo.product) {
+                                       return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;
+                                   }
+                                   return null;
                                  })()
                                }
                             </SwiperSlide>
