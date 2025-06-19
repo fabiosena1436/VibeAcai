@@ -1,5 +1,5 @@
 // src/pages/Admin/AdminLayout/index.js
-import React, 'react';
+import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { auth } from '../../../services/firebaseConfig'; // <-- Caminho atualizado
 import { signOut } from 'firebase/auth';
