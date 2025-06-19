@@ -1,10 +1,8 @@
-// src/components/Navbar/index.js
-
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
+import { FaShoppingCart } from 'react-icons/fa'; // Importando o ícone
 
-// Importando todos os nossos componentes de estilo
 import {
   NavWrapper,
   NavLogoLink,
@@ -14,10 +12,13 @@ import {
   CartItemCount,
   MobileIcon,
   MobileMenuWrapper,
-  MobileMenuOverlay
+  MobileMenuOverlay,
+  MobileActionsContainer, // <-- Importa o novo container
+  MobileCartLink          // <-- Importa o novo link de carrinho
 } from './styles';
 
 const Navbar = () => {
+  // ATENÇÃO: Verifiquei seu CartContext.js, ele exporta 'cartItems', não 'cart'. Use o nome correto.
   const { cartItems } = useCart();
   const { settings } = useStoreSettings();
   const totalItemsInCart = (cartItems || []).reduce((total, item) => total + item.quantity, 0);
@@ -43,33 +44,40 @@ const Navbar = () => {
           {settings.logoUrl ? <LogoImage src={settings.logoUrl} alt="Vibe Açaí" /> : 'Vibe Açaí'}
         </NavLogoLink>
 
-        {/* Menu de Desktop */}
+        {/* Menu de Desktop (permanece o mesmo) */}
         <NavLinksContainer>
           <NavLink to="/">Home</NavLink>
           <NavLink to="/menu">Cardápio</NavLink>
           <NavLink to="/cart">
-            🛒 Carrinho
+            <FaShoppingCart /> Carrinho
             {totalItemsInCart > 0 && (<CartItemCount>{totalItemsInCart}</CartItemCount>)}
           </NavLink>
         </NavLinksContainer>
-
-        {/* Ícone do Menu Hambúrguer */}
-        <MobileIcon onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </MobileIcon>
+        
+        {/* MUDANÇA PRINCIPAL AQUI: Ações no Mobile */}
+        <MobileActionsContainer>
+          {/* O carrinho agora aparece aqui no mobile, se não estiver vazio */}
+          {totalItemsInCart > 0 && (
+            <MobileCartLink to="/cart">
+              <FaShoppingCart />
+              <CartItemCount>{totalItemsInCart}</CartItemCount>
+            </MobileCartLink>
+          )}
+          {/* O ícone do menu hambúrguer continua aqui */}
+          <MobileIcon onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? '✕' : '☰'}
+          </MobileIcon>
+        </MobileActionsContainer>
       </NavWrapper>
 
-      {/* Overlay para fechar menu ao clicar fora */}
+      {/* Overlay e Menu Mobile */}
       <MobileMenuOverlay isOpen={isMenuOpen} onClick={closeMenu} />
-
-      {/* Menu Mobile */}
       <MobileMenuWrapper isOpen={isMenuOpen}>
         <NavLink to="/" onClick={closeMenu}>Home</NavLink>
         <NavLink to="/menu" onClick={closeMenu}>Cardápio</NavLink>
-        <NavLink to="/cart" onClick={closeMenu}>
-          🛒 Carrinho
-          {totalItemsInCart > 0 && (<CartItemCount>{totalItemsInCart}</CartItemCount>)}
-        </NavLink>
+        
+        {/* O link do carrinho foi REMOVIDO daqui de dentro */}
+
       </MobileMenuWrapper>
     </>
   );

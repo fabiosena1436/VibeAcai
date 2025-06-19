@@ -6,6 +6,14 @@ import { collection, getDocs, query, where, documentId } from 'firebase/firestor
 import toast from 'react-hot-toast';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import { useCart } from '../../contexts/CartContext'; 
+// MUDANÇA: Módulo 'Pagination' foi adicionado de volta
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, A11y } from 'swiper/modules';
+
+import 'swiper/css';
+import 'swiper/css/navigation';
+// MUDANÇA: CSS da paginação foi adicionado de volta
+import 'swiper/css/pagination';
 
 import Button from '../../components/Button';
 import ProductCard from '../../components/ProductCard';
@@ -20,6 +28,11 @@ const HeroSection = styled.div`
   background-size: cover; background-position: center;
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   padding: 20px;
+
+  @media (max-width: 768px) {
+    min-height: 300px;
+    height: 40vh;
+  }
 `;
 const HeroContent = styled.div`
   display: flex; flex-direction: column; align-items: center; max-width: 90%;
@@ -29,47 +42,114 @@ const LogoOverlay = styled.div`
   display: flex; justify-content: center; align-items: center;
   box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px;
   img { height: 120px; width: 120px; object-fit: contain; }
+  
+  @media (max-width: 768px) {
+    padding: 15px;
+    img {
+        height: 100px;
+        width: 100px;
+    }
+  }
 `;
 const StatusInfo = styled.div`
   background-color: ${props => props.isOpen ? '#16a34a' : '#ef4444'};
   color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px;
 `;
-const Section = styled.section`max-width: 1200px; margin: 50px auto; padding: 0 20px;`;
-const SectionTitle = styled.h2`font-size: 2.2em; color: #5b21b6; text-align: center; margin-bottom: 30px;`;
+const Section = styled.section`
+    max-width: 1200px; margin: 50px auto; padding: 0 20px;
+    @media (max-width: 768px) {
+        padding: 0 15px;
+    }
+`;
+const SectionTitle = styled.h2`
+    font-size: 2.2em; color: #5b21b6; text-align: center; margin-bottom: 30px;
+    @media (max-width: 768px) {
+        font-size: 1.8em;
+    }
+`;
 const ContentGrid = styled.div`
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
-  justify-items: center; align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  justify-items: center;
+  align-items: stretch;
+
   @media (min-width: 768px) {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 30px;
   }
 `;
 const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 40px; font-size: 1.2em;`;
-const Title = styled.h1`font-size: 3em; color: #7c3aed; margin-bottom: 20px;`;
-
+const Title = styled.h1`
+    font-size: 3em; color: #7c3aed; margin-bottom: 20px;
+    @media (max-width: 768px) {
+        font-size: 2.2em;
+    }
+`;
 const StoreClosedWarning = styled.div`
-  background-color: #fffbe6;
-  color: #92400e;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 16px;
-  margin: -20px auto 40px auto;
-  max-width: 1160px;
-  text-align: center;
+  background-color: #fffbe6; color: #92400e;
+  border: 1px solid #fde68a; border-radius: 8px; padding: 16px;
+  margin: -20px auto 40px auto; max-width: 1160px; text-align: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  h3 { margin-top: 0; font-size: 1.4em; color: #b45309; }
+  p { margin: 5px 0 0 0; white-space: pre-wrap; }
+`;
 
-  h3 {
-    margin-top: 0;
-    font-size: 1.4em;
-    color: #b45309;
+// MUDANÇA: Estilos e padding da paginação foram restaurados
+
+
+const CarouselWrapper = styled.div`
+  position: relative;
+  // Padding horizontal para que as setas não fiquem coladas nas bordas em telas maiores
+  padding: 0 10px;
+
+  // MUDANÇA: Aplicamos um padding inferior diretamente no container do swiper.
+  // Isso cria o espaço necessário ABAIXO dos cards.
+  .swiper {
+    padding-bottom: 40px;
   }
 
-  p {
-    margin: 5px 0 0 0;
-    white-space: pre-wrap;
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: #5b21b6;
+    transition: transform 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  // MUDANÇA: Ajustamos a posição da paginação para ficar dentro do novo espaço.
+  .swiper-pagination {
+    position: absolute;
+    bottom: 8px; // Posição mais baixa, dentro da área de 40px
+    left: 0;
+    width: 100%;
+  }
+
+  .swiper-pagination-bullet {
+    background: #a78bfa;
+    width: 10px;
+    height: 10px;
+    opacity: 0.7;
+  }
+
+  .swiper-pagination-bullet-active {
+    background: #5b21b6;
+    opacity: 1;
+  }
+  
+  // No celular, removemos o padding lateral do wrapper, pois as setas não existem
+  @media (max-width: 768px) {
+    padding: 0 5px;
   }
 `;
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -219,18 +299,46 @@ const HomePage = () => {
                 {promotions.length > 0 && (
                   <Section>
                     <SectionTitle>🔥 Promoções Imperdíveis!</SectionTitle>
-                    <ContentGrid>
-                      {promotions.map(promo => {
-                        const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
-                        if (promo.type === 'product_discount' && promo.product) {
-                          return (<ProductCard key={promo.id} product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />);
-                        }
-                        if (promo.type === 'free_toppings_selection' && promo.product) {
-                          return (<PromoCard key={promo.id} promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />);
-                        }
-                        return null;
-                      })}
-                    </ContentGrid>
+                    <CarouselWrapper>
+                      <Swiper
+                        // MUDANÇA: Módulo Pagination adicionado de volta
+                        modules={[Navigation, Pagination, A11y]}
+                        spaceBetween={12}
+                        slidesPerView={2}
+                        navigation
+                        // MUDANÇA: Propriedade pagination adicionada de volta
+                        pagination={{ clickable: true }}
+                        breakpoints={{
+                          768: {
+                            slidesPerView: 3,
+                            spaceBetween: 20,
+                          },
+                          1024: {
+                            slidesPerView: promotions.length > 3 ? 4 : 3,
+                            spaceBetween: 30,
+                          },
+                        }}
+                      >
+                        {promotions.map(promo => {
+                          const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
+                          return (
+                            <SwiperSlide key={promo.id} style={{ height: 'auto', display: 'flex' }}>
+                               {
+                                 (() => {
+                                    if (promo.type === 'product_discount' && promo.product) {
+                                        return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
+                                    }
+                                    if (promo.type === 'free_toppings_selection' && promo.product) {
+                                        return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;
+                                    }
+                                    return null;
+                                 })()
+                               }
+                            </SwiperSlide>
+                          );
+                        })}
+                      </Swiper>
+                    </CarouselWrapper>
                   </Section>
                 )}
 

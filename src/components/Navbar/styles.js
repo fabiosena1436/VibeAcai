@@ -1,14 +1,5 @@
-// src/components/Navbar/styles.js
-
 import styled from 'styled-components';
 import { NavLink as RouterNavLink } from 'react-router-dom';
-
-// Adicione este estilo global no componente principal ou crie um GlobalStyle
-export const GlobalNavbarStyle = styled.div`
-  body {
-    overflow-x: hidden !important;
-  }
-`;
 
 export const NavWrapper = styled.nav`
   background-color: #7c3aed;
@@ -21,38 +12,14 @@ export const NavWrapper = styled.nav`
   left: 0;
   right: 0;
   z-index: 900;
-  width: 100%; /* Garante largura total */
-  overflow: hidden; /* Previne overflow */
-  box-sizing: border-box; /* Inclui padding no cálculo da largura */
+  width: 100%;
+  box-sizing: border-box;
+  height: 70px;
+  padding: 0 30px;
 
-  /* Mobile muito pequeno (até 360px) */
-  @media (max-width: 360px) {
-    height: 50px;
-    padding: 0 12px;
-  }
-
-  /* Mobile (361px - 480px) */
-  @media (min-width: 361px) and (max-width: 480px) {
-    height: 55px;
-    padding: 0 16px;
-  }
-
-  /* Mobile grande (481px - 768px) */
-  @media (min-width: 481px) and (max-width: 768px) {
-    height: 60px;
+  @media (max-width: 768px) {
     padding: 0 20px;
-  }
-
-  /* Tablet (769px - 1024px) */
-  @media (min-width: 769px) and (max-width: 1024px) {
-    height: 65px;
-    padding: 0 25px;
-  }
-
-  /* Desktop (1025px+) */
-  @media (min-width: 1025px) {
-    height: 70px;
-    padding: 0 30px;
+    height: 60px;
   }
 `;
 
@@ -64,83 +31,43 @@ export const NavLogoLink = styled(RouterNavLink)`
   color: #fff;
   z-index: 999;
   transition: transform 0.2s ease;
-  flex-shrink: 0; /* Previne que o logo encolha */
+  flex-shrink: 0;
 
   &:hover {
     transform: scale(1.05);
   }
-
-  /* Mobile muito pequeno (até 360px) */
-  @media (max-width: 360px) {
-    font-size: 1.2em;
-  }
-
-  /* Mobile (361px - 480px) */
-  @media (min-width: 361px) and (max-width: 480px) {
+  
+  font-size: 1.8em;
+  @media (max-width: 480px) {
     font-size: 1.4em;
-  }
-
-  /* Mobile grande e maiores (481px+) */
-  @media (min-width: 481px) {
-    font-size: 1.8em;
   }
 `;
 
 export const LogoImage = styled.img`
-  width: auto;
+  height: 50px;
+  max-width: 150px;
   object-fit: contain;
-
-  /* Mobile muito pequeno (até 360px) */
-  @media (max-width: 360px) {
-    height: 30px;
-    max-width: 100px;
-  }
-
-  /* Mobile (361px - 480px) */
-  @media (min-width: 361px) and (max-width: 480px) {
-    height: 35px;
-    max-width: 120px;
-  }
-
-  /* Mobile grande (481px - 768px) */
-  @media (min-width: 481px) and (max-width: 768px) {
+  @media (max-width: 768px) {
     height: 40px;
     max-width: 130px;
   }
-
-  /* Tablet (769px - 1024px) */
-  @media (min-width: 769px) and (max-width: 1024px) {
-    height: 45px;
-    max-width: 140px;
-  }
-
-  /* Desktop (1025px+) */
-  @media (min-width: 1025px) {
-    height: 50px;
-    max-width: 150px;
+  @media (max-width: 480px) {
+    height: 35px;
+    max-width: 120px;
   }
 `;
 
+// Container do Menu Desktop (inalterado)
 export const NavLinksContainer = styled.div`
   display: flex;
   align-items: center;
-
-  /* Esconde em telas menores que tablet */
+  gap: 25px;
   @media (max-width: 768px) {
     display: none;
   }
-
-  /* Tablet (769px - 1024px) */
-  @media (min-width: 769px) and (max-width: 1024px) {
-    gap: 20px;
-  }
-
-  /* Desktop (1025px+) */
-  @media (min-width: 1025px) {
-    gap: 25px;
-  }
 `;
 
+// Link de navegação padrão (usado no desktop e menu mobile)
 export const NavLink = styled(RouterNavLink)`
   color: #e0d6ff;
   text-decoration: none;
@@ -150,27 +77,26 @@ export const NavLink = styled(RouterNavLink)`
   align-items: center;
   gap: 8px;
   position: relative;
-  white-space: nowrap; /* Previne quebra de linha */
+  white-space: nowrap;
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: #fff;
-    transform: translateY(-2px);
   }
-
   &.active {
     color: #fff;
     font-weight: bold;
-    background-color: rgba(255, 255, 255, 0.15);
   }
 
-  /* Desktop styles */
+  /* Estilos Desktop */
   @media (min-width: 769px) {
     font-size: 1.1em;
     padding: 8px 12px;
+    &:hover { transform: translateY(-2px); }
+    &.active { background-color: rgba(255, 255, 255, 0.15); }
   }
 
-  /* Mobile styles (para o menu mobile) */
+  /* Estilos para o Menu Mobile que desliza */
   @media (max-width: 768px) {
     font-size: 1.2em;
     padding: 12px 24px;
@@ -179,18 +105,18 @@ export const NavLink = styled(RouterNavLink)`
     justify-content: center;
     background-color: rgba(255, 255, 255, 0.05);
     margin: 8px 0;
-
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.15);
-      transform: scale(1.05);
-    }
+    &:hover { transform: scale(1.05); }
   }
+`;
 
-  /* Mobile muito pequeno */
-  @media (max-width: 360px) {
-    font-size: 1em;
-    padding: 10px 20px;
-  }
+// Ícone do Carrinho para o Cabeçalho Mobile
+export const MobileCartLink = styled(RouterNavLink)`
+  position: relative;
+  color: #fff;
+  font-size: 1.7rem; // Tamanho do ícone
+  display: flex;
+  align-items: center;
+  padding: 8px;
 `;
 
 export const CartItemCount = styled.span`
@@ -199,110 +125,68 @@ export const CartItemCount = styled.span`
   border-radius: 50%;
   font-weight: bold;
   text-align: center;
-  display: inline-flex;
+  font-size: 0.7em;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0; /* Previne que o contador encolha */
+  flex-shrink: 0;
 
-  /* Mobile */
+  /* NOVO: Posicionamento absoluto para a bolinha */
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(40%, -40%);
+  border: 2px solid #7c3aed;
+`;
+
+// NOVO: Container para agrupar o carrinho e o menu no mobile
+export const MobileActionsContainer = styled.div`
+  display: none; // Escondido no desktop
   @media (max-width: 768px) {
-    font-size: 0.7em;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-  }
-
-  /* Desktop */
-  @media (min-width: 769px) {
-    font-size: 0.8em;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px; // Espaçamento entre o carrinho e o menu
   }
 `;
 
 export const MobileIcon = styled.div`
-  display: none;
   cursor: pointer;
   color: #fff;
   user-select: none;
   transition: transform 0.2s ease;
-  flex-shrink: 0; /* Previne que o ícone encolha */
+  font-size: 2rem;
+  z-index: 999;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     transform: scale(1.1);
   }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  @media (max-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    padding: 8px;
-  }
-
-  /* Mobile muito pequeno (até 360px) */
-  @media (max-width: 360px) {
-    font-size: 1.5rem;
-  }
-
-  /* Mobile (361px - 480px) */
-  @media (min-width: 361px) and (max-width: 480px) {
-    font-size: 1.7rem;
-  }
-
-  /* Mobile grande (481px - 768px) */
-  @media (min-width: 481px) and (max-width: 768px) {
-    font-size: 2rem;
-  }
 `;
 
+// Menu que desliza (Overlay e Wrapper)
 export const MobileMenuOverlay = styled.div`
+  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 940;
-  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
-  
-  @media (min-width: 769px) {
-    display: none;
-  }
+  @media (min-width: 769px) { display: none; }
 `;
 
 export const MobileMenuWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  background: #6d28d9;
-  position: fixed;
-  top: 0;
-  left: ${({ isOpen }) => (isOpen ? '0' : '-100%')}; /* Mudança aqui */
-  height: 100vh;
-  width: 85%;
-  max-width: 320px;
-  transition: left 0.3s ease-in-out; /* Mudança aqui */
-  z-index: 950;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  gap: 10px; background: #6d28d9; position: fixed;
+  top: 0; left: ${({ isOpen }) => (isOpen ? '0' : '-100%')};
+  height: 100vh; width: 85%; max-width: 320px;
+  transition: left 0.3s ease-in-out; z-index: 950;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-  overflow-y: auto; /* Permite scroll vertical se necessário */
-  overflow-x: hidden; /* Previne scroll horizontal */
-
-  /* Mobile muito pequeno (até 360px) */
-  @media (max-width: 360px) {
-    width: 80%;
-    gap: 8px;
-  }
-
-  /* Para telas maiores que tablet, esconde o menu mobile */
-  @media (min-width: 769px) {
-    display: none;
-  }
+  padding-top: 60px; // Espaço para não ficar colado no topo
+  overflow-y: auto; 
+  @media (min-width: 769px) { display: none; }
 `;
