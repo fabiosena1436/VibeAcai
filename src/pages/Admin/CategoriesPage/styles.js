@@ -1,4 +1,5 @@
 // src/pages/Admin/CategoriesPage/styles.js
+
 import styled from 'styled-components';
 
 export const PageWrapper = styled.div`
@@ -19,15 +20,15 @@ export const SectionTitle = styled.h2`
 `;
 
 export const AddForm = styled.form`
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
-  margin-bottom: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  background-color: #f9f9f9; 
+  padding: 20px; 
+  border-radius: 8px; 
+  margin-top: 10px; 
+  margin-bottom: 40px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+  border: 1px solid #eee;
 `;
 
 export const FormGroup = styled.div`
@@ -35,17 +36,17 @@ export const FormGroup = styled.div`
   flex-direction: column; 
 
   label { 
-    margin-bottom: 8px;
+    margin-bottom: 5px; 
     font-weight: 600; 
     color: #444; 
   } 
 
   input[type="text"] { 
-    padding: 12px;
+    padding: 10px; 
     border: 1px solid #ccc; 
     border-radius: 6px; 
     font-size: 1em; 
-    background-color: #f8fafc;
+    background-color: white; 
   }
 `;
 
@@ -54,9 +55,10 @@ export const FormActions = styled.div`
   gap: 10px; 
   margin-top: 10px;
 
+  /* Em telas pequenas, os botões se empilham */
   @media (max-width: 768px) {
     flex-direction: column;
-    align-items: stretch;
+    align-items: stretch; /* Faz os botões ocuparem 100% da largura */
   }
 `;
 
@@ -68,42 +70,43 @@ export const CategoryList = styled.ul`
 
 export const CategoryListItem = styled.li`
   background-color: #fff; 
-  padding: 15px 20px;
-  border: 1px solid #e2e8f0;
+  padding: 15px; /* Aumenta um pouco o padding para toque */
+  border: 1px solid #eee; 
   border-radius: 6px; 
   margin-bottom: 10px; 
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
-  font-size: 1.05em; 
+  font-size: 1em; 
   color: #333;
-  flex-wrap: wrap;
-  gap: 15px;
+  flex-wrap: wrap; /* Permite que os itens quebrem linha se necessário */
 
   .category-name {
     font-weight: 500;
-    word-break: break-word;
-    margin-right: 15px;
+    word-break: break-word; /* Quebra palavras longas para não estourar o layout */
+    margin-right: 15px; /* Espaço entre o nome e os botões */
   }
 
   .category-actions {
     display: flex;
     gap: 8px;
-    flex-shrink: 0;
+    flex-shrink: 0; /* Impede que os botões encolham */
 
     button { 
-      padding: 6px 12px;
+      padding: 6px 10px; 
       font-size: 0.9em; 
     }
   }
 
-  @media (max-width: 480px) {
+  /* Em telas pequenas, o layout do item da lista muda */
+  @media (max-width: 768px) {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-start; /* Alinha tudo à esquerda */
+    gap: 15px; /* Espaço entre o nome e a área de botões */
 
     .category-actions {
-      width: 100%;
-      justify-content: flex-end;
+      width: 100%; /* Ocupa toda a largura */
+      justify-content: flex-end; /* Alinha os botões à direita */
     }
   }
 `;
@@ -116,10 +119,9 @@ export const LoadingText = styled.p`
 `;
 
 export const InfoText = styled.p`
-  background-color: #eef2ff;
-  border-left: 4px solid #6366f1;
+  background-color: #f0f4f8;
+  border-left: 4px solid #7c3aed;
   padding: 15px;
   border-radius: 4px;
   color: #333;
-  margin-top: 0;
 `;

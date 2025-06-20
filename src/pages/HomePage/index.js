@@ -1,6 +1,7 @@
+// src/pages/HomePage/index.js
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import toast from 'react-hot-toast';
@@ -18,150 +19,21 @@ import ProductCard from '../../components/ProductCard';
 import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import PromoCard from '../../components/PromoCard';
 
-
-const HomePageWrapper = styled.div`padding-bottom: 50px;`;
-const HeroSection = styled.div`
-  width: 100%; height: 45vh; min-height: 350px; max-height: 450px;
-  background-image: ${props => props.bgImage ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${props.bgImage})` : 'linear-gradient(45deg, #7c3aed, #5b21b6)'};
-  background-size: cover; background-position: center;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  padding: 20px;
-
-  @media (max-width: 768px) {
-    min-height: 300px;
-    height: 40vh;
-  }
-`;
-const HeroContent = styled.div`
-  display: flex; flex-direction: column; align-items: center; max-width: 90%;
-`;
-const LogoOverlay = styled.div`
-  background-color: rgb(247 241 241 / 76%); border-radius: 50%; padding: 20px;
-  display: flex; justify-content: center; align-items: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px;
-  img { height: 120px; width: 120px; object-fit: contain; }
-  
-  @media (max-width: 768px) {
-    padding: 15px;
-    img {
-        height: 100px;
-        width: 100px;
-    }
-  }
-`;
-const StatusInfo = styled.div`
-  background-color: ${props => props.isOpen ? '#16a34a' : '#ef4444'};
-  color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px;
-`;
-
-// NOVO: Componente de estilo para o botão do cardápio.
-// Ele compartilha os estilos de 'StatusInfo' para manter a consistência visual.
-const HeroMenuButton = styled.div`
-  background-color: #5b21b6; /* Cor roxa solicitada */
-  color: white;
-  padding: 8px 20px;
-  border-radius: 20px;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 15px; /* Adiciona um espaço entre o status e o botão */
-  cursor: pointer; /* Muda o cursor para indicar que é clicável */
-  transition: transform 0.2s ease;
-
-  &:hover {
-    transform: scale(1.05); /* Efeito de zoom suave ao passar o mouse */
-  }
-`;
-
-const Section = styled.section`
-    max-width: 1200px; margin: 50px auto; padding: 0 20px;
-    @media (max-width: 768px) {
-        padding: 0 15px;
-    }
-`;
-const SectionTitle = styled.h2`
-    font-size: 2.2em; color: #5b21b6; text-align: center; margin-bottom: 30px;
-    @media (max-width: 768px) {
-        font-size: 1.8em;
-    }
-`;
-const ContentGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  justify-items: center;
-  align-items: stretch;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px;
-  }
-`;
-const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 40px; font-size: 1.2em;`;
-const Title = styled.h1`
-    font-size: 3em; color: #7c3aed; margin-bottom: 20px;
-    @media (max-width: 768px) {
-        font-size: 2.2em;
-    }
-`;
-const StoreClosedWarning = styled.div`
-  background-color: #fffbe6; color: #92400e;
-  border: 1px solid #fde68a; border-radius: 8px; padding: 16px;
-  margin: -20px auto 40px auto; max-width: 1160px; text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  h3 { margin-top: 0; font-size: 1.4em; color: #b45309; }
-  p { margin: 5px 0 0 0; white-space: pre-wrap; }
-`;
-
-const CarouselWrapper = styled.div`
-  position: relative;
-  padding: 0 10px;
-
-  .swiper {
-    padding-bottom: 40px;
-  }
-
-  .swiper-button-next,
-  .swiper-button-prev {
-    color: #5b21b6;
-    transition: transform 0.2s ease;
-    
-    &:hover {
-      transform: scale(1.1);
-    }
-
-    @media (max-width: 768px) {
-      display: none;
-    }
-  }
-
-  .swiper-pagination {
-    position: absolute;
-    bottom: 8px; 
-    left: 0;
-    width: 100%;
-  }
-
-  .swiper-pagination-bullet {
-    background: #a78bfa;
-    width: 10px;
-    height: 10px;
-    opacity: 0.7;
-  }
-
-  .swiper-pagination-bullet-active {
-    background: #5b21b6;
-    opacity: 1;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0 5px;
-  }
-`;
-
+import {
+  HomePageWrapper,
+  HeroSection,
+  HeroContent,
+  LogoOverlay,
+  StatusInfo,
+  HeroMenuButton,
+  Section,
+  SectionTitle,
+  ContentGrid,
+  LoadingText,
+  Title,
+  StoreClosedWarning,
+  CarouselWrapper
+} from './styles';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -245,6 +117,7 @@ const HomePage = () => {
     setSelectedProductForCustomization(productWithContext);
     setIsModalOpen(true);
   };
+
   const handleCloseCustomizationModal = () => {
     setIsModalOpen(false);
     setSelectedProductForCustomization(null);
@@ -252,7 +125,6 @@ const HomePage = () => {
 
   const handleDirectAddToCart = (product, promoDetails = null) => {
     const finalPrice = promoDetails ? promoDetails.promotionalPrice : product.price;
-
     const cartItem = {
       ...product,
       id_cart: `${product.id}-${Date.now()}`,
@@ -295,13 +167,9 @@ const HomePage = () => {
                 <StatusInfo isOpen={settings.isStoreOpen}>
                   {settings.isStoreOpen ? '● Loja Aberta' : '● Loja Fechada'}
                 </StatusInfo>
-
-                {/* NOVO: Botão do cardápio adicionado aqui. */}
-                {/* A função 'navigate' do react-router-dom é usada para ir para a página '/menu'. */}
                 <HeroMenuButton onClick={() => navigate('/menu')}>
                   Ver Cardápio
                 </HeroMenuButton>
-                
               </HeroContent>
             </HeroSection>
 
@@ -319,6 +187,7 @@ const HomePage = () => {
                   <Section>
                     <SectionTitle>🔥 Promoções Imperdíveis!</SectionTitle>
                     <CarouselWrapper>
+                      {/* CÓDIGO DO SWIPER CORRIGIDO E RESTAURADO AO ORIGINAL */}
                       <Swiper
                         modules={[Navigation, Pagination, A11y]}
                         spaceBetween={12}
@@ -339,20 +208,16 @@ const HomePage = () => {
                         {promotions.map(promo => {
                           const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
                           return (
-                            
                             <SwiperSlide key={promo.id} style={{ height: 'auto', display: 'flex' }}>
-                             
-                               {
-                                 (() => {
-                                   if (promo.type === 'product_discount' && promo.product) {
-                                       return  <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
-                                   }
-                                   if (promo.type === 'free_toppings_selection' && promo.product) {
-                                       return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;
-                                   }
-                                   return null;
-                                 })()
-                               }
+                              {(() => {
+                                if (promo.type === 'product_discount' && promo.product) {
+                                  return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
+                                }
+                                if (promo.type === 'free_toppings_selection' && promo.product) {
+                                  return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;
+                                }
+                                return null;
+                              })()}
                             </SwiperSlide>
                           );
                         })}

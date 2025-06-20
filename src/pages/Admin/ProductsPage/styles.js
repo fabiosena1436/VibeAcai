@@ -1,4 +1,5 @@
 // src/pages/Admin/ProductsPage/styles.js
+
 import styled from 'styled-components';
 
 export const PageWrapper = styled.div`
@@ -10,54 +11,71 @@ export const PageWrapper = styled.div`
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 1.5em;
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
+  font-size: 1.5em; 
+  color: #555; 
+  margin-top: 0; 
+  margin-bottom: 20px; 
+  border-bottom: 1px solid #ddd; 
+  padding-bottom: 10px; 
+  
+  &:not(:first-child){
+    margin-top: 40px;
+  }
 `;
 
-export const Form = styled.form`
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
-  margin-bottom: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+export const AddForm = styled.form`
+  background-color: #f9f9f9; 
+  padding: 20px; 
+  border-radius: 8px; 
+  margin-top: 10px; 
+  margin-bottom: 40px; 
+  display: grid; 
+  border: 1px solid #eee;
+  grid-template-columns: 1fr;
+  gap: 15px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    
+    .form-group-description {
+      grid-column: 1 / -1;
+    }
+  }
 `;
 
 export const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  label {
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #444;
-  }
-
-  input, select, textarea {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1em;
-    background-color: #f8fafc;
-  }
+  display: flex; 
+  flex-direction: column; 
   
-  textarea {
-    resize: vertical;
-    min-height: 80px;
+  label { 
+    margin-bottom: 5px; 
+    font-weight: 600; 
+    color: #444; 
+  } 
+  
+  input[type="text"], 
+  input[type="number"], 
+  textarea, 
+  select { 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    font-size: 1em; 
+    background-color: white; 
+    width: 100%;
+  } 
+  
+  textarea { 
+    min-height: 80px; 
+    resize: vertical; 
   }
 `;
 
 export const FormActions = styled.div`
-  display: flex;
-  gap: 10px;
+  display: flex; 
+  gap: 10px; 
   margin-top: 10px;
+  grid-column: 1 / -1;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -66,72 +84,148 @@ export const FormActions = styled.div`
 `;
 
 export const ProductList = styled.ul`
-  list-style: none;
+  list-style: none; 
   padding: 0;
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
 `;
 
 export const ProductListItem = styled.li`
   background-color: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-`;
+  padding: 15px; 
+  border-radius: 8px; 
+  margin-bottom: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+  display: grid;
+  grid-template-columns: 100px 1fr auto; 
+  gap: 20px; 
+  align-items: center; 
+  position: relative;
 
-export const ProductInfo = styled.div`
-  padding: 15px;
-  flex-grow: 1;
-
-  h3 {
-    margin: 0 0 10px 0;
-    color: #4a044e;
+  .product-image-container {
+    width: 100px; 
+    height: 100px; 
+    border-radius: 6px;
+    overflow: hidden; 
+    background-color: #f0f0f0;
+    
+    img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+    }
   }
-
-  p {
-    margin: 4px 0;
-    font-size: 0.9em;
+  
+  .product-content {
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    text-align: left;
+  }
+  
+  .product-name {
+    font-weight: bold; 
+    font-size: 1.2em; 
+    color: #333; 
+    margin: 0;
+  }
+  
+  .product-description {
+    font-size: 0.9em; 
+    color: #666; 
+    line-height: 1.4; 
+    display: -webkit-box;
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical; 
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    margin: 0;
+  }
+  
+  .product-details {
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px 20px; 
+    font-size: 0.9em; 
     color: #555;
   }
-`;
+  
+  .product-price strong { 
+    color: #7c3aed; 
+    font-size: 1.1em; 
+  }
+  
+  .product-category strong { 
+    text-transform: capitalize; 
+  }
+  
+  .product-status {
+    font-weight: bold;
+    &.available { color: #16a34a; }
+    &.unavailable { color: #b91c1c; }
+  }
+  
+  .product-actions {
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px;
+    
+    button { 
+      padding: 8px 10px; 
+      font-size: 0.85em; 
+      width: 100%; 
+      min-width: 110px; 
+    }
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 15px;
 
-export const ProductActions = styled.div`
-  display: flex;
-  gap: 8px;
-  padding: 15px;
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-
-  button {
-    padding: 6px 12px;
-    font-size: 0.9em;
+    .product-image-container {
+      width: 100%; 
+      height: 180px;
+    }
+    
+    .product-content {
+      text-align: center;
+    }
+    
+    .product-details {
+      justify-content: center;
+    }
+    
+    .product-actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+      
+      button {
+        flex-grow: 1;
+        min-width: calc(50% - 4px);
+      }
+    }
   }
 `;
 
 export const LoadingText = styled.p`
-  text-align: center;
-  color: #555;
-  font-style: italic;
+  text-align: center; 
+  color: #555; 
+  font-style: italic; 
   margin-top: 20px;
 `;
 
-export const CheckboxGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  
-  label {
-    margin: 0;
-    font-weight: normal;
-  }
+export const StarIcon = styled.div`
+  position: absolute; 
+  top: 5px; 
+  right: 5px; 
+  font-size: 1.8em;
+  color: #7c3aed; 
+  pointer-events: none;
+  text-shadow: 0 0 5px rgba(0,0,0,0.3);
+`;
 
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-  }
+export const InfoText = styled.p`
+  background-color: #f0f4f8; 
+  border-left: 4px solid #7c3aed;
+  padding: 15px; 
+  border-radius: 4px; 
+  color: #333;
 `;

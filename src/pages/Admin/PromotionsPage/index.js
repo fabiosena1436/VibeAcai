@@ -1,236 +1,207 @@
 // src/pages/Admin/PromotionsPage/index.js
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Button from '../../../components/Button';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import toast from 'react-hot-toast';
 import { db } from '../../../services/firebaseConfig';
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, query } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query, where } from 'firebase/firestore';
+
+// Importando todos os componentes estilizados do arquivo de estilos
 import {
-    PageWrapper,
-    SectionTitle,
-    Form,
-    FormGrid,
-    FormGroup,
-    CheckboxGroup,
-    CheckboxGrid,
-    FormActions,
-    PromotionList,
-    PromotionListItem,
-    PromotionInfo,
-    PromotionActions,
-    LoadingText,
+  PageWrapper,
+  SectionTitle,
+  AddForm,
+  FormGroup,
+  FormActions,
+  LoadingText,
+  PromotionList,
+  PromotionListItem,
+  ToppingsGrid,
+  ToppingCheckboxLabel,
+  InfoText
 } from './styles';
 
 const PromotionsPage = () => {
-    const [promotions, setPromotions] = useState([]);
-    const [products, setProducts] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [toppings, setToppings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingPromoId, setEditingPromoId] = useState(null);
+
+  const [promotionType, setPromotionType] = useState('product_discount');
+  const [promoTitle, setPromoTitle] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [promotionalPrice, setPromotionalPrice] = useState('');
+  const [freeToppingsLimit, setFreeToppingsLimit] = useState(1);
+  const [allowedToppingIds, setAllowedToppingIds] = useState([]);
+
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const promoQuery = query(collection(db, 'promotions'), orderBy("createdAt", "desc"));
+      const productsQuery = query(collection(db, 'products'), where("isAvailable", "==", true), orderBy("name"));
+      const toppingsQuery = query(collection(db, 'toppings'), orderBy("name"));
+
+      const [promoSnapshot, productsSnapshot, toppingsSnapshot] = await Promise.all([
+        getDocs(promoQuery), getDocs(productsQuery), getDocs(toppingsQuery)
+      ]);
+
+      setPromotions(promoSnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      setProducts(productsSnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      setToppings(toppingsSnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+      toast.error("Falha ao carregar dados da página.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const resetForm = () => {
+    setEditingPromoId(null);
+    setPromoTitle('');
+    setPromotionType('product_discount');
+    setSelectedProductId('');
+    setPromotionalPrice('');
+    setFreeToppingsLimit(1);
+    setAllowedToppingIds([]);
+  };
+
+  const handleEditClick = (promo) => {
+    setEditingPromoId(promo.id);
+    setPromoTitle(promo.title);
+    setPromotionType(promo.type);
+    setSelectedProductId(promo.productId);
+    setPromotionalPrice(promo.promotionalPrice);
     
-    // Form state
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [discountType, setDiscountType] = useState('percentage'); // 'percentage' ou 'fixed'
-    const [discountValue, setDiscountValue] = useState('');
-    const [isActive, setIsActive] = useState(true);
-    const [applicableProductIds, setApplicableProductIds] = useState([]);
-
-    const [editingPromotion, setEditingPromotion] = useState(null);
-    const [deletingPromotion, setDeletingPromotion] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const formRef = useRef(null);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            try {
-                // Fetch Products
-                const productsQuery = query(collection(db, 'products'));
-                const productsSnapshot = await getDocs(productsQuery);
-                const productsData = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setProducts(productsData);
-
-                // Fetch Promotions
-                await fetchPromotions();
-            } catch (error) {
-                console.error("Erro ao buscar dados:", error);
-                toast.error("Falha ao carregar dados do servidor.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
-
-    const fetchPromotions = async () => {
-        const promotionsQuery = query(collection(db, 'promotions'));
-        const promotionsSnapshot = await getDocs(promotionsQuery);
-        setPromotions(promotionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    };
-
-    const handleProductSelection = (productId) => {
-        setApplicableProductIds(prev =>
-            prev.includes(productId)
-                ? prev.filter(id => id !== productId)
-                : [...prev, productId]
-        );
-    };
-
-    const handleAddOrUpdatePromotion = async (e) => {
-        e.preventDefault();
-        if (!title || !discountValue || applicableProductIds.length === 0) {
-            toast.error('Preencha título, valor do desconto e selecione ao menos um produto.');
-            return;
-        }
-
-        const promotionData = {
-            title,
-            description,
-            discountType,
-            discountValue: parseFloat(discountValue),
-            isActive,
-            applicableProductIds,
-        };
-        
-        try {
-            if (editingPromotion) {
-                const promoDoc = doc(db, 'promotions', editingPromotion.id);
-                await updateDoc(promoDoc, promotionData);
-                toast.success('Promoção atualizada!');
-            } else {
-                await addDoc(collection(db, 'promotions'), promotionData);
-                toast.success('Promoção criada!');
-            }
-            resetForm();
-            fetchPromotions();
-        } catch (error) {
-            console.error("Erro ao salvar promoção:", error);
-            toast.error("Ocorreu um erro ao salvar a promoção.");
-        }
-    };
-
-    const handleEdit = (promo) => {
-        setEditingPromotion(promo);
-        setTitle(promo.title);
-        setDescription(promo.description);
-        setDiscountType(promo.discountType);
-        setDiscountValue(promo.discountValue);
-        setIsActive(promo.isActive);
-        setApplicableProductIds(promo.applicableProductIds);
-        formRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    const handleDelete = async () => {
-        if (!deletingPromotion) return;
-        try {
-            await deleteDoc(doc(db, 'promotions', deletingPromotion.id));
-            toast.success('Promoção removida!');
-            setDeletingPromotion(null);
-            fetchPromotions();
-        } catch (error) {
-            console.error("Erro ao remover promoção:", error);
-            toast.error("Ocorreu um erro ao remover a promoção.");
-        }
-    };
+    if (promo.type === 'free_toppings_selection') {
+      setFreeToppingsLimit(promo.rules?.selection_limit || 1);
+      setAllowedToppingIds(promo.rules?.allowed_topping_ids || []);
+    } else {
+      setFreeToppingsLimit(1);
+      setAllowedToppingIds([]);
+    }
     
-    const resetForm = () => {
-        setEditingPromotion(null);
-        setTitle('');
-        setDescription('');
-        setDiscountType('percentage');
-        setDiscountValue('');
-        setIsActive(true);
-        setApplicableProductIds([]);
-    };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast('Modo de edição ativado.', { icon: '✏️' });
+  };
 
-    const getProductName = (productId) => products.find(p => p.id === productId)?.name || 'Produto não encontrado';
+  const handleSubmitPromotion = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    let promoData;
 
-    return (
-        <>
-            <PageWrapper>
-                <h1>Gerenciar Promoções</h1>
+    if (promotionType === 'product_discount') {
+      const priceValue = parseFloat(promotionalPrice);
+      const product = products.find(p => p.id === selectedProductId);
+      if (!promoTitle.trim() || !selectedProductId || isNaN(priceValue) || priceValue < 0 || !product) {
+        toast.error('Preencha todos os campos para a promoção de desconto.');
+        setIsSubmitting(false); return;
+      }
+      promoData = { title: promoTitle.trim(), isActive: true, type: promotionType, productId: product.id, productName: product.name, originalPrice: product.price, promotionalPrice: priceValue };
+    } else if (promotionType === 'free_toppings_selection') {
+      const limit = parseInt(freeToppingsLimit, 10);
+      const product = products.find(p => p.id === selectedProductId);
+      const priceValue = parseFloat(promotionalPrice);
+      if (!promoTitle.trim() || !selectedProductId || allowedToppingIds.length === 0 || isNaN(limit) || limit <= 0 || !product || isNaN(priceValue) || priceValue < 0) {
+        toast.error('Preencha todos os campos, incluindo o preço do combo e adicionais.');
+        setIsSubmitting(false); return;
+      }
+      promoData = { title: promoTitle.trim(), isActive: true, type: promotionType, productId: product.id, productName: product.name, originalPrice: product.price, promotionalPrice: priceValue, rules: { selection_limit: limit, allowed_topping_ids: allowedToppingIds }, };
+    }
 
-                <section ref={formRef}>
-                    <SectionTitle>{editingPromotion ? 'Editar Promoção' : 'Criar Nova Promoção'}</SectionTitle>
-                    <Form onSubmit={handleAddOrUpdatePromotion}>
-                        <FormGroup style={{ gridColumn: '1 / -1' }}>
-                            <label htmlFor="promoTitle">Título da Promoção</label>
-                            <input id="promoTitle" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Açaí em Dobro" required />
-                        </FormGroup>
-                        <FormGroup style={{ gridColumn: '1 / -1' }}>
-                            <label htmlFor="promoDesc">Descrição (opcional)</label>
-                            <textarea id="promoDesc" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva brevemente a promoção" />
-                        </FormGroup>
+    if (!promoData) { setIsSubmitting(false); return; }
 
-                        <FormGrid>
-                            <FormGroup>
-                                <label htmlFor="promoDiscountType">Tipo de Desconto</label>
-                                <select id="promoDiscountType" value={discountType} onChange={e => setDiscountType(e.target.value)}>
-                                    <option value="percentage">Porcentagem (%)</option>
-                                    <option value="fixed">Valor Fixo (R$)</option>
-                                </select>
-                            </FormGroup>
-                            <FormGroup>
-                                <label htmlFor="promoValue">Valor do Desconto</label>
-                                <input id="promoValue" type="number" step="0.01" value={discountValue} onChange={e => setDiscountValue(e.target.value)} placeholder={discountType === 'percentage' ? 'Ex: 10 para 10%' : 'Ex: 5 para R$5,00'} required />
-                            </FormGroup>
-                        </FormGrid>
-                        
-                        <CheckboxGrid>
-                            <h4>Aplicar em quais produtos?</h4>
-                            <div className="items">
-                                {products.map(product => (
-                                    <CheckboxGroup key={product.id}>
-                                        <input type="checkbox" id={`prod-${product.id}`} checked={applicableProductIds.includes(product.id)} onChange={() => handleProductSelection(product.id)} />
-                                        <label htmlFor={`prod-${product.id}`}>{product.name}</label>
-                                    </CheckboxGroup>
-                                ))}
-                            </div>
-                        </CheckboxGrid>
+    try {
+      if (editingPromoId) {
+        const promoRef = doc(db, 'promotions', editingPromoId);
+        await updateDoc(promoRef, promoData);
+        toast.success('Promoção atualizada com sucesso!');
+      } else {
+        await addDoc(collection(db, 'promotions'), { ...promoData, createdAt: serverTimestamp() });
+        toast.success('Promoção adicionada com sucesso!');
+      }
+      fetchData();
+      resetForm();
+    } catch (error) {
+      console.error("Erro ao salvar promoção:", error);
+      toast.error('Falha ao salvar promoção.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-                        <CheckboxGroup>
-                            <input id="isActive" type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} />
-                            <label htmlFor="isActive">Ativar esta promoção no site</label>
-                        </CheckboxGroup>
+  const handleToppingSelection = (toppingId) => setAllowedToppingIds(prev => prev.includes(toppingId) ? prev.filter(id => id !== toppingId) : [...prev, toppingId]);
+  const openDeleteConfirmModal = (promo) => { setItemToDelete(promo); setIsConfirmModalOpen(true); };
+  const handleDeletePromotion = async () => { if (!itemToDelete) return; try { await deleteDoc(doc(db, 'promotions', itemToDelete.id)); toast.success(`Promoção "${itemToDelete.title}" excluída.`); fetchData(); } catch (error) { console.error("Erro ao excluir:", error); toast.error("Falha ao excluir promoção."); } finally { setIsConfirmModalOpen(false); setItemToDelete(null); } };
+  const handleToggleActive = async (id, status) => { try { await updateDoc(doc(db, 'promotions', id), { isActive: !status }); fetchData(); } catch (error) { console.error("Erro ao alterar status:", error); toast.error("Falha ao alterar status."); } };
+  const renderPromoDescription = (promo) => {
+    const originalPriceText = `(de R$ ${promo.originalPrice?.toFixed(2).replace('.', ',')})`;
+    const promotionalPriceText = `por R$ ${promo.promotionalPrice?.toFixed(2).replace('.', ',') || 'N/A'}`;
+    if (promo.type === 'product_discount') { return (<p className="promo-description"> Desconto: <strong>{promo.productName}</strong> {originalPriceText} {promotionalPriceText} </p>); }
+    if (promo.type === 'free_toppings_selection') { return (<p className="promo-description"> Combo: <strong>{promo.productName}</strong> + <strong>{promo.rules?.selection_limit || 0}</strong> adicionais grátis {originalPriceText} {promotionalPriceText} </p>); }
+    return null;
+  };
 
-                        <FormActions>
-                            <Button type="submit" variant="primary">{editingPromotion ? 'Atualizar' : 'Criar Promoção'}</Button>
-                            {editingPromotion && <Button type="button" variant="secondary" onClick={resetForm}>Cancelar</Button>}
-                        </FormActions>
-                    </Form>
-                </section>
+  return (
+    <>
+      <PageWrapper>
+        <h1>Gerenciamento de Promoções</h1>
+        <SectionTitle>{editingPromoId ? 'Editar Promoção' : 'Criar Nova Promoção'}</SectionTitle>
+        <AddForm onSubmit={handleSubmitPromotion}>
+          <FormGroup className="full-width"><label htmlFor="promoTitle">Título da Promoção:</label><input type="text" id="promoTitle" value={promoTitle} onChange={(e) => setPromoTitle(e.target.value)} required /></FormGroup>
+          <FormGroup><label htmlFor="promoType">Tipo de Promoção:</label><select id="promoType" value={promotionType} onChange={(e) => { setPromotionType(e.target.value); setSelectedProductId(''); setPromotionalPrice(''); }} disabled={!!editingPromoId}><option value="product_discount">Desconto em Produto</option><option value="free_toppings_selection">Adicionais Grátis (Combo)</option></select></FormGroup>
 
-                <section>
-                    <SectionTitle>Promoções Ativas e Inativas</SectionTitle>
-                    {isLoading ? <LoadingText>Carregando...</LoadingText> : (
-                        <PromotionList>
-                            {promotions.map(promo => (
-                                <PromotionListItem key={promo.id}>
-                                    <PromotionInfo>
-                                        <h3>{promo.title}</h3>
-                                        <p><strong>Descrição:</strong> {promo.description || 'N/A'}</p>
-                                        <p><strong>Desconto:</strong> {promo.discountType === 'fixed' ? `R$${promo.discountValue.toFixed(2)}` : `${promo.discountValue}%`}</p>
-                                        <p><strong>Status:</strong> {promo.isActive ? 'Ativa' : 'Inativa'}</p>
-                                        <p><strong>Produtos:</strong> {promo.applicableProductIds.map(getProductName).join(', ')}</p>
-                                    </PromotionInfo>
-                                    <PromotionActions>
-                                        <Button variant="secondary" onClick={() => handleEdit(promo)}>Editar</Button>
-                                        <Button variant="danger" onClick={() => setDeletingPromotion(promo)}>Excluir</Button>
-                                    </PromotionActions>
-                                </PromotionListItem>
-                            ))}
-                        </PromotionList>
-                    )}
-                </section>
-            </PageWrapper>
+          {promotionType === 'product_discount' && (<>
+            <FormGroup><label htmlFor="productSelect">Produto em Promoção:</label><select id="productSelect" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required disabled={!!editingPromoId}><option value="">-- Escolha um produto --</option>{products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
+            <FormGroup className="full-width"><label htmlFor="promoPrice">Preço Promocional (R$):</label><input type="number" id="promoPrice" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
+          </>)}
 
-            <ConfirmationModal
-                isOpen={!!deletingPromotion}
-                onClose={() => setDeletingPromotion(null)}
-                onConfirm={handleDelete}
-                title="Confirmar Exclusão"
-                message={`Deseja realmente excluir a promoção "${deletingPromotion?.title}"?`}
-            />
-        </>
-    );
+          {promotionType === 'free_toppings_selection' && (<>
+            <FormGroup><label htmlFor="productSelectAcai">Açaí da Promoção:</label><select id="productSelectAcai" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} required disabled={!!editingPromoId}><option value="">-- Escolha um açaí --</option>{products.filter(p => p.category === 'açaí').map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</select></FormGroup>
+            <FormGroup><label htmlFor="promoPriceCombo">Preço do Combo (R$):</label><input type="number" id="promoPriceCombo" value={promotionalPrice} onChange={(e) => setPromotionalPrice(e.target.value)} step="0.01" min="0" required /></FormGroup>
+            <FormGroup className="full-width"><label>Adicionais Permitidos na Promoção:</label><ToppingsGrid>{toppings.map(t => (<ToppingCheckboxLabel key={t.id}><input type="checkbox" checked={allowedToppingIds.includes(t.id)} onChange={() => handleToppingSelection(t.id)} />{t.name}</ToppingCheckboxLabel>))}</ToppingsGrid></FormGroup>
+            <FormGroup className="full-width"><label htmlFor="freeToppingsLimit">Limite de Adicionais Grátis:</label><input type="number" id="freeToppingsLimit" value={freeToppingsLimit} onChange={(e) => setFreeToppingsLimit(e.target.value)} step="1" min="1" required /></FormGroup>
+          </>)}
+
+          <FormActions>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : (editingPromoId ? 'Salvar Alterações' : 'Adicionar Promoção')}</Button>
+            {editingPromoId && (
+              <Button type="button" onClick={resetForm} style={{ backgroundColor: '#6b7280' }}>Cancelar Edição</Button>
+            )}
+          </FormActions>
+        </AddForm>
+
+        <SectionTitle>Promoções Cadastradas</SectionTitle>
+        {loading ? (<LoadingText>Carregando...</LoadingText>) : promotions.length > 0 ? (
+          <PromotionList>{promotions.map(promo => (
+            <PromotionListItem key={promo.id}>
+              <div className="promo-info">
+                <div className="promo-header">
+                  <h4 className="promo-title">{promo.title}</h4>
+                  <span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span>
+                </div>
+                {renderPromoDescription(promo)}
+              </div>
+              <div className="promo-actions">
+                <Button onClick={() => handleEditClick(promo)} style={{ backgroundColor: '#3b82f6' }}>Editar</Button>
+                <Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{ backgroundColor: promo.isActive ? '#7c3aed' : '#22c55e', color: promo.isActive ? '#f9f9f9' : 'white' }}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button>
+                <Button onClick={() => openDeleteConfirmModal(promo)} style={{ backgroundColor: '#ef4444' }}>Excluir</Button>
+              </div>
+            </PromotionListItem>
+          ))}</PromotionList>
+        ) : (<InfoText>Nenhuma promoção cadastrada.</InfoText>)}
+      </PageWrapper>
+      <ConfirmationModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} onConfirm={handleDeletePromotion} title="Confirmar Exclusão" message={`Tem certeza que deseja excluir a promoção "${itemToDelete?.title}"?`} />
+    </>
+  );
 };
 
 export default PromotionsPage;

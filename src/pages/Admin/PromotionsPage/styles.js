@@ -1,11 +1,12 @@
 // src/pages/Admin/PromotionsPage/styles.js
+
 import styled from 'styled-components';
 
 export const PageWrapper = styled.div`
-  h1 {
-    font-size: 2em;
-    color: #333;
-    margin-bottom: 30px;
+  h1 { 
+    font-size: 2em; 
+    color: #333; 
+    margin-bottom: 30px; 
   }
 `;
 
@@ -15,149 +16,61 @@ export const SectionTitle = styled.h2`
   margin-top: 0; 
   margin-bottom: 20px; 
   border-bottom: 1px solid #ddd; 
-  padding-bottom: 10px;
+  padding-bottom: 10px; 
+  
+  &:not(:first-child){
+    margin-top: 40px;
+  }
 `;
 
-export const Form = styled.form`
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
-  margin-bottom: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-`;
+export const AddForm = styled.form`
+  background-color: #f9f9f9; 
+  padding: 20px; 
+  border-radius: 8px; 
+  margin-top: 10px; 
+  margin-bottom: 40px; 
+  display: grid; 
+  gap: 15px 20px; 
+  border: 1px solid #eee;
+  grid-template-columns: 1fr;
 
-export const FormGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
   }
 `;
 
 export const FormGroup = styled.div`
   display: flex; 
   flex-direction: column; 
-
+  
   label { 
-    margin-bottom: 8px;
+    margin-bottom: 5px; 
     font-weight: 600; 
     color: #444; 
   } 
-
-  input, select, textarea { 
-    padding: 12px;
+  
+  input, 
+  select, 
+  textarea { 
+    padding: 10px; 
     border: 1px solid #ccc; 
     border-radius: 6px; 
     font-size: 1em; 
-    background-color: #f8fafc;
+    background-color: white; 
+    width: 100%;
   }
-
-  textarea {
-    resize: vertical;
-    min-height: 100px;
-    grid-column: 1 / -1; // Ocupa a linha inteira no grid
-  }
-`;
-
-export const CheckboxGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 5px;
   
-  label {
-    margin: 0;
-    font-weight: normal;
-  }
-
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
-export const CheckboxGrid = styled.div`
+  &.full-width {
     grid-column: 1 / -1;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 15px;
-
-    h4 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: #444;
-    }
-    
-    .items {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 10px;
-    }
+  }
 `;
 
 export const FormActions = styled.div`
-  display: flex; 
-  gap: 10px; 
-  margin-top: 10px;
-`;
-
-export const PromotionList = styled.ul`
-  list-style: none; 
-  padding: 0; 
-  margin-top: 10px;
-`;
-
-export const PromotionListItem = styled.li`
-  background-color: #fff; 
-  padding: 20px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px; 
-  margin-bottom: 15px; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 15px;
-`;
-
-export const PromotionInfo = styled.div`
-  flex-grow: 1;
-
-  h3 {
-    margin: 0 0 10px 0;
-    color: #4a044e;
-  }
-
-  p {
-    margin: 4px 0;
-    font-size: 0.95em;
-    color: #555;
-    line-height: 1.5;
-  }
-  
-  strong {
-      color: #333;
-  }
-`;
-
-export const PromotionActions = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-  align-self: flex-start;
-
-  button { 
-    width: 100%;
-    padding: 6px 12px;
-    font-size: 0.9em; 
-  }
+  gap: 10px;
+  align-items: center;
+  grid-column: 1 / -1;
+  margin-top: 10px;
 `;
 
 export const LoadingText = styled.p`
@@ -165,4 +78,123 @@ export const LoadingText = styled.p`
   color: #555; 
   font-style: italic; 
   margin-top: 20px;
+`;
+
+export const PromotionList = styled.ul`
+  list-style: none; 
+  padding: 0;
+`;
+
+export const PromotionListItem = styled.li`
+  background-color: #fff; 
+  padding: 15px; 
+  border-radius: 8px; 
+  margin-bottom: 15px; 
+  box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  gap: 20px;
+
+  .promo-info { 
+    flex-grow: 1; 
+  }
+  
+  .promo-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    margin-bottom: 10px; 
+    gap: 15px; 
+  }
+  
+  .promo-title { 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    color: #7c3aed; 
+    margin: 0; 
+  }
+  
+  .promo-status { 
+    font-size: 0.8em; 
+    padding: 3px 6px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    flex-shrink: 0;
+    
+    &.active { 
+      background-color: #dcfce7; 
+      color: #166534; 
+    }
+    
+    &.inactive { 
+      background-color: #fee2e2; 
+      color: #991b1b; 
+    }
+  }
+  
+  .promo-description { 
+    font-size: 0.95em; 
+    color: #333; 
+    margin: 0 0 15px 0; 
+    word-break: break-word; 
+    
+    strong { 
+      color: #5b21b6; 
+    }
+  }
+  
+  .promo-actions { 
+    display: flex; 
+    gap: 10px; 
+    flex-shrink: 0;
+    
+    button { 
+      font-size: 0.9em; 
+      padding: 6px 12px; 
+    }
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column; 
+    align-items: stretch;
+    
+    .promo-actions { 
+      flex-direction: row; 
+      align-items: center; 
+      justify-content: flex-start; 
+      width: 100%;
+    }
+  }
+`;
+
+export const ToppingsGrid = styled.div`
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+  gap: 10px; 
+  background-color: #fff; 
+  border: 1px solid #ddd; 
+  padding: 15px; 
+  border-radius: 6px;
+`;
+
+export const ToppingCheckboxLabel = styled.label`
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  font-size: 0.9em; 
+  cursor: pointer; 
+  
+  input { 
+    width: 16px; 
+    height: 16px; 
+  }
+`;
+
+export const InfoText = styled.p`
+  background-color: #f0f4f8; 
+  border-left: 4px solid #7c3aed;
+  padding: 15px; 
+  border-radius: 4px; 
+  color: #333;
 `;

@@ -1,175 +1,291 @@
 // src/pages/Admin/ToppingsPage/index.js
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { db } from '../../../services/firebaseConfig';
+import { collection, getDocs, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import Button from '../../../components/Button';
+import Modal from '../../../components/Modal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import toast from 'react-hot-toast';
-import { db } from '../../../services/firebaseConfig';
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, query } from 'firebase/firestore';
+
+// Importando todos os componentes estilizados do arquivo de estilos
 import {
-    PageWrapper,
-    SectionTitle,
-    Form,
-    FormGroup,
-    CheckboxGroup,
-    FormActions,
-    InfoText,
-    ToppingList,
-    ToppingListItem,
-    ToppingInfo,
-    ToppingActions,
-    LoadingText
+  Title,
+  FormContainer,
+  FormRow,
+  InputGroup,
+  Label,
+  Input,
+  CheckboxGroup,
+  Table,
+  Thead,
+  Tr,
+  Th,
+  Td,
+  ActionsTd,
+  ImagePreview,
+  LoadingMessage,
+  MobileCardContainer,
+  DesktopTableContainer,
+  ToppingCard,
+  CardHeader,
+  CardTitle,
+  CardBody,
+  InfoRow,
+  CardActions
 } from './styles';
 
 const ToppingsPage = () => {
-    const [toppings, setToppings] = useState([]);
-    const [toppingName, setToppingName] = useState('');
-    const [toppingPrice, setToppingPrice] = useState('');
-    const [isAvailable, setIsAvailable] = useState(true);
-    const [editingTopping, setEditingTopping] = useState(null);
-    const [deletingTopping, setDeletingTopping] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const formRef = useRef(null);
+  const [toppings, setToppings] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newName, setNewName] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [newCategory, setNewCategory] = useState('');
+  const [newIsAvailable, setNewIsAvailable] = useState(true);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTopping, setEditingTopping] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
-    const fetchToppings = async () => {
-        setIsLoading(true);
-        try {
-            const toppingsQuery = query(collection(db, 'toppings'));
-            const toppingsSnapshot = await getDocs(toppingsQuery);
-            const toppingsList = toppingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setToppings(toppingsList);
-        } catch (error) {
-            console.error("Erro ao buscar adicionais: ", error);
-            toast.error("Não foi possível carregar os adicionais.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const toppingsQuery = query(collection(db, 'toppings'), orderBy('name', 'asc'));
+      const categoriesQuery = query(collection(db, 'toppingCategories'), orderBy('name', 'asc'));
+      const [toppingsSnapshot, categoriesSnapshot] = await Promise.all([
+        getDocs(toppingsQuery),
+        getDocs(categoriesQuery)
+      ]);
+      setToppings(toppingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setCategories(categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (error) {
+      toast.error("Não foi possível carregar os dados.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        fetchToppings();
-    }, []);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    const handleAddOrUpdateTopping = async (e) => {
-        e.preventDefault();
-        if (!toppingName.trim() || !toppingPrice) {
-            toast.error('Por favor, preencha o nome e o preço do adicional.');
-            return;
-        }
+  const handleCategoryManagement = async (categoryName) => {
+    if (!categoryName) return '';
+    const trimmedName = categoryName.trim();
+    const existingCategory = categories.find(cat => cat.name.toLowerCase() === trimmedName.toLowerCase());
+    if (existingCategory) {
+      return existingCategory.name;
+    }
+    try {
+      const docRef = await addDoc(collection(db, 'toppingCategories'), { name: trimmedName });
+      setCategories(prev => [...prev, { id: docRef.id, name: trimmedName }].sort((a, b) => a.name.localeCompare(b.name)));
+      return trimmedName;
+    } catch (error) {
+      toast.error("Não foi possível criar a nova categoria.");
+      return '';
+    }
+  };
 
-        const toppingData = {
-            name: toppingName,
-            price: parseFloat(toppingPrice),
-            isAvailable: isAvailable
-        };
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!newName || newPrice === '') {
+      toast.error("Preencha o nome e o preço.");
+      return;
+    }
+    setIsSubmitting(true);
+    const finalCategoryName = await handleCategoryManagement(newCategory);
+    try {
+      await addDoc(collection(db, 'toppings'), {
+        name: newName,
+        price: parseFloat(newPrice),
+        isAvailable: newIsAvailable,
+        imageUrl: newImageUrl,
+        category: finalCategoryName,
+      });
+      toast.success("Adicional adicionado!");
+      setNewName('');
+      setNewPrice('');
+      setNewIsAvailable(true);
+      setNewImageUrl('');
+      setNewCategory('');
+      fetchData();
+    } catch (error) {
+      toast.error("Erro ao adicionar.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-        try {
-            if (editingTopping) {
-                const toppingDoc = doc(db, 'toppings', editingTopping.id);
-                await updateDoc(toppingDoc, toppingData);
-                toast.success('Adicional atualizado com sucesso!');
-            } else {
-                await addDoc(collection(db, 'toppings'), toppingData);
-                toast.success('Adicional adicionado com sucesso!');
-            }
-            resetForm();
-            fetchToppings();
-        } catch (error) {
-            console.error("Erro ao salvar adicional: ", error);
-            toast.error('Ocorreu um erro ao salvar o adicional.');
-        }
-    };
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editingTopping) return;
+    setIsUpdating(true);
+    const finalCategoryName = await handleCategoryManagement(editingTopping.category);
+    try {
+      const toppingDocRef = doc(db, 'toppings', editingTopping.id);
+      await updateDoc(toppingDocRef, {
+        name: editingTopping.name,
+        price: parseFloat(editingTopping.price),
+        isAvailable: editingTopping.isAvailable,
+        imageUrl: editingTopping.imageUrl,
+        category: finalCategoryName,
+      });
+      toast.success("Adicional atualizado!");
+      setEditingTopping(null);
+      fetchData();
+    } catch (error) {
+      toast.error("Erro ao atualizar.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
-    const handleEdit = (topping) => {
-        setEditingTopping(topping);
-        setToppingName(topping.name);
-        setToppingPrice(topping.price);
-        setIsAvailable(topping.isAvailable);
-        formRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+  const executeDelete = async () => {
+    if (!itemToDelete) return;
+    try {
+      await deleteDoc(doc(db, 'toppings', itemToDelete));
+      toast.success("Adicional excluído!");
+      fetchData();
+    } catch (error) {
+      toast.error("Erro ao excluir.");
+    } finally {
+      setItemToDelete(null);
+    }
+  };
 
-    const handleDelete = async () => {
-        if (!deletingTopping) return;
-        try {
-            await deleteDoc(doc(db, 'toppings', deletingTopping.id));
-            toast.success('Adicional removido com sucesso!');
-            setDeletingTopping(null);
-            fetchToppings();
-        } catch (error) {
-            console.error("Erro ao remover adicional: ", error);
-            toast.error('Ocorreu um erro ao remover o adicional.');
-        }
-    };
+  const handleEditInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditingTopping(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
 
-    const resetForm = () => {
-        setEditingTopping(null);
-        setToppingName('');
-        setToppingPrice('');
-        setIsAvailable(true);
-    };
+  const smallButtonStyle = {
+    padding: '6px 12px',
+    fontSize: '0.9em',
+  };
 
-    return (
+  return (
+    <div>
+      <Title>Gerir Adicionais</Title>
+      <FormContainer>
+        <form onSubmit={handleAdd}>
+          <FormRow>
+            <InputGroup><Label>Nome</Label><Input value={newName} onChange={e => setNewName(e.target.value)} required /></InputGroup>
+            <InputGroup><Label>Preço (R$)</Label><Input type="number" step="0.01" value={newPrice} onChange={e => setNewPrice(e.target.value)} required /></InputGroup>
+          </FormRow>
+          <FormRow>
+            <InputGroup>
+              <Label>Categoria</Label>
+              <Input
+                list="categories-list"
+                value={newCategory}
+                onChange={e => setNewCategory(e.target.value)}
+                placeholder="Ex: Frutas (ou crie uma nova)"
+              />
+              <datalist id="categories-list">
+                {categories.map(cat => <option key={cat.id} value={cat.name} />)}
+              </datalist>
+            </InputGroup>
+            <InputGroup>
+              <Label>URL da Imagem</Label>
+              <Input placeholder='Opcional' value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} />
+            </InputGroup>
+          </FormRow>
+          <CheckboxGroup>
+            <input type="checkbox" id="isAvailable" checked={newIsAvailable} onChange={e => setNewIsAvailable(e.target.checked)} />
+            <Label htmlFor="isAvailable">Disponível para venda</Label>
+          </CheckboxGroup>
+          <Button type="submit" variant="primary" disabled={isSubmitting} style={{ marginTop: '20px', width: '100%' }}>
+            {isSubmitting ? 'A adicionar...' : 'Adicionar Adicional'}
+          </Button>
+        </form>
+      </FormContainer>
+
+      {loading ? (
+        <LoadingMessage>A carregar...</LoadingMessage>
+      ) : (
         <>
-            <PageWrapper>
-                <h1>Gerenciar Adicionais</h1>
+          <DesktopTableContainer>
+            <Table>
+              <Thead><Tr><Th>Imagem</Th><Th>Nome</Th><Th>Categoria</Th><Th>Preço</Th><Th>Disponível</Th><Th>Ações</Th></Tr></Thead>
+              <tbody>
+                {toppings.map(topping => (
+                  <Tr key={topping.id}>
+                    <Td>{topping.imageUrl ? <ImagePreview src={topping.imageUrl} alt={topping.name} /> : 'Sem imagem'}</Td>
+                    <Td>{topping.name}</Td>
+                    <Td>{topping.category || 'N/A'}</Td>
+                    <Td>R$ {topping.price.toFixed(2).replace('.', ',')}</Td>
+                    <Td>{topping.isAvailable ? 'Sim' : 'Não'}</Td>
+                    <ActionsTd>
+                      <Button variant="primary" onClick={() => setEditingTopping(topping)} style={smallButtonStyle}>Editar</Button>
+                      <Button variant="danger" onClick={() => setItemToDelete(topping.id)} style={smallButtonStyle}>Excluir</Button>
+                    </ActionsTd>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </DesktopTableContainer>
 
-                <section ref={formRef}>
-                    <SectionTitle>{editingTopping ? 'Editar Adicional' : 'Adicionar Novo Adicional'}</SectionTitle>
-                    <Form onSubmit={handleAddOrUpdateTopping}>
-                        <FormGroup>
-                            <label htmlFor="toppingName">Nome do Adicional</label>
-                            <input id="toppingName" type="text" value={toppingName} onChange={(e) => setToppingName(e.target.value)} placeholder="Ex: Leite em Pó" required />
-                        </FormGroup>
-                        <FormGroup>
-                            <label htmlFor="toppingPrice">Preço (R$)</label>
-                            <input id="toppingPrice" type="number" step="0.01" value={toppingPrice} onChange={(e) => setToppingPrice(e.target.value)} placeholder="Ex: 1.50" required />
-                        </FormGroup>
-                        <FormGroup>
-                            <CheckboxGroup>
-                                <input id="isAvailable" type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
-                                <label htmlFor="isAvailable">Disponível para seleção</label>
-                            </CheckboxGroup>
-                        </FormGroup>
-                        <FormActions>
-                            <Button type="submit" variant="primary">{editingTopping ? 'Atualizar' : 'Adicionar'}</Button>
-                            {editingTopping && <Button type="button" variant="secondary" onClick={resetForm}>Cancelar</Button>}
-                        </FormActions>
-                    </Form>
-                </section>
-
-                <section>
-                    <SectionTitle>Adicionais Cadastrados</SectionTitle>
-                    <InfoText>Estes são os itens que os clientes podem adicionar aos seus açaís.</InfoText>
-                    {isLoading ? (
-                        <LoadingText>Carregando...</LoadingText>
-                    ) : (
-                        <ToppingList>
-                            {toppings.map((top) => (
-                                <ToppingListItem key={top.id}>
-                                    <ToppingInfo>
-                                        <span className="topping-name">{top.name}</span>
-                                        <span className="topping-price">Preço: R$ {top.price.toFixed(2)}</span>
-                                        <span className="topping-status">Status: {top.isAvailable ? 'Disponível' : 'Indisponível'}</span>
-                                    </ToppingInfo>
-                                    <ToppingActions>
-                                        <Button variant="secondary" onClick={() => handleEdit(top)}>Editar</Button>
-                                        <Button variant="danger" onClick={() => setDeletingTopping(top)}>Excluir</Button>
-                                    </ToppingActions>
-                                </ToppingListItem>
-                            ))}
-                        </ToppingList>
-                    )}
-                </section>
-            </PageWrapper>
-
-            <ConfirmationModal
-                isOpen={!!deletingTopping}
-                onClose={() => setDeletingTopping(null)}
-                onConfirm={handleDelete}
-                title="Confirmar Exclusão"
-                message={`Tem certeza de que deseja excluir o adicional "${deletingTopping?.name}"?`}
-            />
+          <MobileCardContainer>
+            {toppings.map(topping => (
+              <ToppingCard key={topping.id}>
+                <CardHeader>
+                  <ImagePreview src={topping.imageUrl || 'https://via.placeholder.com/50'} alt={topping.name} />
+                  <CardTitle>{topping.name}</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <InfoRow><strong>Preço:</strong> R$ {topping.price.toFixed(2).replace('.', ',')}</InfoRow>
+                  <InfoRow><strong>Categoria:</strong> {topping.category || 'N/A'}</InfoRow>
+                  <InfoRow><strong>Disponível:</strong> {topping.isAvailable ? 'Sim' : 'Não'}</InfoRow>
+                </CardBody>
+                <CardActions>
+                  <Button variant="primary" onClick={() => setEditingTopping(topping)} style={{ flex: 1 }}>Editar</Button>
+                  <Button variant="danger" onClick={() => setItemToDelete(topping.id)} style={{ flex: 1 }}>Excluir</Button>
+                </CardActions>
+              </ToppingCard>
+            ))}
+          </MobileCardContainer>
         </>
-    );
+      )}
+
+      <Modal isOpen={!!editingTopping} onClose={() => setEditingTopping(null)} title="Editar Adicional">
+        {editingTopping && (
+          <form onSubmit={handleUpdate}>
+            <InputGroup><Label>Nome</Label><Input name="name" value={editingTopping.name} onChange={handleEditInputChange} /></InputGroup>
+            <InputGroup style={{ marginTop: '15px' }}><Label>Preço (R$)</Label><Input name="price" type="number" step="0.01" value={editingTopping.price} onChange={handleEditInputChange} /></InputGroup>
+            <InputGroup style={{ marginTop: '15px' }}>
+              <Label>Categoria</Label>
+              <Input
+                list="categories-list"
+                name="category"
+                value={editingTopping.category || ''}
+                onChange={handleEditInputChange}
+                placeholder="Ex: Frutas (ou crie uma nova)"
+              />
+            </InputGroup>
+            <InputGroup style={{ marginTop: '15px' }}><Label>URL da Imagem</Label><Input name="imageUrl" placeholder='Opcional' value={editingTopping.imageUrl || ''} onChange={handleEditInputChange} /></InputGroup>
+            <CheckboxGroup>
+              <input type="checkbox" id="editIsAvailable" name="isAvailable" checked={editingTopping.isAvailable} onChange={handleEditInputChange} />
+              <Label htmlFor="editIsAvailable">Disponível para venda</Label>
+            </CheckboxGroup>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <Button type="button" variant="secondary" onClick={() => setEditingTopping(null)}>Cancelar</Button>
+              <Button type="submit" variant="primary" disabled={isUpdating}>{isUpdating ? "A salvar..." : "Salvar Alterações"}</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <ConfirmationModal
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={executeDelete}
+        title="Confirmar Exclusão"
+        message="Tem a certeza de que deseja excluir este adicional?"
+      />
+    </div>
+  );
 };
 
 export default ToppingsPage;

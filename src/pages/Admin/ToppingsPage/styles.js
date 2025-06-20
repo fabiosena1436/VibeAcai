@@ -1,146 +1,171 @@
 // src/pages/Admin/ToppingsPage/styles.js
+
 import styled from 'styled-components';
 
-export const PageWrapper = styled.div`
-  h1 {
-    font-size: 2em;
-    color: #333;
-    margin-bottom: 30px;
+export const Title = styled.h2`
+  color: #333;
+  margin-bottom: 20px;
+`;
+
+export const FormContainer = styled.div`
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+`;
+
+export const FormRow = styled.div`
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 0;
   }
 `;
 
-export const SectionTitle = styled.h2`
-  font-size: 1.5em; 
-  color: #555; 
-  margin-top: 0; 
-  margin-bottom: 20px; 
-  border-bottom: 1px solid #ddd; 
-  padding-bottom: 10px;
-`;
-
-export const Form = styled.form`
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
-  margin-bottom: 40px;
+export const InputGroup = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  
+  @media (max-width: 768px) {
+    margin-bottom: 15px;
+  }
 `;
 
-export const FormGroup = styled.div`
-  display: flex; 
-  flex-direction: column; 
+export const Label = styled.label`
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+`;
 
-  label { 
-    margin-bottom: 8px;
-    font-weight: 600; 
-    color: #444; 
-  } 
-
-  input { 
-    padding: 12px;
-    border: 1px solid #ccc; 
-    border-radius: 6px; 
-    font-size: 1em; 
-    background-color: #f8fafc;
-  }
+export const Input = styled.input`
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 export const CheckboxGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 5px;
-  
-  label {
-    margin: 0;
-    font-weight: normal;
-    color: #333;
-  }
-
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
-export const FormActions = styled.div`
-  display: flex; 
-  gap: 10px; 
   margin-top: 10px;
+`;
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
+export const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+`;
+
+export const Thead = styled.thead`
+  background-color: #f8f9fa;
+`;
+
+export const Tr = styled.tr`
+  &:nth-child(even) {
+    background-color: #f2f2f2;
   }
 `;
 
-export const InfoText = styled.p`
-  background-color: #eef2ff;
-  border-left: 4px solid #6366f1;
-  padding: 15px;
+export const Th = styled.th`
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  color: #495057;
+`;
+
+export const Td = styled.td`
+  padding: 12px 15px;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+`;
+
+export const ActionsTd = styled(Td)`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  height: 74px;
+`;
+
+export const ImagePreview = styled.img`
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
   border-radius: 4px;
-  color: #333;
-  margin: 20px 0;
 `;
 
-export const ToppingList = styled.ul`
-  list-style: none; 
-  padding: 0; 
-  margin-top: 10px;
+export const LoadingMessage = styled.p`
+  color: #555;
+  font-style: italic;
 `;
 
-export const ToppingListItem = styled.li`
-  background-color: #fff; 
-  padding: 15px 20px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px; 
-  margin-bottom: 10px; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  flex-wrap: wrap;
-  gap: 15px;
+export const MobileCardContainer = styled.div`
+  display: none;
+  @media (max-width: 768px) {
+    display: block;
+  }
 `;
 
-export const ToppingInfo = styled.div`
+export const DesktopTableContainer = styled.div`
+  display: block;
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+export const ToppingCard = styled.div`
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 15px;
+  margin-bottom: 15px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+`;
 
-  .topping-name {
-    font-weight: 500;
-    font-size: 1.05em; 
+export const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+`;
+
+export const CardTitle = styled.h3`
+  margin: 0;
+  color: #333;
+  font-size: 1.2em;
+`;
+
+export const CardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const InfoRow = styled.div`
+  font-size: 0.95em;
+  color: #555;
+  & > strong {
     color: #333;
   }
-
-  .topping-price, .topping-status {
-    font-size: 0.9em;
-    color: #555;
-  }
-
-  .topping-status {
-    font-style: italic;
-  }
 `;
 
-export const ToppingActions = styled.div`
+export const CardActions = styled.div`
   display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-
-  button { 
-    padding: 6px 12px;
-    font-size: 0.9em; 
-  }
-`;
-
-export const LoadingText = styled.p`
-  text-align: center; 
-  color: #555; 
-  font-style: italic; 
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
 `;
