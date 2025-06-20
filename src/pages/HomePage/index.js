@@ -17,7 +17,7 @@ import Button from '../../components/Button';
 import ProductCard from '../../components/ProductCard';
 import AcaiCustomizationModal from '../../components/AcaiCustomizationModal';
 import PromoCard from '../../components/PromoCard';
-import Footer from '../../components/Footer';
+
 
 const HomePageWrapper = styled.div`padding-bottom: 50px;`;
 const HeroSection = styled.div`
@@ -395,7 +395,6 @@ const HomePage = () => {
         )}
       </HomePageWrapper>
       <AcaiCustomizationModal isOpen={isModalOpen} onClose={handleCloseCustomizationModal} productToCustomize={selectedProductForCustomization} />
-      <Footer />
     </>
   );
 };

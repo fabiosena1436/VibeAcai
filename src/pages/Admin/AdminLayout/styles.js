@@ -1,11 +1,12 @@
 // src/pages/Admin/AdminLayout/styles.js
+
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
 
 export const AdminWrapper = styled.div`
   display: flex;
   position: relative;
-  min-height: calc(100vh - 70px);
+  min-height: 100vh;
 `;
 
 export const Sidebar = styled.div`
@@ -44,8 +45,10 @@ export const NavList = styled.ul`
   flex-grow: 1;
 `;
 
-export const StyledNavLink = styled(NavLink)`
-  display: block;
+export const StyledNavLink = styled(NavLink)` 
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: #e0d6ff;
   text-decoration: none;
   padding: 12px 15px;
@@ -61,7 +64,7 @@ export const StyledNavLink = styled(NavLink)`
     background-color: #7c3aed;
     color: #fff;
     font-weight: bold;
-  }
+  } 
 `;
 
 export const ContentArea = styled.main`
@@ -75,17 +78,17 @@ export const ContentArea = styled.main`
   }
 `;
 
-export const MenuButton = styled.button`
+export const MenuButton = styled.button` 
   display: none;
   background: none;
   border: none;
   cursor: pointer;
   z-index: 1100;
 
-  @media (max-width: 768px) {
+  @media (max-width: 768px) { 
     display: block;
     position: fixed;
-    top: 80px;
+    top: 15px;
     right: 15px;
     background-color: #7c3aed;
     color: white;
@@ -94,7 +97,7 @@ export const MenuButton = styled.button`
     height: 50px;
     font-size: 20px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  }
+  } 
 `;
 
 export const Overlay = styled.div`
@@ -110,4 +113,10 @@ export const Overlay = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 999;
   }
+`;
+
+export const NavSeparator = styled.hr`
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 15px 0;
 `;
