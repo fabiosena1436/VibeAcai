@@ -259,7 +259,7 @@ const PromotionsPage = () => {
               <div className="promo-actions">
                 {/* NOVO: Botão de Editar adicionado */}
                 <Button onClick={() => handleEditClick(promo)} style={{backgroundColor: '#3b82f6'}}>Editar</Button>
-                <Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{backgroundColor: promo.isActive ? '#facc15' : '#22c55e', color: promo.isActive ? '#422006' : 'white'}}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button>
+                <Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{backgroundColor: promo.isActive ? '#7c3aed' : '#22c55e', color: promo.isActive ? '#f9f9f9' : 'white'}}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button>
                 <Button onClick={() => openDeleteConfirmModal(promo)} style={{backgroundColor: '#ef4444'}}>Excluir</Button>
               </div>
             </PromotionListItem>

@@ -129,7 +129,7 @@ const ProductListItem = styled.li`
 const LoadingText = styled.p`text-align: center; color: #555; font-style: italic; margin-top: 20px;`;
 const StarIcon = styled.div`
   position: absolute; top: 5px; right: 5px; font-size: 1.8em;
-  color: #facc15; pointer-events: none;
+  color: #7c3aed; pointer-events: none;
   text-shadow: 0 0 5px rgba(0,0,0,0.3);
 `;
 const InfoText = styled.p`
@@ -328,7 +328,7 @@ const ProductsPage = () => {
                     <Button onClick={() => handleToggleFeatured(product.id, product.isFeatured || false)} style={{backgroundColor: product.isFeatured ? '#a855f7' : '#6b7280'}}>
                       {product.isFeatured ? 'Remover Destaque' : 'Destacar'}
                     </Button>
-                    <Button onClick={() => handleToggleProductAvailability(product.id, product.isAvailable === undefined ? true : product.isAvailable)} style={{backgroundColor: product.isAvailable === false ? '#22c55e' : '#facc15', color: product.isAvailable === false ? 'white' : '#422006'}}>
+                    <Button onClick={() => handleToggleProductAvailability(product.id, product.isAvailable === undefined ? true : product.isAvailable)} style={{backgroundColor: product.isAvailable === false ? '#22c55e' : '#7c3aed', color: product.isAvailable === false ? 'white' : '#f9f9f9'}}>
                       {product.isAvailable === false ? 'Ativar' : 'Desativar'}
                     </Button>
                     <Button onClick={() => handleEditProduct(product)} style={{backgroundColor: '#7c3aed', color: 'white'}}>Editar</Button>

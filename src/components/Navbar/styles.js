@@ -44,15 +44,15 @@ export const NavLogoLink = styled(RouterNavLink)`
 `;
 
 export const LogoImage = styled.img`
-  height: 50px;
+  height: 70px;
   max-width: 150px;
   object-fit: contain;
   @media (max-width: 768px) {
-    height: 40px;
+    height: 60px;
     max-width: 130px;
   }
   @media (max-width: 480px) {
-    height: 35px;
+    height: 60px;
     max-width: 120px;
   }
 `;
