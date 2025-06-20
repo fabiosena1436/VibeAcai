@@ -5,10 +5,8 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { auth, db } from '../../../services/firebaseConfig';
 import { signOut } from 'firebase/auth';
 import Button from '../../../components/Button';
-import { FaBars, FaTimes, FaHome } from 'react-icons/fa';
-import toast from 'react-hot-toast'; // Importando o toast para as notificações
-
-// MUDANÇA: Importando funções do Firestore para o listener em tempo real
+import { FaBars, FaTimes, FaHome, FaBell } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import {
@@ -20,47 +18,48 @@ import {
   ContentArea,
   MenuButton,
   Overlay,
-  NavSeparator
+  NavSeparator,
+  NotificationBellWrapper,
+  NotificationBadge,
 } from './styles';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  
-  // MUDANÇA: Usamos useRef para evitar a notificação na carga inicial
+  const [notificationCount, setNotificationCount] = useState(0);
   const isInitialLoad = useRef(true);
 
-  // --- MUDANÇA: LÓGICA DE NOTIFICAÇÃO DE NOVOS PEDIDOS ---
   useEffect(() => {
-    // Cria uma query que busca pedidos com status "Pendente"
     const ordersQuery = query(
       collection(db, "orders"), 
       where("status", "==", "Pendente")
     );
 
-    // Inicia o "listener" em tempo real
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-      // Se for a primeira vez que o listener é ativado (ao carregar a página),
-      // apenas marcamos que a carga inicial foi concluída e não fazemos nada.
+      // --- MUDANÇA PRINCIPAL: O contador agora reflete o número total de documentos ---
+      // A propriedade 'snapshot.size' nos dá o número exato de pedidos pendentes.
+      // A interface sempre mostrará a contagem real, atualizada automaticamente.
+      setNotificationCount(snapshot.size);
+
+      // A lógica abaixo continua a mesma, para garantir que o SOM e o POP-UP
+      // apareçam apenas para pedidos NOVOS, e não na carga inicial da página.
       if (isInitialLoad.current) {
         isInitialLoad.current = false;
         return;
       }
 
-      // Itera sobre as mudanças que ocorreram na coleção
       snapshot.docChanges().forEach((change) => {
-        // Se um novo documento foi ADICIONADO...
+        // Quando um novo pedido é adicionado, tocamos o alerta.
+        // Quando um pedido muda de status (sai de "Pendente"), ele é "removido"
+        // desta query, e o 'snapshot.size' lá em cima já cuida de atualizar o contador.
         if (change.type === "added") {
           const newOrder = change.doc.data();
           
-          // 1. Toca o som de notificação
-          // (Certifique-se de que 'notification.mp3' está na pasta /public)
           const audio = new Audio('/notification.mp3');
           audio.play().catch(error => {
             console.warn("Não foi possível tocar o som de notificação automaticamente:", error);
           });
           
-          // 2. Mostra uma notificação visual (toast)
           toast.custom((t) => (
             <div
               style={{
@@ -78,17 +77,13 @@ const AdminLayout = () => {
                 Cliente: <strong>{newOrder.customerName}</strong>
               </p>
             </div>
-          ), { duration: 6000 }); // A notificação dura 6 segundos
+          ), { duration: 6000 });
         }
       });
     });
 
-    // Função de limpeza: O listener é removido quando o componente é desmontado.
-    // Isso é MUITO importante para evitar vazamentos de memória.
     return () => unsubscribe();
-  }, []); // O array vazio [] garante que este efeito rode apenas uma vez
-
-  // --- O restante do componente permanece igual ---
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -97,6 +92,13 @@ const AdminLayout = () => {
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
     }
+  };
+
+  // --- MUDANÇA: O clique no sino agora é apenas um atalho ---
+  // Removemos a linha que zerava o contador.
+  const handleBellClick = () => {
+    closeSidebar();
+    navigate('/admin/dashboard');
   };
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
@@ -113,7 +115,25 @@ const AdminLayout = () => {
             </StyledNavLink>
           </li>
           <NavSeparator /> 
-          <li onClick={closeSidebar}><StyledNavLink to="/admin/dashboard">Visão Geral & Pedidos</StyledNavLink></li>
+          {/* --- MUDANÇA: O link da dashboard também zera o contador ao ser clicado --- */}
+          {/* Adicionamos um onClick aqui para uma melhor experiência do usuário */}
+          <li onClick={handleBellClick}>
+            <StyledNavLink to="/admin/dashboard">
+              Visão Geral & Pedidos
+              {/* O contador também pode aparecer aqui no menu! */}
+              {notificationCount > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  background: '#e53e3e',
+                  borderRadius: '10px',
+                  padding: '2px 8px',
+                  fontSize: '12px'
+                }}>
+                  {notificationCount}
+                </span>
+              )}
+            </StyledNavLink>
+          </li>
           <li onClick={closeSidebar}><StyledNavLink to="/admin/products">Produtos</StyledNavLink></li>
           <li onClick={closeSidebar}><StyledNavLink to="/admin/categories">Categorias</StyledNavLink></li>
           <li onClick={closeSidebar}><StyledNavLink to="/admin/toppings">Adicionais</StyledNavLink></li>
@@ -123,12 +143,23 @@ const AdminLayout = () => {
         </NavList>
         <Button onClick={handleLogout} variant="danger">Sair (Logout)</Button>
       </Sidebar>
+
       <ContentArea>
         <Outlet />
       </ContentArea>
+
       <MenuButton onClick={toggleSidebar}>
         {isSidebarOpen ? <FaTimes /> : <FaBars />}
       </MenuButton>
+      
+      {/* A lógica do sino continua a mesma, mas agora depende do contador real */}
+      <NotificationBellWrapper onClick={handleBellClick}>
+        <FaBell />
+        {notificationCount > 0 && (
+          <NotificationBadge>{notificationCount}</NotificationBadge>
+        )}
+      </NotificationBellWrapper>
+
       <Overlay show={isSidebarOpen} onClick={toggleSidebar} />
     </AdminWrapper>
   );
