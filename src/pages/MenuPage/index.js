@@ -1,3 +1,5 @@
+// src/pages/MenuPage/index.js
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
@@ -103,7 +105,8 @@ const MenuPage = () => {
       appliedPromotion: promoDetails ? promoDetails.title : null, 
     };
     addToCart(cartItem);
-    toast.success(`${product.name} foi adicionado ao carrinho!`);
+    // --- MUDANÇA: A LINHA ABAIXO FOI REMOVIDA ---
+    // toast.success(`${product.name} foi adicionado ao carrinho!`);
   };
 
   const handleProductAction = (product, promoDetails = null) => {

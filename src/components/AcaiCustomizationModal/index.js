@@ -1,3 +1,5 @@
+// src/components/AcaiCustomizationModal/index.js
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
@@ -7,11 +9,10 @@ import { useCart } from '../../contexts/CartContext';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import Modal from '../Modal';
 import Button from '../Button';
-// --- ALTERADO: Importando novos componentes de estilo para o filtro ---
 import {
     SectionTitle, OptionsGrid, OptionItem, ToppingCategory, LoadingContainer,
     ToppingImage, ToppingInfo, CheckboxWrapper,
-    CategoryFilterContainer, CategoryFilterButton // <-- NOVO
+    CategoryFilterContainer, CategoryFilterButton
 } from './styles';
 
 const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
@@ -20,20 +21,19 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
 
     const [sizes, setSizes] = useState([]);
     const [toppings, setToppings] = useState([]);
-    const [categories, setCategories] = useState([]); // <-- NOVO ESTADO para categorias
+    const [categories, setCategories] = useState([]);
     const [loadingData, setLoadingData] = useState(false);
 
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedToppings, setSelectedToppings] = useState({});
     const [currentPrice, setCurrentPrice] = useState(0);
-    const [selectedCategory, setSelectedCategory] = useState('all'); // <-- NOVO ESTADO para o filtro
+    const [selectedCategory, setSelectedCategory] = useState('all');
 
     const promotion = productToCustomize?.appliedPromo;
     const isFreeToppingPromo = promotion?.type === 'free_toppings_selection';
     const freeToppingsLimit = isFreeToppingPromo ? promotion.rules.selection_limit : 0;
     const totalSelectedToppings = Object.values(selectedToppings).filter(Boolean).length;
 
-    // --- ALTERADO: fetchData agora busca também as categorias ---
     useEffect(() => {
         const fetchData = async () => {
             if (!isOpen) return;
@@ -41,7 +41,7 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
             try {
                 const sizesRef = collection(db, 'sizes');
                 const toppingsRef = collection(db, 'toppings');
-                const categoriesRef = collection(db, 'toppingCategories'); // <-- Referência para a nova coleção
+                const categoriesRef = collection(db, 'toppingCategories');
 
                 const qSizes = query(sizesRef, orderBy('price'));
                 const qToppings = query(toppingsRef, orderBy('name'));
@@ -50,16 +50,16 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
                 const [sizesSnapshot, toppingsSnapshot, categoriesSnapshot] = await Promise.all([
                     getDocs(qSizes),
                     getDocs(qToppings),
-                    getDocs(qCategories) // <-- Busca as categorias
+                    getDocs(qCategories)
                 ]);
 
                 const sizesData = sizesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const toppingsData = toppingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const categoriesData = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // <-- Dados das categorias
+                const categoriesData = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 setSizes(sizesData);
                 setToppings(toppingsData);
-                setCategories(categoriesData); // <-- Salva as categorias no estado
+                setCategories(categoriesData);
 
                 const initialSize = sizesData.find(s => s.name.replace('ml', '') === productToCustomize?.size) || sizesData[0];
                 if (initialSize) setSelectedSize(initialSize);
@@ -73,7 +73,6 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
         fetchData();
     }, [isOpen, productToCustomize]);
 
-    // O useEffect de cálculo de preço não precisa de alterações.
     useEffect(() => {
         if (!productToCustomize) {
             setCurrentPrice(0);
@@ -118,7 +117,8 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
         });
         const cartItem = { ...productToCustomize, id_cart: `${productToCustomize.id}-${Date.now()}`, name: `${productToCustomize.name} ${selectedSize.name}`, price: currentPrice, quantity: 1, size: selectedSize, toppings: toppingsList, appliedPromotion: promotion ? promotion.title : null };
         addToCart(cartItem);
-        toast.success(`${cartItem.name} foi adicionado ao carrinho!`);
+        // --- MUDANÇA: A LINHA ABAIXO FOI REMOVIDA ---
+        // toast.success(`${cartItem.name} foi adicionado ao carrinho!`);
         resetAndClose();
     };
 
@@ -126,11 +126,10 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
         setSelectedSize(null);
         setSelectedToppings({});
         setCurrentPrice(0);
-        setSelectedCategory('all'); // <-- Reseta o filtro ao fechar
+        setSelectedCategory('all');
         onClose();
     }, [onClose]);
 
-    // --- LÓGICA DE FILTRAGEM ---
     const groupedToppings = toppings.reduce((acc, topping) => {
         const category = topping.category || 'Outros';
         if (!acc[category]) acc[category] = [];
@@ -140,9 +139,8 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
 
     const filteredGroupedToppings = (() => {
         if (selectedCategory === 'all') {
-            return groupedToppings; // Se 'Todos' está selecionado, retorna tudo
+            return groupedToppings;
         }
-        // Senão, retorna um objeto contendo apenas a categoria selecionada
         return {
             [selectedCategory]: groupedToppings[selectedCategory] || []
         };
@@ -171,7 +169,6 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
                         {isFreeToppingPromo && ` (${totalSelectedToppings}/${freeToppingsLimit} grátis)`}
                     </SectionTitle>
                     
-                    {/* NOVO: Interface dos botões de filtro */}
                     <CategoryFilterContainer>
                         <CategoryFilterButton $isActive={selectedCategory === 'all'} onClick={() => setSelectedCategory('all')}>
                             Todos
@@ -183,7 +180,6 @@ const AcaiCustomizationModal = ({ isOpen, onClose, productToCustomize }) => {
                         ))}
                     </CategoryFilterContainer>
 
-                    {/* ALTERADO: Mapeia sobre os adicionais já filtrados */}
                     {Object.entries(filteredGroupedToppings).map(([category, items]) => (
                         <div key={category}>
                             <ToppingCategory>{category}</ToppingCategory>

@@ -133,7 +133,8 @@ const HomePage = () => {
       appliedPromotion: promoDetails ? promoDetails.title : null,
     };
     addToCart(cartItem);
-    toast.success(`${product.name} foi adicionado ao carrinho!`);
+    // --- MUDANÇA: A LINHA ABAIXO FOI REMOVIDA ---
+    // toast.success(`${product.name} foi adicionado ao carrinho!`);
   };
 
   const handleProductAction = (product, promoDetails = null) => {
@@ -187,7 +188,6 @@ const HomePage = () => {
                   <Section>
                     <SectionTitle>🔥 Promoções Imperdíveis!</SectionTitle>
                     <CarouselWrapper>
-                      {/* CÓDIGO DO SWIPER CORRIGIDO E RESTAURADO AO ORIGINAL */}
                       <Swiper
                         modules={[Navigation, Pagination, A11y]}
                         spaceBetween={12}
