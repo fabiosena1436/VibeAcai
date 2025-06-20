@@ -1,70 +1,191 @@
-# Getting Started with Create React App
+# 🍧 Vibe Açaí - Sistema de Delivery Completo
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase&logoColor=white)
+![Styled Components](https://img.shields.io/badge/styled--components-DB7093?style=for-the-badge&logo=styled-components&logoColor=white)
 
-## Available Scripts
+Um sistema de e-commerce completo e em tempo real, desenvolvido para lojas de açaí e similares. O projeto inclui uma vitrine moderna para os clientes e um painel administrativo poderoso para gestão de produtos, pedidos e configurações da loja.
 
-In the project directory, you can run:
+---
 
-### `yarn start`
+## 📜 Índice
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- [Visão Geral](#-visão-geral)
+- [📸 Screenshots](#-screenshots)
+- [✨ Funcionalidades](#-funcionalidades)
+  - [Cliente (Vitrine)](#-cliente-vitrine)
+  - [Administrador (Painel de Gestão)](#-administrador-painel-de-gestão)
+- [🛠️ Tecnologias Utilizadas](#️-tecnologias-utilizadas)
+- [🚀 Começando](#-começando)
+  - [Pré-requisitos](#pré-requisitos)
+  - [Configuração do Firebase](#configuração-do-firebase)
+  - [Instalação Local](#instalação-local)
+- [📂 Estrutura do Projeto](#-estrutura-do-projeto)
+- [📄 Licença](#-licença)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `yarn test`
+## 🖼️ Visão Geral
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+O **Vibe Açaí** foi criado para oferecer uma experiência de compra fluida e agradável para os clientes e, ao mesmo tempo, dar ao dono da loja controle total sobre o seu negócio. A integração com o Firebase garante que os pedidos cheguem em tempo real, as informações estejam sempre atualizadas e a gestão seja feita de forma segura.
 
-### `yarn build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 📸 Screenshots
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Página Inicial | Cardápio com Filtros | Painel do Administrador |
+| :---: | :---: | :---: |
+| ![Tela inicial do Vibe Açaí](./screenshots/home.png) | ![Tela do cardápio com filtros](./screenshots/menu.png) | ![Dashboard de pedidos do painel admin](./screenshots/admin-dashboard.png) |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `yarn eject`
+## ✨ Funcionalidades
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 🛍️ Cliente (Vitrine)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Vitrine Dinâmica:** Página inicial com banner, promoções e produtos em destaque.
+- **Cardápio Inteligente:**
+    - Filtro de produtos por categoria.
+    - Busca de produtos por nome.
+- **Personalização de Açaí:** Modal interativo para o cliente montar o açaí, escolhendo tamanho e adicionais.
+- **Carrinho de Compras:** Adição e gestão de itens com cálculo de subtotal.
+- **Status da Loja:** O cliente é informado se a loja está aberta ou fechada e vê o horário de funcionamento.
+- **Checkout Simplificado:** Página para inserir informações de entrega e finalizar o pedido.
+- **Design Responsivo:** Interface adaptada para computadores, tablets e telemóveis.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### ⚙️ Administrador (Painel de Gestão)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.to
+- **Login Seguro:** Autenticação para acesso exclusivo ao painel.
+- **Dashboard em Tempo Real:**
+    - Visualização de novos pedidos que chegam instantaneamente.
+    - **Notificações sonoras e visuais** (ícone de sino com contador) para cada novo pedido.
+    - Gestão de status dos pedidos (Pendente, Em Preparo, Saiu para Entrega, Finalizado).
+- **Gestão de Conteúdo (CRUD completo):**
+    - **Produtos:** Crie, edite e remova produtos, definindo nome, preço, categoria, imagem, etc.
+    - **Categorias:** Organize seus produtos em categorias.
+    - **Adicionais:** Gira a lista de toppings disponíveis para os açaís.
+    - **Tamanhos:** Defina os tamanhos e preços dos copos de açaí.
+    - **Promoções:** Crie promoções de desconto para produtos específicos.
+- **Configurações da Loja:**
+    - Alterar logo e banner da loja.
+    - Definir a taxa de entrega.
+    - **Abrir e Fechar a loja** com um clique.
+    - Definir o texto com os horários de funcionamento.
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🛠️ Tecnologias Utilizadas
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **Frontend:**
+    - [React.js](https://reactjs.org/)
+    - [React Router](https://reactrouter.com/)
+    - [Styled Components](https://styled-components.com/) para estilização.
+- **Backend & Banco de Dados (BaaS):**
+    - [Firebase](https://firebase.google.com/)
+        - **Firestore:** Banco de dados NoSQL em tempo real.
+        - **Authentication:** Para login de administradores.
+        - **Storage:** Para upload de imagens de produtos e da loja.
+- **UI/UX & Outros:**
+    - [React Hot Toast](https://react-hot-toast.com/) para notificações.
+    - [Swiper.js](https://swiperjs.com/) para carrosséis.
+    - [React Icons](https://react-icons.github.io/react-icons/) para ícones.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🚀 Começando
 
-### Analyzing the Bundle Size
+Siga estas instruções para obter uma cópia do projeto e executá-la na sua máquina local para desenvolvimento e testes.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Pré-requisitos
 
-### Making a Progressive Web App
+- [Node.js](https://nodejs.org/en/) (versão 16 ou superior)
+- `npm` ou `yarn`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Configuração do Firebase
 
-### Advanced Configuration
+Este projeto depende de uma configuração do Firebase para funcionar.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+1.  **Crie um projeto no Firebase:**
+    - Vá para o [Console do Firebase](https://console.firebase.google.com/).
+    - Clique em "Adicionar projeto" e siga os passos.
 
-### Deployment
+2.  **Crie uma Aplicação Web:**
+    - Dentro do seu projeto, clique no ícone da Web (`</>`) para adicionar uma nova aplicação web.
+    - Dê um nome à aplicação e copie o objeto `firebaseConfig`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+3.  **Configure os Serviços:**
+    - **Firestore Database:** No menu lateral, vá para `Firestore Database` e clique em "Criar banco de dados". Comece no **modo de teste** para facilitar o desenvolvimento inicial.
+    - **Authentication:** No menu `Authentication`, vá para a aba `Sign-in method` e ative o provedor **"E-mail/senha"**.
+    - **Storage:** No menu `Storage`, clique em "Começar" e siga as instruções para criar um bucket de armazenamento.
 
-### `yarn build` fails to minify
+### Instalação Local
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/seu-usuario/vibeacai.git](https://github.com/seu-usuario/vibeacai.git)
+    ```
+
+2.  **Navegue para a pasta do projeto:**
+    ```bash
+    cd vibeacai
+    ```
+
+3.  **Instale as dependências:**
+    ```bash
+    npm install
+    # ou
+    yarn install
+    ```
+
+4.  **Configure as variáveis de ambiente:**
+    - Navegue até o ficheiro `src/services/firebaseConfig.js`.
+    - Substitua o objeto de configuração de exemplo pelo seu objeto `firebaseConfig` que você copiou do console do Firebase.
+
+    ```javascript
+    // src/services/firebaseConfig.js
+
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_AUTH_DOMAIN",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_STORAGE_BUCKET",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+      appId: "SUA_APP_ID"
+    };
+    ```
+
+5.  **Execute a aplicação:**
+    ```bash
+    npm start
+    # ou
+    yarn start
+    ```
+
+A aplicação deverá estar a ser executada em `http://localhost:3000`.
+
+---
+
+## 📂 Estrutura do Projeto
+
+A estrutura de ficheiros foi organizada para ser escalável e de fácil manutenção:
+
+vibeacai/
+├── public/              # Ficheiros estáticos e HTML base
+└── src/
+├── assets/          # Imagens, fontes, etc.
+├── components/      # Componentes React reutilizáveis (Button, Modal, Card)
+├── contexts/        # Contextos da aplicação (Auth, Cart, StoreSettings)
+├── pages/           # Componentes de página (HomePage, MenuPage, Admin/Dashboard)
+├── routes/          # Configuração das rotas da aplicação
+├── services/        # Configuração de serviços externos (firebaseConfig.js)
+├── styles/          # Estilos globais
+└── App.js           # Componente principal que renderiza as rotas
+
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o ficheiro [LICENSE](LICENSE) para mais detalhes.
+
+---
