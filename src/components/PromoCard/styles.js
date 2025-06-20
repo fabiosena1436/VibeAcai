@@ -20,7 +20,7 @@ export const CardImage = styled.img`
 `;
 
 export const CardContent = styled.div`
-  padding: 20px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
   text-align: center;

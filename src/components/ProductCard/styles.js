@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 export const CardWrapper = styled.div`
   background-color: #fff;
-  border-radius: 12px;
+  border-radius: 7px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   overflow: hidden;
   display: flex;

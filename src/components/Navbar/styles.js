@@ -113,7 +113,7 @@ export const NavLink = styled(RouterNavLink)`
 export const MobileCartLink = styled(RouterNavLink)`
   position: relative;
   color: #fff;
-  font-size: 1.7rem; // Tamanho do ícone
+  font-size: 1.3rem; // Tamanho do ícone
   display: flex;
   align-items: center;
   padding: 8px;
