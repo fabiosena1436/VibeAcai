@@ -339,11 +339,13 @@ const HomePage = () => {
                         {promotions.map(promo => {
                           const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
                           return (
+                            
                             <SwiperSlide key={promo.id} style={{ height: 'auto', display: 'flex' }}>
+                             
                                {
                                  (() => {
                                    if (promo.type === 'product_discount' && promo.product) {
-                                       return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
+                                       return  <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
                                    }
                                    if (promo.type === 'free_toppings_selection' && promo.product) {
                                        return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;

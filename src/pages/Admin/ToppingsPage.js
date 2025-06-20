@@ -1,33 +1,171 @@
 // src/pages/Admin/ToppingsPage.js
+
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-// MUDANÇA: Ícones não são mais necessários
-// import { FaEdit, FaTrash } from 'react-icons/fa';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import toast from 'react-hot-toast';
 
 // --- STYLED COMPONENTS ---
-const Title = styled.h2` color: #333; margin-bottom: 20px; `;
-const FormContainer = styled.div` background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; `;
-const FormRow = styled.div` display: flex; gap: 15px; margin-bottom: 15px; @media (max-width: 768px) { flex-direction: column; gap: 0; } `;
-const InputGroup = styled.div` flex: 1; display: flex; flex-direction: column; @media (max-width: 768px) { margin-bottom: 15px; } `;
-const Label = styled.label` margin-bottom: 5px; font-weight: 500; color: #555; `;
-const Input = styled.input` padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; `;
-const CheckboxGroup = styled.div` display: flex; align-items: center; gap: 10px; margin-top: 10px; `;
-const Table = styled.table` width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);`;
-const Thead = styled.thead` background-color: #f8f9fa;`;
+
+// Título da página
+const Title = styled.h2`
+  color: #333;
+  margin-bottom: 20px;
+`;
+
+// Contêiner para o formulário de adição
+const FormContainer = styled.div`
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+`;
+
+// Linha do formulário, flexível e responsiva
+const FormRow = styled.div`
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 15px; // Mantém um gap para espaçamento em mobile
+    margin-bottom: 0;
+  }
+`;
+
+// Grupo de Label + Input
+const InputGroup = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  @media (max-width: 768px) {
+    margin-bottom: 15px;
+  }
+`;
+
+const Label = styled.label`
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+`;
+
+const Input = styled.input`
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box; // Garante que padding não afete a largura total
+`;
+
+const CheckboxGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+`;
+
+// Estilos da tabela (visível apenas em Desktop)
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+`;
+
+const Thead = styled.thead` background-color: #f8f9fa; `;
 const Tr = styled.tr` &:nth-child(even) { background-color: #f2f2f2; }`;
-const Th = styled.th` padding: 12px 15px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;`;
+const Th = styled.th` padding: 12px 15px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057; `;
 const Td = styled.td` padding: 12px 15px; border-bottom: 1px solid #dee2e6; vertical-align: middle; `;
-const ActionsTd = styled(Td)` display: flex; gap: 10px; align-items: center; height: 74px;`;
-const LoadingMessage = styled.p` color: #555; font-style: italic;`;
-const ImagePreview = styled.img` width: 50px; height: 50px; object-fit: cover; border-radius: 4px; `;
+const ActionsTd = styled(Td)` display: flex; gap: 10px; align-items: center; height: 74px; `;
 
+// Pré-visualização da imagem na tabela
+const ImagePreview = styled.img`
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+`;
 
+const LoadingMessage = styled.p` color: #555; font-style: italic; `;
+
+// --- MUDANÇA: Estilos para a visualização em cartões (Mobile) ---
+
+// Contêiner que só aparece em telas menores (mobile)
+const MobileCardContainer = styled.div`
+  display: none; // Escondido por padrão
+  @media (max-width: 768px) {
+    display: block; // Visível em telas <= 768px
+  }
+`;
+
+// Contêiner que só aparece em telas maiores (desktop)
+const DesktopTableContainer = styled.div`
+  display: block; // Visível por padrão
+  @media (max-width: 768px) {
+    display: none; // Escondido em telas <= 768px
+  }
+`;
+
+// Estilo de cada cartão de adicional
+const ToppingCard = styled.div`
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+// Cabeçalho do cartão (Imagem e Nome)
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+`;
+
+const CardTitle = styled.h3`
+  margin: 0;
+  color: #333;
+  font-size: 1.2em;
+`;
+
+// Corpo do cartão com as informações
+const CardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+// Linha de informação (ex: "Preço: R$ 5,00")
+const InfoRow = styled.div`
+  font-size: 0.95em;
+  color: #555;
+  & > strong {
+    color: #333;
+  }
+`;
+
+// Rodapé do cartão com os botões de ação
+const CardActions = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+`;
+
+// --- COMPONENTE ---
 const ToppingsPage = () => {
     const [toppings, setToppings] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -141,7 +279,6 @@ const ToppingsPage = () => {
         setEditingTopping(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    // NOVO: Estilo para os botões ficarem compactos na tabela, igual na página de categorias.
     const smallButtonStyle = {
         padding: '6px 12px',
         fontSize: '0.9em',
@@ -175,36 +312,58 @@ const ToppingsPage = () => {
                         </InputGroup>
                     </FormRow>
                     <CheckboxGroup><input type="checkbox" id="isAvailable" checked={newIsAvailable} onChange={e => setNewIsAvailable(e.target.checked)} /><Label htmlFor="isAvailable">Disponível para venda</Label></CheckboxGroup>
-                    <Button type="submit" variant="primary" disabled={isSubmitting} style={{marginTop: '20px'}}>{isSubmitting ? 'A adicionar...' : 'Adicionar Adicional'}</Button>
+                    <Button type="submit" variant="primary" disabled={isSubmitting} style={{marginTop: '20px', width: '100%'}}>{isSubmitting ? 'A adicionar...' : 'Adicionar Adicional'}</Button>
                 </form>
             </FormContainer>
 
             {loading ? <LoadingMessage>A carregar...</LoadingMessage> : (
-                <Table>
-                    <Thead><Tr><Th>Imagem</Th><Th>Nome</Th><Th>Categoria</Th><Th>Preço</Th><Th>Disponível</Th><Th>Ações</Th></Tr></Thead>
-                    <tbody>
+                <>
+                    {/* --- MUDANÇA: Container para a tabela (visível em desktop) --- */}
+                    <DesktopTableContainer>
+                        <Table>
+                            <Thead><Tr><Th>Imagem</Th><Th>Nome</Th><Th>Categoria</Th><Th>Preço</Th><Th>Disponível</Th><Th>Ações</Th></Tr></Thead>
+                            <tbody>
+                                {toppings.map(topping => (
+                                    <Tr key={topping.id}>
+                                        <Td>{topping.imageUrl ? <ImagePreview src={topping.imageUrl} alt={topping.name} /> : 'Sem imagem'}</Td>
+                                        <Td>{topping.name}</Td>
+                                        <Td>{topping.category || 'N/A'}</Td>
+                                        <Td>R$ {topping.price.toFixed(2).replace('.', ',')}</Td>
+                                        <Td>{topping.isAvailable ? 'Sim' : 'Não'}</Td>
+                                        <ActionsTd>
+                                            <Button variant="primary" onClick={() => setEditingTopping(topping)} style={smallButtonStyle}>Editar</Button>
+                                            <Button variant="danger" onClick={() => setItemToDelete(topping.id)} style={smallButtonStyle}>Excluir</Button>
+                                        </ActionsTd>
+                                    </Tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </DesktopTableContainer>
+
+                    {/* --- MUDANÇA: Container para os cartões (visível em mobile) --- */}
+                    <MobileCardContainer>
                         {toppings.map(topping => (
-                            <Tr key={topping.id}>
-                                <Td>{topping.imageUrl ? <ImagePreview src={topping.imageUrl} alt={topping.name} /> : 'Sem imagem'}</Td>
-                                <Td>{topping.name}</Td>
-                                <Td>{topping.category || 'N/A'}</Td>
-                                <Td>R$ {topping.price.toFixed(2).replace('.', ',')}</Td>
-                                <Td>{topping.isAvailable ? 'Sim' : 'Não'}</Td>
-                                <ActionsTd>
-                                    {/* MUDANÇA: Botões de ícone trocados por botões de texto, usando o novo estilo. */}
-                                    <Button variant="primary" onClick={() => setEditingTopping(topping)} style={smallButtonStyle}>
-                                        Editar
-                                    </Button>
-                                    <Button variant="danger" onClick={() => setItemToDelete(topping.id)} style={smallButtonStyle}>
-                                        Excluir
-                                    </Button>
-                                </ActionsTd>
-                            </Tr>
+                            <ToppingCard key={topping.id}>
+                                <CardHeader>
+                                    <ImagePreview src={topping.imageUrl || 'https://via.placeholder.com/50'} alt={topping.name} />
+                                    <CardTitle>{topping.name}</CardTitle>
+                                </CardHeader>
+                                <CardBody>
+                                    <InfoRow><strong>Preço:</strong> R$ {topping.price.toFixed(2).replace('.', ',')}</InfoRow>
+                                    <InfoRow><strong>Categoria:</strong> {topping.category || 'N/A'}</InfoRow>
+                                    <InfoRow><strong>Disponível:</strong> {topping.isAvailable ? 'Sim' : 'Não'}</InfoRow>
+                                </CardBody>
+                                <CardActions>
+                                    <Button variant="primary" onClick={() => setEditingTopping(topping)} style={{flex: 1}}>Editar</Button>
+                                    <Button variant="danger" onClick={() => setItemToDelete(topping.id)} style={{flex: 1}}>Excluir</Button>
+                                </CardActions>
+                            </ToppingCard>
                         ))}
-                    </tbody>
-                </Table>
+                    </MobileCardContainer>
+                </>
             )}
 
+            {/* O Modal de Edição e de Confirmação não precisam de alterações, pois já são componentes sobrepostos e geralmente funcionam bem em qualquer tela. */}
             <Modal isOpen={!!editingTopping} onClose={() => setEditingTopping(null)} title="Editar Adicional">
                 {editingTopping && (
                     <form onSubmit={handleUpdate}>

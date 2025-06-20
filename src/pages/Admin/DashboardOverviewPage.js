@@ -1,16 +1,18 @@
 // src/pages/Admin/DashboardOverviewPage.js
+
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 
-// Importações do MUI para a Tabela e Abas
+// Importações do MUI
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import toast from 'react-hot-toast'; // Importando toast para notificações
 
 // --- STYLED COMPONENTS COM RESPONSIVIDADE ---
 const PageWrapper = styled.div`
@@ -71,33 +73,98 @@ const ReportsSection = styled.div`
     strong { color: #7c3aed; } 
   }
 
-  /* Em telas menores, os cartões de relatório ficam em uma única coluna */
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 25px;
   }
 `;
 
-// Wrapper para aplicar estilos responsivos na tabela
-const DataGridWrapper = styled.div`
-  .MuiDataGrid-root {
-    border: none; /* Remove borda dupla */
-  }
+// --- MUDANÇA: Estilos para a visualização em cartões (Mobile) e DataGrid (Desktop) ---
 
-  /* Em telas menores, oculta a coluna de ID */
+// Contêiner para a lista de cartões (visível em mobile)
+const MobileCardList = styled.div`
+  display: none; // Escondido por padrão
+  padding: 15px;
+  background-color: #f9f9f9;
+
   @media (max-width: 768px) {
-    .column-id {
-      display: none;
-    }
+    display: block; // Visível em telas <= 768px
   }
 `;
+
+// Contêiner para o DataGrid (visível em desktop)
+const DesktopDataGrid = styled.div`
+  display: block; // Visível por padrão
+  .MuiDataGrid-root {
+    border: none;
+  }
+  @media (max-width: 768px) {
+    display: none; // Escondido em telas <= 768px
+  }
+`;
+
+// Estilo de cada cartão de pedido
+const OrderCard = styled.div`
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  padding: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+`;
+
+const CustomerInfo = styled.div`
+  h4 {
+    margin: 0;
+    font-size: 1.15em;
+    color: #333;
+  }
+  span {
+    font-size: 0.85em;
+    color: #777;
+  }
+`;
+
+const OrderTotal = styled.div`
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #7c3aed;
+`;
+
+const StatusSelector = styled.select`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 5px;
+
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+  }
+`;
+
 // --- FIM DOS STYLED COMPONENTS ---
 
 
 const DashboardOverviewPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
+  // ... (estados de relatórios permanecem os mesmos)
   const [salesToday, setSalesToday] = useState(0);
   const [ordersTodayCount, setOrdersTodayCount] = useState(0);
   const [salesThisWeek, setSalesThisWeek] = useState(0);
@@ -108,8 +175,7 @@ const DashboardOverviewPage = () => {
   const [ordersThisYearCount, setOrdersThisYearCount] = useState(0);
 
   const [selectedStatusTab, setSelectedStatusTab] = useState('Ativos');
-  
-  // Hooks do MUI para responsividade das Abas
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -122,6 +188,7 @@ const DashboardOverviewPage = () => {
       const ordersData = querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       setOrders(ordersData);
 
+      // Lógica de cálculo de relatórios (permanece a mesma)
       let todaySales = 0, todayCount = 0, weekSales = 0, weekCount = 0, monthSales = 0, monthCount = 0, yearSales = 0, yearCount = 0;
       const now = new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -142,55 +209,55 @@ const DashboardOverviewPage = () => {
       setSalesThisWeek(weekSales); setOrdersThisWeekCount(weekCount);
       setSalesThisMonth(monthSales); setOrdersThisMonthCount(monthCount);
       setSalesThisYear(yearSales); setOrdersThisYearCount(yearCount);
+
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
+      toast.error("Erro ao carregar os dados.");
       setOrders([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     const orderDocRef = doc(db, 'orders', orderId);
     try {
       await updateDoc(orderDocRef, { status: newStatus });
-      fetchData();
+      toast.success("Status do pedido atualizado!");
+      fetchData(); // Recarrega os dados para refletir a mudança
     } catch (error) {
       console.error("Erro ao atualizar status do pedido:", error);
-      alert("Falha ao atualizar o status do pedido.");
+      toast.error("Falha ao atualizar o status.");
     }
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID Pedido', width: 150, cellClassName: 'column-id', headerClassName: 'column-id', renderCell: (params) => params.value.substring(0,8) + '...' },
     { field: 'createdAt', headerName: 'Data', width: 170, valueGetter: (params) => params.row?.createdAt?.toDate() || null, renderCell: (params) => params.value ? params.value.toLocaleString('pt-BR') : 'N/A' },
     { field: 'customerName', headerName: 'Cliente', width: 200, flex: 1 },
     { field: 'grandTotal', headerName: 'Total', width: 130, type: 'number', renderCell: (params) => `R$ ${params.value?.toFixed(2).replace('.', ',') || '0,00'}` },
-    { field: 'status', headerName: 'Status', width: 180,
+    {
+      field: 'status', headerName: 'Status', width: 180,
       renderCell: (params) => (
-        <select 
+        <StatusSelector
           value={params.value}
           onChange={(e) => handleUpdateOrderStatus(params.row.id, e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-          style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: '#fff', cursor: 'pointer' }}
+          onClick={(e) => e.stopPropagation()} // Impede que o clique no select selecione a linha
         >
           <option value="Pendente">Pendente</option>
           <option value="Em Preparo">Em Preparo</option>
           <option value="Saiu para Entrega">Saiu para Entrega</option>
           <option value="Concluído">Concluído</option>
           <option value="Cancelado">Cancelado</option>
-        </select>
+        </StatusSelector>
       )
     },
+    // Coluna de ID escondida por padrão para focar em dados mais relevantes
+    { field: 'id', headerName: 'ID Pedido', width: 150, renderCell: (params) => params.value.substring(0, 8) + '...' },
   ];
 
-  const handleTabChange = (event, newValue) => {
-    setSelectedStatusTab(newValue);
-  };
+  const handleTabChange = (event, newValue) => { setSelectedStatusTab(newValue); };
 
   const filteredOrders = orders.filter(order => {
     if (selectedStatusTab === 'Todos') return true;
@@ -201,43 +268,87 @@ const DashboardOverviewPage = () => {
   return (
     <PageWrapper>
       <h1>Visão Geral do Dashboard</h1>
-      
+
       <SectionTitle>Relatórios Rápidos</SectionTitle>
-      {loading ? ( <LoadingText>Calculando relatórios...</LoadingText> ) : (<ReportsSection>
-        <h3>Resumo de Vendas</h3>
-        <div><h4>Hoje ({new Date().toLocaleDateString('pt-BR')})</h4><p>Total de Vendas: <strong>R$ {salesToday.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersTodayCount}</strong></p></div>
-        <div><h4>Esta Semana</h4><p>Total de Vendas: <strong>R$ {salesThisWeek.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersThisWeekCount}</strong></p></div>
-        <div><h4>Este Mês ({new Date().toLocaleString('pt-BR', { month: 'long' })})</h4><p>Total de Vendas: <strong>R$ {salesThisMonth.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersThisMonthCount}</strong></p></div>
-        <div><h4>Este Ano ({new Date().getFullYear()})</h4><p>Total de Vendas: <strong>R$ {salesThisYear.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersThisYearCount}</strong></p></div>
-      </ReportsSection>)}
-      
+      {loading ? (<LoadingText>Calculando relatórios...</LoadingText>) : (
+        <ReportsSection>
+          <h3>Resumo de Vendas</h3>
+          <div><h4>Hoje ({new Date().toLocaleDateString('pt-BR')})</h4><p>Total de Vendas: <strong>R$ {salesToday.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersTodayCount}</strong></p></div>
+          <div><h4>Esta Semana</h4><p>Total de Vendas: <strong>R$ {salesThisWeek.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersThisWeekCount}</strong></p></div>
+          <div><h4>Este Mês ({new Date().toLocaleString('pt-BR', { month: 'long' })})</h4><p>Total de Vendas: <strong>R$ {salesThisMonth.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersThisMonthCount}</strong></p></div>
+          <div><h4>Este Ano ({new Date().getFullYear()})</h4><p>Total de Vendas: <strong>R$ {salesThisYear.toFixed(2).replace('.', ',')}</strong></p><p>Número de Pedidos: <strong>{ordersThisYearCount}</strong></p></div>
+        </ReportsSection>
+      )}
+
       <SectionTitle>Pedidos</SectionTitle>
       <Box sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: '8px', boxShadow: 1, overflow: 'hidden' }}>
-        <Tabs 
-            value={selectedStatusTab} 
-            onChange={handleTabChange} 
-            variant={isMobile ? 'scrollable' : 'standard'}
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            centered={!isMobile}
+        <Tabs
+          value={selectedStatusTab}
+          onChange={handleTabChange}
+          variant={isMobile ? 'scrollable' : 'standard'}
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          centered={!isMobile}
+          indicatorColor="primary"
+          textColor="primary"
         >
           <Tab label={`Ativos (${orders.filter(o => ['Pendente', 'Em Preparo', 'Saiu para Entrega'].includes(o.status)).length})`} value="Ativos" />
           <Tab label={`Concluídos (${orders.filter(o => o.status === 'Concluído').length})`} value="Concluído" />
           <Tab label={`Cancelados (${orders.filter(o => o.status === 'Cancelado').length})`} value="Cancelado" />
           <Tab label={`Todos (${orders.length})`} value="Todos" />
         </Tabs>
-        <DataGridWrapper>
-          <Box sx={{ height: 600, width: '100%' }}>
+
+        {/* --- MUDANÇA: Renderização condicional por CSS --- */}
+
+        {/* 1. Visão Desktop com DataGrid */}
+        <DesktopDataGrid>
+          <Box sx={{ height: 600, width: '100%', overflow: 'hidden' }}>
             <DataGrid
               rows={filteredOrders}
               columns={columns}
+              initialState={{
+                columns: {
+                  columnVisibilityModel: { id: false } // Esconde a coluna ID por padrão
+                }
+              }}
               pageSize={10}
               rowsPerPageOptions={[10, 20, 50]}
               loading={loading}
               localeText={{ noRowsLabel: 'Nenhum pedido para exibir nesta categoria' }}
             />
           </Box>
-        </DataGridWrapper>
+        </DesktopDataGrid>
+
+        {/* 2. Visão Mobile com Cartões */}
+        <MobileCardList>
+          {loading ? <LoadingText>Carregando pedidos...</LoadingText> : (
+            filteredOrders.length > 0 ? filteredOrders.map(order => (
+              <OrderCard key={order.id}>
+                <CardHeader>
+                  <CustomerInfo>
+                    <h4>{order.customerName}</h4>
+                    <span>{order.createdAt?.toDate().toLocaleString('pt-BR') || 'Data indisponível'}</span>
+                  </CustomerInfo>
+                  <OrderTotal>
+                    R$ {order.grandTotal?.toFixed(2).replace('.', ',') || '0,00'}
+                  </OrderTotal>
+                </CardHeader>
+                <div>
+                  <StatusSelector
+                    value={order.status}
+                    onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                  >
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em Preparo">Em Preparo</option>
+                    <option value="Saiu para Entrega">Saiu para Entrega</option>
+                    <option value="Concluído">Concluído</option>
+                    <option value="Cancelado">Cancelado</option>
+                  </StatusSelector>
+                </div>
+              </OrderCard>
+            )) : <LoadingText>Nenhum pedido para exibir nesta categoria</LoadingText>
+          )}
+        </MobileCardList>
       </Box>
     </PageWrapper>
   );
