@@ -1,4 +1,3 @@
-// src/pages/Admin/PrintableReceiptPage/styles.js
 import styled from 'styled-components';
 
 export const ReceiptWrapper = styled.div`
@@ -93,6 +92,13 @@ export const ItemTable = styled.table`
     font-style: italic;
     color: #333;
     padding-left: 10px;
+  }
+
+  /* --- NOVO --- Estilo para o preço unitário */
+  .unit-price {
+    font-size: 10px;
+    font-style: italic;
+    color: #555;
   }
 `;
 

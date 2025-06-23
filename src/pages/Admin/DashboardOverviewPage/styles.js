@@ -1,5 +1,3 @@
-// src/pages/Admin/DashboardOverviewPage/styles.js
-
 import styled from 'styled-components';
 
 export const PageWrapper = styled.div`
@@ -155,7 +153,7 @@ export const StatusSelector = styled.select`
   background-color: #fff;
   cursor: pointer;
   font-size: 1em;
-  flex-grow: 1; // --- Faz o seletor ocupar o espaço restante
+  flex-grow: 1;
 
   &:focus {
     outline: none;

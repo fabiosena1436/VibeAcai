@@ -1,22 +1,14 @@
-// src/pages/Admin/DashboardOverviewPage/index.js
-
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../services/firebaseConfig';
 import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-
-// --- NOVO --- Importar o ícone de impressão
 import { FaPrint } from 'react-icons/fa';
-
-// Importações do MUI
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-
-// Importando todos os componentes estilizados do arquivo de estilos
 import {
   PageWrapper,
   SectionTitle,
@@ -29,14 +21,12 @@ import {
   CustomerInfo,
   OrderTotal,
   StatusSelector,
-  // --- NOVO --- Importar o novo container de ações
   CardActionsContainer
 } from './styles';
 
 const DashboardOverviewPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [salesToday, setSalesToday] = useState(0);
   const [ordersTodayCount, setOrdersTodayCount] = useState(0);
   const [salesThisWeek, setSalesThisWeek] = useState(0);
@@ -45,9 +35,7 @@ const DashboardOverviewPage = () => {
   const [ordersThisMonthCount, setOrdersThisMonthCount] = useState(0);
   const [salesThisYear, setSalesThisYear] = useState(0);
   const [ordersThisYearCount, setOrdersThisYearCount] = useState(0);
-
   const [selectedStatusTab, setSelectedStatusTab] = useState('Ativos');
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -86,7 +74,6 @@ const DashboardOverviewPage = () => {
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
       toast.error("Erro ao carregar os dados.");
-      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -96,14 +83,12 @@ const DashboardOverviewPage = () => {
 
   // --- NOVO --- Função para enviar notificação pelo WhatsApp
   const sendWhatsAppNotification = (phone, customerName, orderId) => {
-    // Remove todos os caracteres não numéricos do telefone
     const cleanedPhone = phone.replace(/\D/g, '');
     const message = `Olá, ${customerName}! Seu pedido #${orderId.substring(0, 5)} da Vibe Açaí saiu para entrega e chegará em breve! 🛵`;
     const whatsappLink = `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(message)}`;
     
-    // Abre o link em uma nova aba
     window.open(whatsappLink, '_blank');
-    toast.success(`Notificação para ${customerName} pronta para ser enviada!`);
+    toast.success(`Notificação para ${customerName} pronta para envio!`);
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
@@ -112,24 +97,23 @@ const DashboardOverviewPage = () => {
       await updateDoc(orderDocRef, { status: newStatus });
       toast.success("Status do pedido atualizado!");
 
-      // --- NOVO --- Lógica para notificação
+      // --- ALTERADO --- Lógica para notificação de entrega
       if (newStatus === 'Saiu para Entrega') {
         const order = orders.find(o => o.id === orderId);
         if (order && order.phone) {
           sendWhatsAppNotification(order.phone, order.customerName, order.id);
         } else {
-          toast.error("Não foi possível notificar: o cliente não possui um telefone cadastrado no pedido.");
+          toast.error("Cliente não possui telefone para notificar.");
         }
       }
-
-      fetchData(); // Re-busca os dados para atualizar a interface
+      fetchData();
     } catch (error) {
-      console.error("Erro ao atualizar status do pedido:", error);
+      console.error("Erro ao atualizar status:", error);
       toast.error("Falha ao atualizar o status.");
     }
   };
 
-  // --- NOVO --- Função para impressão
+  // --- NOVO --- Função para abrir a página de impressão
   const handlePrintOrder = (orderId) => {
     window.open(`/admin/print/order/${orderId}`, '_blank');
   };
@@ -154,7 +138,7 @@ const DashboardOverviewPage = () => {
         </StatusSelector>
       )
     },
-    // --- ALTERADO --- Coluna de Ações com botão de imprimir
+    // --- NOVO --- Coluna de Ações com botão de imprimir
     {
       field: 'actions',
       headerName: 'Ações',
@@ -162,11 +146,8 @@ const DashboardOverviewPage = () => {
       sortable: false,
       renderCell: (params) => (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePrintOrder(params.row.id);
-          }}
-          style={{ cursor: 'pointer', background: 'none', border: 'none', color: '#7c3aed' }}
+          onClick={(e) => { e.stopPropagation(); handlePrintOrder(params.row.id); }}
+          style={{ cursor: 'pointer', background: 'none', border: 'none', color: '#7c3aed', padding: '10px' }}
           aria-label="Imprimir Recibo"
         >
           <FaPrint size={20} />
@@ -187,7 +168,6 @@ const DashboardOverviewPage = () => {
   return (
     <PageWrapper>
       <h1>Visão Geral do Dashboard</h1>
-
       <SectionTitle>Relatórios Rápidos</SectionTitle>
       {loading ? (<LoadingText>Calculando relatórios...</LoadingText>) : (
         <ReportsSection>
@@ -222,11 +202,7 @@ const DashboardOverviewPage = () => {
             <DataGrid
               rows={filteredOrders}
               columns={columns}
-              initialState={{
-                columns: {
-                  columnVisibilityModel: { id: false }
-                }
-              }}
+              initialState={{ columns: { columnVisibilityModel: { id: false } } }}
               pageSizeOptions={[5, 10, 20]}
               loading={loading}
               localeText={{ noRowsLabel: 'Nenhum pedido para exibir nesta categoria' }}
@@ -239,32 +215,18 @@ const DashboardOverviewPage = () => {
             filteredOrders.length > 0 ? filteredOrders.map(order => (
               <OrderCard key={order.id}>
                 <CardHeader>
-                  <CustomerInfo>
-                    <h4>{order.customerName}</h4>
-                    <span>{order.createdAt?.toDate().toLocaleString('pt-BR') || 'Data indisponível'}</span>
-                  </CustomerInfo>
-                  <OrderTotal>
-                    R$ {order.grandTotal?.toFixed(2).replace('.', ',') || '0,00'}
-                  </OrderTotal>
+                  <CustomerInfo><h4>{order.customerName}</h4><span>{order.createdAt?.toDate().toLocaleString('pt-BR') || 'Data indisponível'}</span></CustomerInfo>
+                  <OrderTotal>R$ {order.grandTotal?.toFixed(2).replace('.', ',') || '0,00'}</OrderTotal>
                 </CardHeader>
-                {/* --- ALTERADO --- Container para ações */}
                 <CardActionsContainer>
-                  <StatusSelector
-                    value={order.status}
-                    onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                  >
+                  <StatusSelector value={order.status} onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}>
                     <option value="Pendente">Pendente</option>
                     <option value="Em Preparo">Em Preparo</option>
                     <option value="Saiu para Entrega">Saiu para Entrega</option>
                     <option value="Concluído">Concluído</option>
                     <option value="Cancelado">Cancelado</option>
                   </StatusSelector>
-                  <button
-                    onClick={() => handlePrintOrder(order.id)}
-                    className="print-button"
-                  >
-                    <FaPrint size={18} />
-                  </button>
+                  <button onClick={() => handlePrintOrder(order.id)} className="print-button"><FaPrint size={18} /></button>
                 </CardActionsContainer>
               </OrderCard>
             )) : <LoadingText>Nenhum pedido para exibir nesta categoria</LoadingText>
