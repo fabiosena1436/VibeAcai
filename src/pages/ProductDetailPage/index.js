@@ -26,7 +26,7 @@ import {
   CategoryFilterContainer,
   CategoryFilterButton,
   SuggestedProductsSection,
-  SuggestedProduct,
+  SuggestedProductLabel,
   BackButton
 } from './styles';
 
@@ -43,7 +43,10 @@ const ProductDetailPage = () => {
   const [selectedToppingCategory, setSelectedToppingCategory] = useState('all');
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedToppings, setSelectedToppings] = useState([]);
+  
   const [suggestedDrinks, setSuggestedDrinks] = useState([]);
+  const [selectedDrinks, setSelectedDrinks] = useState([]);
+
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -89,8 +92,6 @@ const ProductDetailPage = () => {
           
           setToppings(toppingsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
           setToppingCategories(toppingCategoriesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        } else {
-          setTotalPrice(productData.price);
         }
       } catch (error) {
         console.error("Erro ao buscar detalhes do produto:", error);
@@ -102,19 +103,27 @@ const ProductDetailPage = () => {
     fetchData();
   }, [productId, navigate]);
 
+  // --- ALTERADO --- Efeito para recalcular o preço total
   useEffect(() => {
     if (!product) return;
-    let basePrice = 0;
-    if (product.category.toLowerCase() === 'açaí') {
-      basePrice = selectedSize ? selectedSize.price : 0;
-    } else {
-      basePrice = product.price;
-    }
     
-    const toppingsPrice = selectedToppings.reduce((total, topping) => total + topping.price, 0);
-    const finalPrice = (basePrice + toppingsPrice) * quantity;
-    setTotalPrice(finalPrice);
-  }, [product, selectedSize, selectedToppings, quantity]);
+    // Calcula o preço base do produto principal
+    let mainProductPrice = 0;
+    if (product.category.toLowerCase() === 'açaí') {
+      const basePrice = selectedSize ? selectedSize.price : 0;
+      const toppingsPrice = selectedToppings.reduce((total, topping) => total + topping.price, 0);
+      mainProductPrice = (basePrice + toppingsPrice) * quantity;
+    } else {
+      mainProductPrice = product.price * quantity;
+    }
+
+    // Calcula o preço total das bebidas selecionadas
+    const drinksTotalPrice = selectedDrinks.reduce((total, drink) => total + drink.price, 0);
+
+    // Soma tudo para o preço total exibido no botão
+    setTotalPrice(mainProductPrice + drinksTotalPrice);
+
+  }, [product, selectedSize, selectedToppings, quantity, selectedDrinks]); // Adicionado `selectedDrinks` à dependência
 
   const handleToppingChange = (topping) => {
     setSelectedToppings(prev =>
@@ -124,26 +133,51 @@ const ProductDetailPage = () => {
     );
   };
   
-  const handleAddSuggestedDrink = (drink) => {
-    addToCart({ ...drink, quantity: 1, id_cart: `${drink.id}-${Date.now()}` });
-    toast.success(`${drink.name} adicionado ao carrinho!`);
+  const handleDrinkSelectionChange = (drink) => {
+    setSelectedDrinks(prev =>
+      prev.some(d => d.id === drink.id)
+        ? prev.filter(d => d.id !== drink.id)
+        : [...prev, drink]
+    );
   };
 
   const handleAddToCart = () => {
+    // Validação para Açaí
     if (product.category.toLowerCase() === 'açaí' && !selectedSize) {
       toast.error("Por favor, selecione um tamanho.");
       return;
     }
-    const itemToAdd = {
+
+    // --- ALTERADO --- Calcula o preço *apenas* do item principal para adicionar ao carrinho
+    let mainItemPricePerUnit = 0;
+    if (product.category.toLowerCase() === 'açaí') {
+      const basePrice = selectedSize ? selectedSize.price : 0;
+      const toppingsPrice = selectedToppings.reduce((total, topping) => total + topping.price, 0);
+      mainItemPricePerUnit = basePrice + toppingsPrice;
+    } else {
+      mainItemPricePerUnit = product.price;
+    }
+    
+    // Adiciona o produto principal
+    const mainItemToAdd = {
       ...product,
       id_cart: `${product.id}-${selectedSize ? selectedSize.id : ''}-${Date.now()}`,
       quantity,
-      price: totalPrice / quantity,
+      price: mainItemPricePerUnit, // Preço correto por unidade
       selectedSize: selectedSize || null,
       selectedToppings: selectedToppings || [],
     };
-    addToCart(itemToAdd);
+    addToCart(mainItemToAdd);
     toast.success(`${product.name} foi adicionado ao carrinho!`);
+
+    // Adiciona as bebidas selecionadas como itens separados
+    if (selectedDrinks.length > 0) {
+      selectedDrinks.forEach(drink => {
+        addToCart({ ...drink, quantity: 1, id_cart: `${drink.id}-${Date.now()}` });
+      });
+      toast.success(`${selectedDrinks.length} bebida(s) também foram adicionadas!`);
+    }
+
     navigate('/menu');
   };
 
@@ -223,16 +257,19 @@ const ProductDetailPage = () => {
           <SuggestedProductsSection>
             <SectionTitle>Bebidas para acompanhar</SectionTitle>
             {suggestedDrinks.map(drink => (
-              <SuggestedProduct key={drink.id}>
+              <SuggestedProductLabel key={drink.id}>
+                <input
+                  type="checkbox"
+                  checked={selectedDrinks.some(d => d.id === drink.id)}
+                  onChange={() => handleDrinkSelectionChange(drink)}
+                />
+                <div className="custom-checkbox" />
                 <img src={drink.imageUrl || 'https://via.placeholder.com/50'} alt={drink.name} />
                 <div className="info">
                   <span>{drink.name}</span>
                   <strong>R$ {drink.price.toFixed(2).replace('.', ',')}</strong>
                 </div>
-                <Button onClick={() => handleAddSuggestedDrink(drink)} style={{ marginLeft: 'auto', padding: '8px 12px', fontSize: '0.9em' }}>
-                  Adicionar
-                </Button>
-              </SuggestedProduct>
+              </SuggestedProductLabel>
             ))}
           </SuggestedProductsSection>
         )}
