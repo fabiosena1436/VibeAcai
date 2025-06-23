@@ -1,131 +1,99 @@
 import styled from 'styled-components';
 
 export const MenuPageWrapper = styled.div`
-  padding: 100px 0 40px 0;
-  background-color: #f4f0ff;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px 0;
+  background-color: #f8fafc;
+  min-height: 100vh;
 `;
 
 export const MenuHeader = styled.div`
-  text-align: center;
-  margin-bottom: 30px;
+  width: 100%;
+  max-width: 900px;
   padding: 0 20px;
+  margin-bottom: 20px;
 `;
 
 export const MenuTitle = styled.h1`
-  color: #7c3aed;
-  font-size: 2.5em;
-  margin-bottom: 20px;
+  font-size: 2em;
+  color: #333;
+  text-align: left;
 `;
 
 export const CategoryCarouselWrapper = styled.div`
   width: 100%;
-  margin-bottom: 50px;
-  position: sticky;
-  top: 70px; /* Altura da navbar */
-  background-color: #f4f0ff;
-  padding: 15px 0;
-  z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-
-  .swiper-wrapper {
-    justify-content: center; 
-    padding: 0 20px;
-  
-  }
-
+  max-width: 900px;
+  padding: 0 20px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
   .swiper-slide {
     width: auto;
   }
 `;
 
 export const CategoryButton = styled.button`
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid #8e44ad;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: ${({ $isActive }) => ($isActive ? '#7c3aed' : '#f3f4f6')};
+  color: ${({ $isActive }) => ($isActive ? '#fff' : '#374151')};
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-
-  background-color: ${({ $active }) => ($active ? '#8e44ad' : '#fff')};
-  color: ${({ $active }) => ($active ? '#fff' : '#8e44ad')};
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
 
   &:hover {
-    background-color: #9b59b6;
-    color: #fff;
+    background-color: ${({ $isActive }) => ($isActive ? '#6d28d9' : '#e5e7eb')};
   }
 `;
 
 export const CategorySectionTitle = styled.h2`
-  font-size: 2em;
-  color: #5b21b6;
-  text-align: center;
-  margin-top: 40px;
-  margin-bottom: 30px;
+  font-size: 1.5em;
+  color: #333;
+  padding: 0 20px;
+  margin-bottom: 15px;
+  margin-top: 25px;
+  text-transform: capitalize;
   width: 100%;
+  max-width: 900px;
+  box-sizing: border-box;
 `;
 
 export const ProductListContainer = styled.div`
-  /* ▼ ATUALIZAÇÃO E LIMPEZA DOS ESTILOS DA GRELHA ▼ */
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Padrão de 2 colunas para mobile */
-  gap: 16px; /* Espaçamento ideal para mobile */
-  
   width: 100%;
-  max-width: 1200px;
-  padding: 0 16px;
-  margin: 0 auto;
-  justify-items: center;
-  align-items: stretch;
-
-  /* Media query para tablets */
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    padding: 0 24px;
-  }
-
-  /* Media query para desktops */
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-  }
+  max-width: 900px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 `;
 
 export const LoadingText = styled.p`
   text-align: center;
-  font-size: 1.2em;
-  color: #555;
-  margin-top: 50px;
+  padding: 50px;
 `;
 
 export const SearchContainer = styled.div`
-  padding: 0 20px;
-  margin-bottom: 30px;
-  text-align: center;
   width: 100%;
+  max-width: 900px;
+  padding: 0 20px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
 `;
 
 export const SearchInput = styled.input`
-  padding: 12px;
-  font-size: 1em;
   width: 100%;
-  max-width: 500px;
-  border-radius: 20px;
+  padding: 15px;
+  border-radius: 8px;
   border: 1px solid #ddd;
-
-  &:focus {
-    border-color: #7c3aed;
-    outline: none;
-  }
+  font-size: 1em;
+  box-sizing: border-box;
 `;
 
 export const NoProductsText = styled.p`
   text-align: center;
-  color: #555;
-  margin-top: 20px;
-  width: 100%;
+  padding: 40px;
+  color: #666;
 `;

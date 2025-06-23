@@ -10,7 +10,7 @@ export const CardWrapper = styled.div`
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
   width: 100%;
-  height: 100%; // Garante que o card preencha o espaço no grid
+  height: 100%;
 
   &:hover {
     transform: translateY(-5px);
@@ -33,18 +33,23 @@ export const CardContent = styled.div`
 
 export const ProductName = styled.h3`
   font-size: 1.2em;
-  font-weight: 700;
   color: #333;
-  margin: 0 0 10px 0;
-  line-height: 1.2;
+  margin: 0 0 8px 0;
 `;
 
+// --- ALTERADO --- Adiciona `line-clamp` para limitar o texto da descrição
 export const ProductDescription = styled.p`
   font-size: 0.9em;
   color: #666;
   flex-grow: 1;
   margin: 0 0 15px 0;
   line-height: 1.4;
+  
+  /* Limita o texto a 3 linhas e adiciona "..." */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
 `;
 
 export const PriceWrapper = styled.div`
@@ -56,12 +61,12 @@ export const PriceWrapper = styled.div`
 
 export const OriginalPrice = styled.span`
   font-size: 0.9em;
-  color: #999;
+  color: #9ca3af;
   text-decoration: line-through;
 `;
 
 export const PromotionalPrice = styled.span`
-  font-size: 1.4em;
+  font-size: 1.3em;
   font-weight: bold;
-  color: #5b21b6; // Roxo vibrante
+  color: #7c3aed;
 `;

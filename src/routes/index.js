@@ -6,6 +6,8 @@ import MenuPage from '../pages/MenuPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import AdminLoginPage from '../pages/AdminLoginPage';
+// --- NOVO --- Importa a nova página de detalhes
+import ProductDetailPage from '../pages/ProductDetailPage'; 
 import AdminLayout from '../pages/Admin/AdminLayout';
 import DashboardOverviewPage from '../pages/Admin/DashboardOverviewPage';
 import ProductsPage from '../pages/Admin/ProductsPage';
@@ -14,7 +16,6 @@ import ToppingsPage from '../pages/Admin/ToppingsPage';
 import SettingsPage from '../pages/Admin/SettingsPage';
 import PromotionsPage from '../pages/Admin/PromotionsPage';
 import SizesPage from '../pages/Admin/SizesPage';
-// --- NOVO ---
 import PrintableReceiptPage from '../pages/Admin/PrintableReceiptPage';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -44,13 +45,14 @@ const AppRoutes = () => (
     <Route element={<PublicLayout />}>
       <Route path="/" element={<HomePage />} />
       <Route path="/menu" element={<MenuPage />} />
+      {/* --- NOVO --- Rota para a página de detalhes do produto */}
+      <Route path="/produto/:productId" element={<ProductDetailPage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
     </Route>
 
     <Route path="/admin/login" element={<AdminLoginPage />} />
 
-    {/* --- NOVO --- Rota de impressão */}
     <Route 
       path="/admin/print/order/:orderId"
       element={
