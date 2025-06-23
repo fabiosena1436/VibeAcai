@@ -5,6 +5,9 @@ import { db } from '../../../services/firebaseConfig';
 import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
+// --- NOVO --- Importar o ícone de impressão
+import { FaPrint } from 'react-icons/fa';
+
 // Importações do MUI
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
@@ -25,7 +28,9 @@ import {
   CardHeader,
   CustomerInfo,
   OrderTotal,
-  StatusSelector // Importante, pois é usado na definição das colunas
+  StatusSelector,
+  // --- NOVO --- Importar o novo container de ações
+  CardActionsContainer
 } from './styles';
 
 const DashboardOverviewPage = () => {
@@ -89,16 +94,44 @@ const DashboardOverviewPage = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // --- NOVO --- Função para enviar notificação pelo WhatsApp
+  const sendWhatsAppNotification = (phone, customerName, orderId) => {
+    // Remove todos os caracteres não numéricos do telefone
+    const cleanedPhone = phone.replace(/\D/g, '');
+    const message = `Olá, ${customerName}! Seu pedido #${orderId.substring(0, 5)} da Vibe Açaí saiu para entrega e chegará em breve! 🛵`;
+    const whatsappLink = `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(message)}`;
+    
+    // Abre o link em uma nova aba
+    window.open(whatsappLink, '_blank');
+    toast.success(`Notificação para ${customerName} pronta para ser enviada!`);
+  };
+
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     const orderDocRef = doc(db, 'orders', orderId);
     try {
       await updateDoc(orderDocRef, { status: newStatus });
       toast.success("Status do pedido atualizado!");
-      fetchData();
+
+      // --- NOVO --- Lógica para notificação
+      if (newStatus === 'Saiu para Entrega') {
+        const order = orders.find(o => o.id === orderId);
+        if (order && order.phone) {
+          sendWhatsAppNotification(order.phone, order.customerName, order.id);
+        } else {
+          toast.error("Não foi possível notificar: o cliente não possui um telefone cadastrado no pedido.");
+        }
+      }
+
+      fetchData(); // Re-busca os dados para atualizar a interface
     } catch (error) {
       console.error("Erro ao atualizar status do pedido:", error);
       toast.error("Falha ao atualizar o status.");
     }
+  };
+
+  // --- NOVO --- Função para impressão
+  const handlePrintOrder = (orderId) => {
+    window.open(`/admin/print/order/${orderId}`, '_blank');
   };
 
   const columns = [
@@ -120,6 +153,25 @@ const DashboardOverviewPage = () => {
           <option value="Cancelado">Cancelado</option>
         </StatusSelector>
       )
+    },
+    // --- ALTERADO --- Coluna de Ações com botão de imprimir
+    {
+      field: 'actions',
+      headerName: 'Ações',
+      width: 150,
+      sortable: false,
+      renderCell: (params) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePrintOrder(params.row.id);
+          }}
+          style={{ cursor: 'pointer', background: 'none', border: 'none', color: '#7c3aed' }}
+          aria-label="Imprimir Recibo"
+        >
+          <FaPrint size={20} />
+        </button>
+      ),
     },
     { field: 'id', headerName: 'ID Pedido', width: 150, renderCell: (params) => params.value.substring(0, 8) + '...' },
   ];
@@ -175,8 +227,7 @@ const DashboardOverviewPage = () => {
                   columnVisibilityModel: { id: false }
                 }
               }}
-              pageSize={10}
-              rowsPerPageOptions={[10, 20, 50]}
+              pageSizeOptions={[5, 10, 20]}
               loading={loading}
               localeText={{ noRowsLabel: 'Nenhum pedido para exibir nesta categoria' }}
             />
@@ -196,7 +247,8 @@ const DashboardOverviewPage = () => {
                     R$ {order.grandTotal?.toFixed(2).replace('.', ',') || '0,00'}
                   </OrderTotal>
                 </CardHeader>
-                <div>
+                {/* --- ALTERADO --- Container para ações */}
+                <CardActionsContainer>
                   <StatusSelector
                     value={order.status}
                     onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
@@ -207,7 +259,13 @@ const DashboardOverviewPage = () => {
                     <option value="Concluído">Concluído</option>
                     <option value="Cancelado">Cancelado</option>
                   </StatusSelector>
-                </div>
+                  <button
+                    onClick={() => handlePrintOrder(order.id)}
+                    className="print-button"
+                  >
+                    <FaPrint size={18} />
+                  </button>
+                </CardActionsContainer>
               </OrderCard>
             )) : <LoadingText>Nenhum pedido para exibir nesta categoria</LoadingText>
           )}

@@ -1,5 +1,3 @@
-// src/pages/CheckoutPage/index.js
-
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
@@ -29,7 +27,10 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
 
   const [customerName, setCustomerName] = useState('');
-  const [address, setAddress] = useState('');
+  // --- ALTERADO --- Substituímos o estado 'address' por três estados separados
+  const [street, setStreet] = useState('');
+  const [number, setNumber] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
   const [phone, setPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [trocoPara, setTrocoPara] = useState('');
@@ -86,7 +87,8 @@ const CheckoutPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!customerName || !address || !phone) {
+    // --- ALTERADO --- Validação para os novos campos de endereço
+    if (!customerName || !street || !number || !neighborhood || !phone) {
       toast.error('Por favor, preencha todos os seus dados.');
       setIsSubmitting(false);
       return;
@@ -122,8 +124,17 @@ const CheckoutPage = () => {
       paymentMethodFormatted = 'PIX';
     }
 
+    // --- NOVO --- Juntamos os campos de endereço em uma única string
+    const fullAddress = `Rua ${street}, N° ${number}, Bairro: ${neighborhood}`;
+
     const orderDetailsForFirestore = {
-      customerName, address, phone, paymentMethod, paymentMethodFormatted, precisaTroco,
+      customerName,
+      // --- ALTERADO --- Usamos o endereço completo
+      address: fullAddress,
+      phone,
+      paymentMethod,
+      paymentMethodFormatted,
+      precisaTroco,
       trocoPara: precisaTroco ? parseFloat(trocoPara || 0).toFixed(2).replace('.', ',') : '',
       items: cartItems.map(item => ({
         id: item.id,
@@ -134,8 +145,11 @@ const CheckoutPage = () => {
         selectedSize: item.selectedSize || null,
         selectedToppings: (item.selectedToppings && item.selectedToppings.length > 0) ? item.selectedToppings.map(t => ({ name: t.name, price: t.price })) : [],
       })),
-      itemsSubtotal, deliveryFee, grandTotal,
-      status: "Pendente", createdAt: serverTimestamp()
+      itemsSubtotal,
+      deliveryFee,
+      grandTotal,
+      status: "Pendente",
+      createdAt: serverTimestamp()
     };
 
     try {
@@ -169,10 +183,21 @@ const CheckoutPage = () => {
             <label htmlFor="customerName">Nome Completo:</label>
             <input type="text" id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required />
           </FormGroup>
+          
+          {/* --- ALTERADO --- Substituímos o campo único de endereço por três campos */}
           <FormGroup>
-            <label htmlFor="address">Endereço Completo (Rua, N°, Bairro):</label>
-            <input type="text" id="address" value={address} onChange={(e) => setAddress(e.target.value)} required />
+            <label htmlFor="street">Rua:</label>
+            <input type="text" id="street" value={street} onChange={(e) => setStreet(e.target.value)} required />
           </FormGroup>
+          <FormGroup>
+            <label htmlFor="number">Número:</label>
+            <input type="text" id="number" value={number} onChange={(e) => setNumber(e.target.value)} required />
+          </FormGroup>
+          <FormGroup>
+            <label htmlFor="neighborhood">Bairro:</label>
+            <input type="text" id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} required />
+          </FormGroup>
+          
           <FormGroup>
             <label htmlFor="phone">Telefone (com DDD):</label>
             <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(XX) XXXXX-XXXX" required />

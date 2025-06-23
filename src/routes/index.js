@@ -20,6 +20,8 @@ import ToppingsPage from '../pages/Admin/ToppingsPage';
 import SettingsPage from '../pages/Admin/SettingsPage';
 import PromotionsPage from '../pages/Admin/PromotionsPage';
 import SizesPage from '../pages/Admin/SizesPage';
+// --- NOVO ---
+import PrintableReceiptPage from '../pages/Admin/PrintableReceiptPage'; // Importa a nova página de recibo
 
 // Importações de Componentes de Layout e Proteção
 import Navbar from '../components/Navbar';
@@ -27,7 +29,6 @@ import Footer from '../components/Footer';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 // Componente de Layout para as páginas públicas
-// Ele garante que a Navbar e o Footer apareçam em todas as páginas públicas.
 const ContentWrapper = styled.main`
   flex-grow: 1; 
   padding-top: 70px; // Altura da Navbar para evitar sobreposição
@@ -42,7 +43,7 @@ const PublicLayout = () => {
     <>
       <Navbar />
       <ContentWrapper>
-        <Outlet /> {/* Onde o conteúdo da rota filha será renderizado */}
+        <Outlet />
       </ContentWrapper>
       <Footer />
     </>
@@ -63,6 +64,16 @@ const AppRoutes = () => {
 
       {/* Rota de Login do Admin (sem Navbar ou Footer) */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
+
+      {/* --- NOVO --- Rota de impressão fora do layout principal do admin para uma impressão limpa */}
+      <Route 
+        path="/admin/print/order/:orderId"
+        element={
+          <ProtectedRoute>
+            <PrintableReceiptPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Rotas Protegidas do Admin (usam seu próprio layout, o AdminLayout) */}
       <Route 

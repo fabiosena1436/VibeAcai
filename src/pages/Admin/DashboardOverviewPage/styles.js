@@ -123,6 +123,30 @@ export const OrderTotal = styled.div`
   color: #7c3aed;
 `;
 
+// --- NOVO --- Container para agrupar o seletor de status e o botão de impressão
+export const CardActionsContainer = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  .print-button {
+    background: #e9d5ff;
+    color: #7c3aed;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &:hover {
+      background: #c084fc;
+      color: white;
+    }
+  }
+`;
+
 export const StatusSelector = styled.select`
   width: 100%;
   padding: 12px;
@@ -131,7 +155,7 @@ export const StatusSelector = styled.select`
   background-color: #fff;
   cursor: pointer;
   font-size: 1em;
-  margin-top: 5px;
+  flex-grow: 1; // --- Faz o seletor ocupar o espaço restante
 
   &:focus {
     outline: none;
