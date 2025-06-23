@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../services/firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { useCart } from '../../contexts/CartContext';
+// --- NOVO --- Importando o hook de configurações da loja
+import { useStoreSettings } from '../../contexts/StoreSettingsContext'; 
 import toast from 'react-hot-toast';
 import Button from '../../components/Button';
 import {
@@ -34,6 +36,9 @@ const ProductDetailPage = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  // --- NOVO --- Obtendo as configurações e o status de carregamento da loja
+  const { settings, loading: loadingSettings } = useStoreSettings();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -102,12 +107,10 @@ const ProductDetailPage = () => {
     };
     fetchData();
   }, [productId, navigate]);
-
-  // --- ALTERADO --- Efeito para recalcular o preço total
+  
   useEffect(() => {
     if (!product) return;
     
-    // Calcula o preço base do produto principal
     let mainProductPrice = 0;
     if (product.category.toLowerCase() === 'açaí') {
       const basePrice = selectedSize ? selectedSize.price : 0;
@@ -117,13 +120,11 @@ const ProductDetailPage = () => {
       mainProductPrice = product.price * quantity;
     }
 
-    // Calcula o preço total das bebidas selecionadas
     const drinksTotalPrice = selectedDrinks.reduce((total, drink) => total + drink.price, 0);
 
-    // Soma tudo para o preço total exibido no botão
     setTotalPrice(mainProductPrice + drinksTotalPrice);
 
-  }, [product, selectedSize, selectedToppings, quantity, selectedDrinks]); // Adicionado `selectedDrinks` à dependência
+  }, [product, selectedSize, selectedToppings, quantity, selectedDrinks]);
 
   const handleToppingChange = (topping) => {
     setSelectedToppings(prev =>
@@ -142,13 +143,17 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
-    // Validação para Açaí
+    // --- NOVO --- Bloqueia a ação se a loja estiver fechada
+    if (!settings.isStoreOpen) {
+      toast.error("A loja está fechada e não é possível adicionar itens.");
+      return;
+    }
+
     if (product.category.toLowerCase() === 'açaí' && !selectedSize) {
       toast.error("Por favor, selecione um tamanho.");
       return;
     }
 
-    // --- ALTERADO --- Calcula o preço *apenas* do item principal para adicionar ao carrinho
     let mainItemPricePerUnit = 0;
     if (product.category.toLowerCase() === 'açaí') {
       const basePrice = selectedSize ? selectedSize.price : 0;
@@ -158,30 +163,29 @@ const ProductDetailPage = () => {
       mainItemPricePerUnit = product.price;
     }
     
-    // Adiciona o produto principal
     const mainItemToAdd = {
       ...product,
       id_cart: `${product.id}-${selectedSize ? selectedSize.id : ''}-${Date.now()}`,
       quantity,
-      price: mainItemPricePerUnit, // Preço correto por unidade
+      price: mainItemPricePerUnit,
       selectedSize: selectedSize || null,
       selectedToppings: selectedToppings || [],
     };
     addToCart(mainItemToAdd);
-    toast.success(`${product.name} foi adicionado ao carrinho!`);
-
-    // Adiciona as bebidas selecionadas como itens separados
+    
     if (selectedDrinks.length > 0) {
       selectedDrinks.forEach(drink => {
         addToCart({ ...drink, quantity: 1, id_cart: `${drink.id}-${Date.now()}` });
       });
-      toast.success(`${selectedDrinks.length} bebida(s) também foram adicionadas!`);
     }
 
+    // --- MUDADO --- Exibe um único toast de sucesso no final
+    toast.success('Itens adicionados com sucesso!');
     navigate('/menu');
   };
 
-  if (loading) return <LoadingText>Carregando produto...</LoadingText>;
+  // --- ALTERADO --- Agora espera também as configurações da loja
+  if (loading || loadingSettings) return <LoadingText>Carregando produto...</LoadingText>;
   if (!product) return <LoadingText>Produto não encontrado.</LoadingText>;
 
   const isAcai = product.category.toLowerCase() === 'açaí';
@@ -198,6 +202,7 @@ const ProductDetailPage = () => {
         
         {isAcai && (
           <CustomizationSection>
+            {/* O conteúdo da customização permanece o mesmo */}
             <SectionTitle>1. Escolha o Tamanho</SectionTitle>
             <OptionGroup>
               {sizes.map(size => (
@@ -222,9 +227,7 @@ const ProductDetailPage = () => {
             </CategoryFilterContainer>
 
             {toppingCategories.map(category => {
-              if (selectedToppingCategory !== 'all' && selectedToppingCategory !== category.name) {
-                return null;
-              }
+              if (selectedToppingCategory !== 'all' && selectedToppingCategory !== category.name) return null;
               const toppingsInCategory = toppings.filter(t => t.category === category.name);
               if (toppingsInCategory.length === 0) return null;
 
@@ -234,11 +237,7 @@ const ProductDetailPage = () => {
                   <ToppingGrid>
                     {toppingsInCategory.map(topping => (
                       <ToppingItemLabel key={topping.id}>
-                        <input
-                          type="checkbox"
-                          checked={selectedToppings.some(t => t.id === topping.id)}
-                          onChange={() => handleToppingChange(topping)}
-                        />
+                        <input type="checkbox" checked={selectedToppings.some(t => t.id === topping.id)} onChange={() => handleToppingChange(topping)} />
                         <div className="custom-checkbox" />
                         <ToppingInfo>
                           <span>{topping.name}</span>
@@ -258,11 +257,7 @@ const ProductDetailPage = () => {
             <SectionTitle>Bebidas para acompanhar</SectionTitle>
             {suggestedDrinks.map(drink => (
               <SuggestedProductLabel key={drink.id}>
-                <input
-                  type="checkbox"
-                  checked={selectedDrinks.some(d => d.id === drink.id)}
-                  onChange={() => handleDrinkSelectionChange(drink)}
-                />
+                <input type="checkbox" checked={selectedDrinks.some(d => d.id === drink.id)} onChange={() => handleDrinkSelectionChange(drink)} />
                 <div className="custom-checkbox" />
                 <img src={drink.imageUrl || 'https://via.placeholder.com/50'} alt={drink.name} />
                 <div className="info">
@@ -277,12 +272,18 @@ const ProductDetailPage = () => {
       </ProductContent>
       <ActionBar>
         <QuantityControl>
-          <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
+          {/* --- ALTERADO --- Botões desabilitados se a loja estiver fechada */}
+          <button onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={!settings.isStoreOpen}>-</button>
           <span>{quantity}</span>
-          <button onClick={() => setQuantity(q => q + 1)}>+</button>
+          <button onClick={() => setQuantity(q => q + 1)} disabled={!settings.isStoreOpen}>+</button>
         </QuantityControl>
-        <Button onClick={handleAddToCart} disabled={loading}>
-          Adicionar <TotalPrice>R$ {totalPrice.toFixed(2).replace('.', ',')}</TotalPrice>
+        
+        {/* --- ALTERADO --- Botão principal com estado e texto dinâmicos */}
+        <Button onClick={handleAddToCart} disabled={loading || loadingSettings || !settings.isStoreOpen}>
+          {settings.isStoreOpen 
+            ? <>Adicionar <TotalPrice>R$ {totalPrice.toFixed(2).replace('.', ',')}</TotalPrice></>
+            : 'Loja Fechada'
+          }
         </Button>
       </ActionBar>
     </PageWrapper>

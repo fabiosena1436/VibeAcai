@@ -97,3 +97,14 @@ export const NoProductsText = styled.p`
   padding: 40px;
   color: #666;
 `;
+
+// --- NOVO --- Estilo para o aviso de loja fechada
+export const StoreClosedWarning = styled.div`
+  background-color: #fffbe6; color: #92400e; border: 1px solid #fde68a;
+  border-radius: 8px; padding: 16px; margin: 0 20px 30px 20px; text-align: center;
+  width: 100%;
+  max-width: 900px;
+  box-sizing: border-box;
+  h3 { margin-top: 0; font-size: 1.4em; color: #b45309; }
+  p { margin: 5px 0 0 0; white-space: pre-wrap; }
+`;

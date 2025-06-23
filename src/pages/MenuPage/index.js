@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
 import { db } from '../../services/firebaseConfig';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
@@ -7,20 +6,27 @@ import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import ProductListItem from '../../components/ProductListItem';
-import { MenuPageWrapper, MenuHeader, MenuTitle, CategoryCarouselWrapper, CategoryButton, CategorySectionTitle, ProductListContainer, LoadingText, SearchContainer, SearchInput, NoProductsText } from './styles';
 
-const StoreClosedWarning = styled.div`
-  background-color: #fffbe6; color: #92400e; border: 1px solid #fde68a;
-  border-radius: 8px; padding: 16px; margin: 0 20px 30px 20px; text-align: center;
-  width: 100%;
-  max-width: 900px;
-  box-sizing: border-box;
-  h3 { margin-top: 0; font-size: 1.4em; color: #b45309; }
-  p { margin: 5px 0 0 0; white-space: pre-wrap; }
-`;
+// --- ALTERADO --- Importamos o novo estilo e removemos o styled daqui
+import {
+  MenuPageWrapper,
+  MenuHeader,
+  MenuTitle,
+  CategoryCarouselWrapper,
+  CategoryButton,
+  CategorySectionTitle,
+  ProductListContainer,
+  LoadingText,
+  SearchContainer,
+  SearchInput,
+  NoProductsText,
+  StoreClosedWarning // <-- Novo estilo importado
+} from './styles';
 
 const MenuPage = () => {
+  // --- NOVO --- Obtendo as configurações da loja
   const { settings, loading: loadingSettings } = useStoreSettings();
+  
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,9 +67,16 @@ const MenuPage = () => {
     fetchData();
   }, []);
 
+  // --- ALTERADO --- Lógica de busca aprimorada
   const filteredProducts = products.filter(product => {
     const categoryMatch = selectedCategory === 'Todos' || product.category.toLowerCase() === selectedCategory.toLowerCase();
-    const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Normaliza os textos para busca (remove acentos e converte para minúsculas)
+    const normalizedSearchTerm = searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const normalizedProductName = product.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    
+    const searchMatch = normalizedProductName.includes(normalizedSearchTerm);
+    
     return categoryMatch && searchMatch;
   });
 
@@ -72,7 +85,8 @@ const MenuPage = () => {
       <ProductListItem key={product.id} product={product} />
     ));
   };
-
+  
+  // --- ALTERADO --- Espera pelas configurações da loja também
   if (loading || loadingSettings) {
     return <LoadingText>Carregando cardápio...</LoadingText>;
   }
@@ -82,6 +96,8 @@ const MenuPage = () => {
       <MenuHeader>
         <MenuTitle>Nosso Cardápio</MenuTitle>
       </MenuHeader>
+
+      {/* --- NOVO --- Renderização condicional do aviso de loja fechada */}
       {!settings.isStoreOpen && settings.openingHoursText && (
         <StoreClosedWarning>
           <h3>Ops! Estamos Fechados</h3>
@@ -89,6 +105,7 @@ const MenuPage = () => {
           <p><strong>Nosso horário é:</strong><br/>{settings.openingHoursText}</p>
         </StoreClosedWarning>
       )}
+
       <SearchContainer>
         <SearchInput type="text" placeholder="🔎 Buscar pelo nome do produto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
       </SearchContainer>
