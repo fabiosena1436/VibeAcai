@@ -1,10 +1,11 @@
+// src/pages/ProductDetailPage/index.js
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../services/firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { useCart } from '../../contexts/CartContext';
-// --- NOVO --- Importando o hook de configurações da loja
-import { useStoreSettings } from '../../contexts/StoreSettingsContext'; 
+import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import toast from 'react-hot-toast';
 import Button from '../../components/Button';
 import {
@@ -36,7 +37,6 @@ const ProductDetailPage = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  // --- NOVO --- Obtendo as configurações e o status de carregamento da loja
   const { settings, loading: loadingSettings } = useStoreSettings();
 
   const [product, setProduct] = useState(null);
@@ -78,22 +78,21 @@ const ProductDetailPage = () => {
         }
 
         if (productData.category.toLowerCase() === 'açaí') {
-          const sizesRef = collection(db, 'sizes');
+          if (productData.hasCustomizableSizes && productData.availableSizes) {
+            const sizesData = productData.availableSizes.sort((a, b) => a.price - b.price);
+            setSizes(sizesData);
+            if (sizesData.length > 0) {
+              setSelectedSize(sizesData[0]);
+            }
+          }
+          
           const toppingsRef = collection(db, 'toppings');
           const toppingCategoriesRef = collection(db, 'toppingCategories');
           
-          const [sizesSnap, toppingsSnap, toppingCategoriesSnap] = await Promise.all([
-            getDocs(query(sizesRef, orderBy('price'))),
+          const [toppingsSnap, toppingCategoriesSnap] = await Promise.all([
             getDocs(query(toppingsRef, orderBy('name'))),
             getDocs(query(toppingCategoriesRef, orderBy('name')))
           ]);
-          
-          const sizesData = sizesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-          setSizes(sizesData);
-
-          if (sizesData.length > 0) {
-            setSelectedSize(sizesData[0]);
-          }
           
           setToppings(toppingsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
           setToppingCategories(toppingCategoriesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -112,8 +111,10 @@ const ProductDetailPage = () => {
     if (!product) return;
     
     let mainProductPrice = 0;
-    if (product.category.toLowerCase() === 'açaí') {
+    // Usa a lógica de preço baseada nos tamanhos customizáveis ou no preço fixo
+    if (product.hasCustomizableSizes) {
       const basePrice = selectedSize ? selectedSize.price : 0;
+      // Lógica de preço dos adicionais (sempre soma, conforme original)
       const toppingsPrice = selectedToppings.reduce((total, topping) => total + topping.price, 0);
       mainProductPrice = (basePrice + toppingsPrice) * quantity;
     } else {
@@ -121,7 +122,6 @@ const ProductDetailPage = () => {
     }
 
     const drinksTotalPrice = selectedDrinks.reduce((total, drink) => total + drink.price, 0);
-
     setTotalPrice(mainProductPrice + drinksTotalPrice);
 
   }, [product, selectedSize, selectedToppings, quantity, selectedDrinks]);
@@ -143,19 +143,18 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
-    // --- NOVO --- Bloqueia a ação se a loja estiver fechada
     if (!settings.isStoreOpen) {
       toast.error("A loja está fechada e não é possível adicionar itens.");
       return;
     }
 
-    if (product.category.toLowerCase() === 'açaí' && !selectedSize) {
+    if (product.hasCustomizableSizes && !selectedSize) {
       toast.error("Por favor, selecione um tamanho.");
       return;
     }
 
     let mainItemPricePerUnit = 0;
-    if (product.category.toLowerCase() === 'açaí') {
+    if (product.hasCustomizableSizes) {
       const basePrice = selectedSize ? selectedSize.price : 0;
       const toppingsPrice = selectedToppings.reduce((total, topping) => total + topping.price, 0);
       mainItemPricePerUnit = basePrice + toppingsPrice;
@@ -165,7 +164,7 @@ const ProductDetailPage = () => {
     
     const mainItemToAdd = {
       ...product,
-      id_cart: `${product.id}-${selectedSize ? selectedSize.id : ''}-${Date.now()}`,
+      id_cart: `${product.id}-${selectedSize ? selectedSize.name : ''}-${Date.now()}`,
       quantity,
       price: mainItemPricePerUnit,
       selectedSize: selectedSize || null,
@@ -179,16 +178,14 @@ const ProductDetailPage = () => {
       });
     }
 
-    // --- MUDADO --- Exibe um único toast de sucesso no final
     toast.success('Itens adicionados com sucesso!');
     navigate('/menu');
   };
 
-  // --- ALTERADO --- Agora espera também as configurações da loja
   if (loading || loadingSettings) return <LoadingText>Carregando produto...</LoadingText>;
   if (!product) return <LoadingText>Produto não encontrado.</LoadingText>;
 
-  const isAcai = product.category.toLowerCase() === 'açaí';
+  const isAcaiWithSizes = product.category.toLowerCase() === 'açaí' && product.hasCustomizableSizes;
 
   return (
     <PageWrapper>
@@ -200,19 +197,20 @@ const ProductDetailPage = () => {
         <ProductName>{product.name}</ProductName>
         <ProductDescription>{product.description}</ProductDescription>
         
-        {isAcai && (
+        {isAcaiWithSizes ? (
           <CustomizationSection>
-            {/* O conteúdo da customização permanece o mesmo */}
             <SectionTitle>1. Escolha o Tamanho</SectionTitle>
             <OptionGroup>
               {sizes.map(size => (
-                <OptionLabel key={size.id} $isActive={selectedSize?.id === size.id}>
-                  <input type="radio" name="size" checked={selectedSize?.id === size.id} onChange={() => setSelectedSize(size)} />
+                <OptionLabel key={size.name} $isActive={selectedSize?.name === size.name}>
+                  <input type="radio" name="size" checked={selectedSize?.name === size.name} onChange={() => setSelectedSize(size)} />
                   {size.name} - R$ {size.price.toFixed(2).replace('.', ',')}
                 </OptionLabel>
               ))}
             </OptionGroup>
             
+            {/* --- CÓDIGO RESTAURADO --- */}
+            {/* A seção de adicionais que estava faltando foi adicionada aqui, mantendo a lógica e o visual originais. */}
             <SectionTitle>2. Adicionais (Opcional)</SectionTitle>
             
             <CategoryFilterContainer>
@@ -249,9 +247,15 @@ const ProductDetailPage = () => {
                 </div>
               );
             })}
-          </CustomizationSection>
-        )}
+            {/* --- FIM DO CÓDIGO RESTAURADO --- */}
 
+          </CustomizationSection>
+        ) : (
+          product.category.toLowerCase() === 'açaí' ? (
+            <SectionTitle>Preço Fixo: R$ {product.price.toFixed(2).replace('.', ',')}</SectionTitle>
+          ) : null
+        )}
+        
         {suggestedDrinks.length > 0 && (
           <SuggestedProductsSection>
             <SectionTitle>Bebidas para acompanhar</SectionTitle>
@@ -272,13 +276,11 @@ const ProductDetailPage = () => {
       </ProductContent>
       <ActionBar>
         <QuantityControl>
-          {/* --- ALTERADO --- Botões desabilitados se a loja estiver fechada */}
           <button onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={!settings.isStoreOpen}>-</button>
           <span>{quantity}</span>
           <button onClick={() => setQuantity(q => q + 1)} disabled={!settings.isStoreOpen}>+</button>
         </QuantityControl>
         
-        {/* --- ALTERADO --- Botão principal com estado e texto dinâmicos */}
         <Button onClick={handleAddToCart} disabled={loading || loadingSettings || !settings.isStoreOpen}>
           {settings.isStoreOpen 
             ? <>Adicionar <TotalPrice>R$ {totalPrice.toFixed(2).replace('.', ',')}</TotalPrice></>
