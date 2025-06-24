@@ -133,8 +133,6 @@ const HomePage = () => {
       appliedPromotion: promoDetails ? promoDetails.title : null,
     };
     addToCart(cartItem);
-    // --- MUDANÇA: A LINHA ABAIXO FOI REMOVIDA ---
-    // toast.success(`${product.name} foi adicionado ao carrinho!`);
   };
 
   const handleProductAction = (product, promoDetails = null) => {
@@ -142,7 +140,7 @@ const HomePage = () => {
       toast.error("A loja está fechada no momento.");
       return;
     }
-    if (product.category.toLowerCase() === 'açaí') {
+    if (product.category.toLowerCase() === 'açaí' && product.hasCustomizableSizes) {
       handleOpenCustomizationModal(product, promoDetails);
     } else {
       handleDirectAddToCart(product, promoDetails);
@@ -206,14 +204,15 @@ const HomePage = () => {
                         }}
                       >
                         {promotions.map(promo => {
-                          const promoDetails = { title: promo.title, promotionalPrice: promo.promotionalPrice, originalPrice: promo.originalPrice };
                           return (
                             <SwiperSlide key={promo.id} style={{ height: 'auto', display: 'flex' }}>
                               {(() => {
                                 if (promo.type === 'product_discount' && promo.product) {
-                                  return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} onCustomize={(product) => handleProductAction(product, promoDetails)} isStoreOpen={settings.isStoreOpen} />;
+                                  // Passamos os preços da promoção diretamente para o ProductCard
+                                  return <ProductCard product={promo.product} originalPrice={promo.originalPrice} promotionalPrice={promo.promotionalPrice} />;
                                 }
                                 if (promo.type === 'free_toppings_selection' && promo.product) {
+                                  // O PromoCard já tem sua própria lógica para combos
                                   return <PromoCard promotion={promo} onActionClick={(product) => handleProductAction(product, promo)} isStoreOpen={settings.isStoreOpen} />;
                                 }
                                 return null;
@@ -231,16 +230,15 @@ const HomePage = () => {
                     <SectionTitle>⭐ Nossos Destaques</SectionTitle>
                     <ContentGrid>
                       {featuredProducts.map(product => {
+                        // Verifica se o produto em destaque também tem uma promoção de desconto ativa
                         const discountPromo = promotions.find(p => p.type === 'product_discount' && p.productId === product.id);
-                        const promoDetails = discountPromo ? { title: discountPromo.title, promotionalPrice: discountPromo.promotionalPrice, originalPrice: discountPromo.originalPrice } : null;
                         return (
                           <ProductCard
                             key={`featured-${product.id}`}
                             product={product}
+                            // Passa os preços promocionais se existirem
                             originalPrice={discountPromo ? discountPromo.originalPrice : undefined}
                             promotionalPrice={discountPromo ? discountPromo.promotionalPrice : undefined}
-                            onCustomize={(product) => handleProductAction(product, promoDetails)}
-                            isStoreOpen={settings.isStoreOpen}
                           />
                         );
                       })}

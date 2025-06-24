@@ -1,46 +1,59 @@
+// src/components/ProductCard/index.js
+
 import React from 'react';
-import Button from '../Button';
-import { CardWrapper, CardImage, CardContent, ProductName, ProductDescription, PriceWrapper, OriginalPrice, PromotionalPrice } from './styles';
+import { useNavigate } from 'react-router-dom';
+// NOVO: Importamos o estilo OldPrice para o preço antigo
+import { CardWrapper, ProductImage, ProductInfo, ProductName, ProductPrice, PricePrefix, OldPrice } from './styles';
 
-const ProductCard = ({ product, originalPrice, promotionalPrice, onCustomize, isStoreOpen }) => {
-  const displayPrice = promotionalPrice !== undefined ? promotionalPrice : product.price;
-  const isDiscountValid = promotionalPrice !== undefined && originalPrice > promotionalPrice;
+// ALTERADO: Adicionamos `promotionalPrice` e `originalPrice` como props
+const ProductCard = ({ product, promotionalPrice, originalPrice }) => {
+  const navigate = useNavigate();
 
-  const getButtonText = () => {
-    if (!isStoreOpen) {
-      return 'Loja Fechada';
-    }
-    return product.category.toLowerCase() === 'açaí' ? 'Montar Açaí' : 'Adicionar';
+  const handleCardClick = () => {
+    navigate(`/produto/${product.id}`);
   };
 
-  const handleActionClick = (e) => {
-    e.stopPropagation();
-    if (onCustomize && isStoreOpen) {
-      const promoDetails = isDiscountValid ? {
-        type: 'product_discount',
-        promotionalPrice: promotionalPrice,
-        originalPrice: originalPrice,
-      } : null;
-      onCustomize(product, promoDetails);
-    }
-  };
-  
-  return (
-    <CardWrapper onClick={handleActionClick}>
-      {product.imageUrl && <CardImage src={product.imageUrl} alt={product.name} />}
-      <CardContent>
-        <ProductName>{product.name}</ProductName>
-        <ProductDescription>{product.description}</ProductDescription>
-        <PriceWrapper>
-          {isDiscountValid && (
-            <OriginalPrice>R$ {originalPrice.toFixed(2).replace('.', ',')}</OriginalPrice>
+  // LÓGICA ALTERADA: Esta função agora lida com preços promocionais
+  const getDisplayPrice = () => {
+    // Se um preço promocional for fornecido, ele tem prioridade
+    if (typeof promotionalPrice === 'number') {
+      return (
+        <>
+          {/* Mostra o preço original riscado, se ele existir */}
+          {typeof originalPrice === 'number' && (
+            <OldPrice>
+              R$ {originalPrice.toFixed(2).replace('.', ',')}
+            </OldPrice>
           )}
-          <PromotionalPrice>R$ {displayPrice.toFixed(2).replace('.', ',')}</PromotionalPrice>
-        </PriceWrapper>
-        <Button onClick={handleActionClick} style={{ width: '100%', marginTop: 'auto' }} disabled={!isStoreOpen}>
-          {getButtonText()}
-        </Button>
-      </CardContent>
+          {/* Exibe o preço da promoção */}
+          <span>R$ {promotionalPrice.toFixed(2).replace('.', ',')}</span>
+        </>
+      );
+    }
+    
+    // Lógica original para produtos com vários tamanhos (açaí)
+    if (product.hasCustomizableSizes && product.availableSizes?.length > 0) {
+      const minPrice = Math.min(...product.availableSizes.map(size => size.price));
+      return (
+        <>
+          <PricePrefix>A partir de</PricePrefix>
+          R$ {minPrice.toFixed(2).replace('.', ',')}
+        </>
+      );
+    }
+    
+    // Retorna o preço padrão se não houver promoção ou tamanhos customizáveis
+    return `R$ ${product.price.toFixed(2).replace('.', ',')}`;
+  };
+
+  return (
+    <CardWrapper onClick={handleCardClick}>
+      <ProductImage src={product.imageUrl || 'https://via.placeholder.com/300'} alt={product.name} />
+      <ProductInfo>
+        <ProductName>{product.name}</ProductName>
+        {/* Chamamos a função atualizada para exibir o preço correto */}
+        <ProductPrice>{getDisplayPrice()}</ProductPrice>
+      </ProductInfo>
     </CardWrapper>
   );
 };

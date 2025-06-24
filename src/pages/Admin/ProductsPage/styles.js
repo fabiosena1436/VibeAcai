@@ -40,6 +40,9 @@ export const AddForm = styled.form`
     .form-group-description {
       grid-column: 1 / -1;
     }
+    .full-width {
+      grid-column: 1 / -1;
+    }
   }
 `;
 
@@ -56,13 +59,15 @@ export const FormGroup = styled.div`
   input[type="text"], 
   input[type="number"], 
   textarea, 
-  select { 
+  select,
+  input[type="checkbox"] { 
     padding: 10px; 
     border: 1px solid #ccc; 
     border-radius: 6px; 
     font-size: 1em; 
     background-color: white; 
     width: 100%;
+    box-sizing: border-box;
   } 
   
   textarea { 
@@ -228,4 +233,50 @@ export const InfoText = styled.p`
   padding: 15px; 
   border-radius: 4px; 
   color: #333;
+`;
+
+// --- ESTILOS NOVOS ADICIONADOS ---
+export const SizeManagementContainer = styled.div`
+  grid-column: 1 / -1;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 10px;
+`;
+
+export const SizeInputGrid = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const SizeList = styled.ul`
+  list-style: none;
+  padding: 0;
+`;
+
+export const SizeListItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+
+  button {
+    background: none;
+    border: none;
+    color: #dc2626;
+    cursor: pointer;
+    font-size: 1.1em;
+  }
 `;
