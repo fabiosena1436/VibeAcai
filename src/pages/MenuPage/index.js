@@ -138,6 +138,7 @@ const MenuPage = () => {
           })}
         </>
       ) : (
+        
         <ProductListContainer>
           {filteredProducts.length > 0 ? (
             renderProductList(filteredProducts)
