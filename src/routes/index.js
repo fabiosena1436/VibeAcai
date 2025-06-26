@@ -16,7 +16,6 @@ import CategoriesPage from '../pages/Admin/CategoriesPage';
 import ToppingsPage from '../pages/Admin/ToppingsPage';
 import SettingsPage from '../pages/Admin/SettingsPage';
 import PromotionsPage from '../pages/Admin/PromotionsPage';
-import SizesPage from '../pages/Admin/SizesPage';
 import PrintableReceiptPage from '../pages/Admin/PrintableReceiptPage';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -93,7 +92,6 @@ const AppRoutes = () => (
       <Route path="toppings" element={<ToppingsPage />} />
       <Route path="promotions" element={<PromotionsPage />} />
       <Route path="settings" element={<SettingsPage />} />
-      <Route path="sizes" element={<SizesPage />} />
     </Route>
   </Routes>
 );
