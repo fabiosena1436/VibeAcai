@@ -98,8 +98,23 @@ export const OptionLabel = styled.label`
 
 export const ToppingGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 15px;
+`;
+
+/**
+ * ## MUDANÇA PRINCIPAL (Estilos) ##
+ * - Adicionamos um `ToppingImage` para a foto do adicional.
+ * - Ajustamos o `ToppingItemLabel` e `ToppingInfo` para alinhar
+ * corretamente a imagem, o nome e o preço.
+ */
+export const ToppingImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-right: 12px;
+  flex-shrink: 0;
 `;
 
 export const ToppingItemLabel = styled.label`
@@ -143,12 +158,16 @@ export const ToppingItemLabel = styled.label`
 export const ToppingInfo = styled.div`
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
+
   span {
     color: #333;
+    font-weight: 500;
   }
   strong {
     color: #888;
     font-size: 0.9em;
+    font-weight: 600;
   }
 `;
 

@@ -1,5 +1,3 @@
-// src/pages/Admin/PromotionsPage/index.js
-
 import React, { useState, useEffect } from 'react';
 import Button from '../../../components/Button';
 import ConfirmationModal from '../../../components/ConfirmationModal';
@@ -7,7 +5,7 @@ import toast from 'react-hot-toast';
 import { db } from '../../../services/firebaseConfig';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query, where } from 'firebase/firestore';
 
-// Importando todos os componentes estilizados do arquivo de estilos
+// Importando os novos componentes de estilo
 import {
   PageWrapper,
   SectionTitle,
@@ -19,7 +17,9 @@ import {
   PromotionListItem,
   ToppingsGrid,
   ToppingCheckboxLabel,
-  InfoText
+  InfoText,
+  ProductImage, // <-- Importado
+  PromoContent  // <-- Importado
 } from './styles';
 
 const PromotionsPage = () => {
@@ -181,22 +181,33 @@ const PromotionsPage = () => {
 
         <SectionTitle>Promoções Cadastradas</SectionTitle>
         {loading ? (<LoadingText>Carregando...</LoadingText>) : promotions.length > 0 ? (
-          <PromotionList>{promotions.map(promo => (
-            <PromotionListItem key={promo.id}>
-              <div className="promo-info">
-                <div className="promo-header">
-                  <h4 className="promo-title">{promo.title}</h4>
-                  <span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span>
-                </div>
-                {renderPromoDescription(promo)}
-              </div>
-              <div className="promo-actions">
-                <Button onClick={() => handleEditClick(promo)} style={{ backgroundColor: '#3b82f6' }}>Editar</Button>
-                <Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{ backgroundColor: promo.isActive ? '#7c3aed' : '#22c55e', color: promo.isActive ? '#f9f9f9' : 'white' }}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button>
-                <Button onClick={() => openDeleteConfirmModal(promo)} style={{ backgroundColor: '#ef4444' }}>Excluir</Button>
-              </div>
-            </PromotionListItem>
-          ))}</PromotionList>
+          <PromotionList>{promotions.map(promo => {
+           
+            const product = products.find(p => p.id === promo.productId);
+
+            return (
+              <PromotionListItem key={promo.id}>
+                <ProductImage 
+                  src={product?.imageUrl || 'https://via.placeholder.com/150'} 
+                  alt={product?.name || 'Produto da promoção'} 
+                />
+                <PromoContent>
+                  <div className="promo-info">
+                    <div className="promo-header">
+                      <h4 className="promo-title">{promo.title}</h4>
+                      <span className={`promo-status ${promo.isActive ? 'active' : 'inactive'}`}>{promo.isActive ? 'Ativa' : 'Inativa'}</span>
+                    </div>
+                    {renderPromoDescription(promo)}
+                  </div>
+                  <div className="promo-actions">
+                    <Button onClick={() => handleEditClick(promo)} style={{ backgroundColor: '#3b82f6' }}>Editar</Button>
+                    <Button onClick={() => handleToggleActive(promo.id, promo.isActive)} style={{ backgroundColor: promo.isActive ? '#7c3aed' : '#22c55e', color: promo.isActive ? '#f9f9f9' : 'white' }}>{promo.isActive ? 'Desativar' : 'Ativar'}</Button>
+                    <Button onClick={() => openDeleteConfirmModal(promo)} style={{ backgroundColor: '#ef4444' }}>Excluir</Button>
+                  </div>
+                </PromoContent>
+              </PromotionListItem>
+            );
+          })}</PromotionList>
         ) : (<InfoText>Nenhuma promoção cadastrada.</InfoText>)}
       </PageWrapper>
       <ConfirmationModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} onConfirm={handleDeletePromotion} title="Confirmar Exclusão" message={`Tem certeza que deseja excluir a promoção "${itemToDelete?.title}"?`} />

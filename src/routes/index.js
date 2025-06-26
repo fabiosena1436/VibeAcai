@@ -1,12 +1,13 @@
 import React from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import styled from 'styled-components';
+
+// --- Imports das Páginas e Componentes ---
 import HomePage from '../pages/HomePage';
 import MenuPage from '../pages/MenuPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import AdminLoginPage from '../pages/AdminLoginPage';
-// --- NOVO --- Importa a nova página de detalhes
 import ProductDetailPage from '../pages/ProductDetailPage'; 
 import AdminLayout from '../pages/Admin/AdminLayout';
 import DashboardOverviewPage from '../pages/Admin/DashboardOverviewPage';
@@ -23,14 +24,15 @@ import ProtectedRoute from '../components/ProtectedRoute';
 
 const ContentWrapper = styled.main`
   flex-grow: 1; 
-  padding-top: 70px;
+  padding-top: 70px; /* Altura do Navbar */
 
   @media (max-width: 768px) {
-    padding-top: 60px;
+    padding-top: 60px; /* Altura do Navbar em telas menores */
   }
 `;
 
-const PublicLayout = () => (
+// Layout para páginas públicas que TÊM rodapé
+const LayoutComRodape = () => (
   <>
     <Navbar />
     <ContentWrapper>
@@ -40,19 +42,34 @@ const PublicLayout = () => (
   </>
 );
 
+// Layout para páginas que NÃO TÊM rodapé (como a de detalhes do produto)
+const LayoutSemRodape = () => (
+    <>
+      <Navbar />
+      <ContentWrapper>
+        <Outlet />
+      </ContentWrapper>
+    </>
+  );
+
+// Componente principal de rotas que será exportado
 const AppRoutes = () => (
   <Routes>
-    <Route element={<PublicLayout />}>
+    {/* Agrupamos as rotas que usam o layout com rodapé */}
+    <Route element={<LayoutComRodape />}>
       <Route path="/" element={<HomePage />} />
       <Route path="/menu" element={<MenuPage />} />
-      {/* --- NOVO --- Rota para a página de detalhes do produto */}
-      <Route path="/produto/:productId" element={<ProductDetailPage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
     </Route>
 
-    <Route path="/admin/login" element={<AdminLoginPage />} />
+    {/* A rota de detalhes do produto agora usa o layout sem rodapé */}
+    <Route element={<LayoutSemRodape />}>
+        <Route path="/produto/:productId" element={<ProductDetailPage />} />
+    </Route>
 
+    {/* Rotas de Admin */}
+    <Route path="/admin/login" element={<AdminLoginPage />} />
     <Route 
       path="/admin/print/order/:orderId"
       element={
@@ -61,7 +78,6 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
-
     <Route 
       path="/admin" 
       element={

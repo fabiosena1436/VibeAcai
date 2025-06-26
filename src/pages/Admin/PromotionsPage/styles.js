@@ -1,5 +1,3 @@
-// src/pages/Admin/PromotionsPage/styles.js
-
 import styled from 'styled-components';
 
 export const PageWrapper = styled.div`
@@ -85,6 +83,24 @@ export const PromotionList = styled.ul`
   padding: 0;
 `;
 
+
+export const ProductImage = styled.img`
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #f0f0f0;
+  flex-shrink: 0;
+`;
+
+export const PromoContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+`;
+
+
 export const PromotionListItem = styled.li`
   background-color: #fff; 
   padding: 15px; 
@@ -92,7 +108,6 @@ export const PromotionListItem = styled.li`
   margin-bottom: 15px; 
   box-shadow: 0 2px 5px rgba(0,0,0,0.07);
   display: flex; 
-  justify-content: space-between; 
   align-items: center; 
   gap: 20px;
 
@@ -104,7 +119,7 @@ export const PromotionListItem = styled.li`
     display: flex; 
     justify-content: space-between; 
     align-items: flex-start; 
-    margin-bottom: 10px; 
+    margin-bottom: 8px; 
     gap: 15px; 
   }
   
@@ -136,7 +151,7 @@ export const PromotionListItem = styled.li`
   .promo-description { 
     font-size: 0.95em; 
     color: #333; 
-    margin: 0 0 15px 0; 
+    margin: 0 0 10px 0; 
     word-break: break-word; 
     
     strong { 
@@ -156,14 +171,15 @@ export const PromotionListItem = styled.li`
   }
   
   @media (max-width: 768px) {
-    flex-direction: column; 
-    align-items: stretch;
+    align-items: flex-start;
     
-    .promo-actions { 
-      flex-direction: row; 
-      align-items: center; 
-      justify-content: flex-start; 
-      width: 100%;
+    ${ProductImage} {
+      width: 60px;
+      height: 60px;
+    }
+    
+    .promo-actions {
+      flex-wrap: wrap;
     }
   }
 `;

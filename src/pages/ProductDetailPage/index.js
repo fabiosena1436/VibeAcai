@@ -1,5 +1,3 @@
-// src/pages/ProductDetailPage/index.js
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../services/firebaseConfig';
@@ -30,7 +28,8 @@ import {
   CategoryFilterButton,
   SuggestedProductsSection,
   SuggestedProductLabel,
-  BackButton
+  BackButton,
+  ToppingImage // <-- Importa o novo componente de imagem
 } from './styles';
 
 const ProductDetailPage = () => {
@@ -111,10 +110,8 @@ const ProductDetailPage = () => {
     if (!product) return;
     
     let mainProductPrice = 0;
-    // Usa a lógica de preço baseada nos tamanhos customizáveis ou no preço fixo
     if (product.hasCustomizableSizes) {
       const basePrice = selectedSize ? selectedSize.price : 0;
-      // Lógica de preço dos adicionais (sempre soma, conforme original)
       const toppingsPrice = selectedToppings.reduce((total, topping) => total + topping.price, 0);
       mainProductPrice = (basePrice + toppingsPrice) * quantity;
     } else {
@@ -209,8 +206,6 @@ const ProductDetailPage = () => {
               ))}
             </OptionGroup>
             
-            {/* --- CÓDIGO RESTAURADO --- */}
-            {/* A seção de adicionais que estava faltando foi adicionada aqui, mantendo a lógica e o visual originais. */}
             <SectionTitle>2. Adicionais (Opcional)</SectionTitle>
             
             <CategoryFilterContainer>
@@ -237,6 +232,13 @@ const ProductDetailPage = () => {
                       <ToppingItemLabel key={topping.id}>
                         <input type="checkbox" checked={selectedToppings.some(t => t.id === topping.id)} onChange={() => handleToppingChange(topping)} />
                         <div className="custom-checkbox" />
+                        
+                        {/* ## MUDANÇA PRINCIPAL (Lógica) ##
+                           - Adicionamos a imagem do adicional (topping).
+                           - Usamos uma imagem padrão caso a URL não exista.
+                        */}
+                        <ToppingImage src={topping.imageUrl || 'https://via.placeholder.com/50x50.png?text=Item'} alt={topping.name} />
+
                         <ToppingInfo>
                           <span>{topping.name}</span>
                           <strong>+ R$ {topping.price.toFixed(2).replace('.', ',')}</strong>
@@ -247,8 +249,6 @@ const ProductDetailPage = () => {
                 </div>
               );
             })}
-            {/* --- FIM DO CÓDIGO RESTAURADO --- */}
-
           </CustomizationSection>
         ) : (
           product.category.toLowerCase() === 'açaí' ? (
