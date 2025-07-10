@@ -5,6 +5,7 @@ import { db } from '../../../services/firebaseConfig';
 import { useStoreSettings } from '../../../contexts/StoreSettingsContext'; // Importando o hook de configurações
 
 import {
+  PrintStyles,
   ReceiptWrapper,
   Header,
   LogoImage,
