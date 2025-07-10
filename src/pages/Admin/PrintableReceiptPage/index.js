@@ -2,23 +2,38 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../services/firebaseConfig';
+import { useStoreSettings } from '../../../contexts/StoreSettingsContext'; // Importando o hook de configurações
+
 import {
   ReceiptWrapper,
   Header,
+  LogoImage,
   Title,
+  StoreAddress,
   InfoSection,
   InfoRow,
   ItemsSection,
-  ItemTable,
+  ItemsList,
+  Item,
+  ItemName,
+  ItemPrice,
+  ToppingsList,
+  UnitPrice,
   Footer,
   LoadingText,
-  PrintButton
+  PrintButton,
+  ThankYouMessage,
+  DottedLine,
 } from './styles';
 
 const PrintableReceiptPage = () => {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Usando o hook para pegar as configurações da loja
+  const { settings, loading: loadingSettings } = useStoreSettings();
+  
   const hasPrinted = useRef(false);
 
   useEffect(() => {
@@ -45,13 +60,14 @@ const PrintableReceiptPage = () => {
   }, [orderId]);
 
   useEffect(() => {
-    if (order && !hasPrinted.current) {
+    // Imprime automaticamente apenas quando o pedido e as configurações estiverem carregados
+    if (order && !loadingSettings && !hasPrinted.current) {
       window.print();
       hasPrinted.current = true;
     }
-  }, [order]);
+  }, [order, loadingSettings]);
 
-  if (loading) {
+  if (loading || loadingSettings) {
     return <LoadingText>Carregando dados do pedido...</LoadingText>;
   }
 
@@ -59,59 +75,56 @@ const PrintableReceiptPage = () => {
     return <LoadingText>Pedido não encontrado.</LoadingText>;
   }
 
+  // --- Lógica para calcular o troco ---
+  const needsChange = order.paymentMethod === 'dinheiro' && order.trocoPara && parseFloat(order.trocoPara) > 0;
+  const changeValue = needsChange ? parseFloat(order.trocoPara) - order.grandTotal : 0;
+
   return (
     <ReceiptWrapper>
       <Header>
-        <Title>Vibe Açaí - Recibo do Pedido</Title>
-        <p>ID do Pedido: {order.id.substring(0, 8)}...</p>
+        {settings.logoUrl && <LogoImage src={settings.logoUrl} alt="Logo da loja" />}
+        {/* Usaremos "Vibe Açaí" como padrão se o nome da loja não estiver nas configurações */}
+        <Title>{settings.storeName || 'Vibe Açaí'}</Title>
+        {settings.address && <StoreAddress>{settings.address}</StoreAddress>}
+        <DottedLine />
+        <p>Pedido: #{order.id.substring(0, 8).toUpperCase()}</p>
         <p>Data: {order.createdAt?.toDate().toLocaleString('pt-BR')}</p>
       </Header>
 
       <InfoSection>
-        <h3>Dados do Cliente</h3>
-        <InfoRow><strong>Nome:</strong> {order.customerName}</InfoRow>
-        <InfoRow><strong>Telefone:</strong> {order.phone}</InfoRow>
-        <InfoRow><strong>Endereço:</strong> {order.address}</InfoRow>
+        <h3>ENTREGAR PARA:</h3>
+        <InfoRow><strong>{order.customerName.toUpperCase()}</strong></InfoRow>
+        <InfoRow><span>{order.address}</span></InfoRow>
+        <InfoRow><span>Telefone: {order.phone}</span></InfoRow>
       </InfoSection>
 
       <ItemsSection>
-        <h3>Itens do Pedido</h3>
-        <ItemTable>
-          <thead>
-            <tr>
-              <th>Qtd.</th>
-              <th>Produto</th>
-              <th>Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.items.map((item) => (
-              <tr key={item.id_cart || item.id}>
-                <td>{item.quantity}x</td>
-                <td>
-                  {item.name}
-                  {/* --- ALTERADO --- Mostra o preço unitário se a quantidade for maior que 1 */}
-                  {item.quantity > 1 && (
-                    <div className="unit-price">
-                      (R$ {item.price.toFixed(2).replace('.', ',')} / un)
-                    </div>
-                  )}
-                  {item.selectedToppings && item.selectedToppings.length > 0 && (
-                    <div className="toppings-list">
-                      Adicionais: {item.selectedToppings.map(t => t.name).join(', ')}
-                    </div>
-                  )}
-                </td>
-                <td>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </ItemTable>
+        <h3>ITENS DO PEDIDO</h3>
+        <ItemsList>
+          {order.items.map((item) => (
+            <Item key={item.id_cart || item.id}>
+              <ItemName>
+                {item.quantity}x {item.name}
+                {item.quantity > 1 && (
+                  <UnitPrice>
+                    (R$ {item.price.toFixed(2).replace('.', ',')} / un)
+                  </UnitPrice>
+                )}
+                {item.selectedToppings && item.selectedToppings.length > 0 && (
+                  <ToppingsList>
+                    Adicionais: {item.selectedToppings.map(t => t.name).join(', ')}
+                  </ToppingsList>
+                )}
+              </ItemName>
+              <ItemPrice>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</ItemPrice>
+            </Item>
+          ))}
+        </ItemsList>
       </ItemsSection>
 
       <Footer>
         <InfoRow>
-          <span>Subtotal dos Itens:</span>
+          <span>Subtotal:</span>
           <strong>R$ {order.itemsSubtotal.toFixed(2).replace('.', ',')}</strong>
         </InfoRow>
         <InfoRow>
@@ -119,19 +132,35 @@ const PrintableReceiptPage = () => {
           <strong>R$ {order.deliveryFee.toFixed(2).replace('.', ',')}</strong>
         </InfoRow>
         <InfoRow className="grand-total">
-          <span>TOTAL GERAL:</span>
+          <span>TOTAL:</span>
           <strong>R$ {order.grandTotal.toFixed(2).replace('.', ',')}</strong>
         </InfoRow>
-        <hr />
+        <DottedLine />
         <InfoRow>
-          <span>Forma de Pagamento:</span>
+          <span>Pagamento:</span>
           <strong>{order.paymentMethodFormatted}</strong>
         </InfoRow>
+        {needsChange && (
+          <>
+            <InfoRow>
+              <span>Pagar com:</span>
+              <strong>R$ {parseFloat(order.trocoPara).toFixed(2).replace('.', ',')}</strong>
+            </InfoRow>
+            <InfoRow>
+              <span>TROCO:</span>
+              <strong>R$ {changeValue.toFixed(2).replace('.', ',')}</strong>
+            </InfoRow>
+          </>
+        )}
       </Footer>
+      
+      <ThankYouMessage>
+        Obrigado pela preferência!
+      </ThankYouMessage>
 
       <div className="no-print">
         <PrintButton onClick={() => window.print()}>
-          Imprimir novamente
+          Imprimir Novamente
         </PrintButton>
       </div>
     </ReceiptWrapper>
