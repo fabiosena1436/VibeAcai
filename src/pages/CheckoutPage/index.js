@@ -27,7 +27,6 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
 
   const [customerName, setCustomerName] = useState('');
-  // --- ALTERADO --- Substituímos o estado 'address' por três estados separados
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
@@ -36,6 +35,9 @@ const CheckoutPage = () => {
   const [trocoPara, setTrocoPara] = useState('');
   const [precisaTroco, setPrecisaTroco] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // --- NOVO --- Estado para as observações
+  const [observations, setObservations] = useState('');
 
   useEffect(() => {
     if (!loadingSettings) {
@@ -71,6 +73,12 @@ const CheckoutPage = () => {
       }
       message += ` - R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
     });
+    
+    // --- NOVO --- Adiciona a observação na mensagem do WhatsApp se existir
+    if (orderDetails.observations) {
+      message += `\n*Observações:* ${orderDetails.observations}\n`;
+    }
+
     message += `\n*Subtotal dos Itens:* R$ ${orderDetails.itemsSubtotal.toFixed(2).replace('.', ',')}\n`;
     if (orderDetails.deliveryFee > 0) {
       message += `*Taxa de Entrega:* R$ ${orderDetails.deliveryFee.toFixed(2).replace('.', ',')}\n`;
@@ -87,7 +95,6 @@ const CheckoutPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // --- ALTERADO --- Validação para os novos campos de endereço
     if (!customerName || !street || !number || !neighborhood || !phone) {
       toast.error('Por favor, preencha todos os seus dados.');
       setIsSubmitting(false);
@@ -124,18 +131,18 @@ const CheckoutPage = () => {
       paymentMethodFormatted = 'PIX';
     }
 
-    // --- NOVO --- Juntamos os campos de endereço em uma única string
     const fullAddress = `Rua ${street}, N° ${number}, Bairro: ${neighborhood}`;
 
     const orderDetailsForFirestore = {
       customerName,
-      // --- ALTERADO --- Usamos o endereço completo
       address: fullAddress,
       phone,
       paymentMethod,
       paymentMethodFormatted,
       precisaTroco,
       trocoPara: precisaTroco ? parseFloat(trocoPara || 0).toFixed(2).replace('.', ',') : '',
+      // --- NOVO --- Adiciona as observações ao objeto do pedido
+      observations: observations.trim(),
       items: cartItems.map(item => ({
         id: item.id,
         id_cart: item.id_cart || null,
@@ -184,7 +191,6 @@ const CheckoutPage = () => {
             <input type="text" id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required />
           </FormGroup>
           
-          {/* --- ALTERADO --- Substituímos o campo único de endereço por três campos */}
           <FormGroup>
             <label htmlFor="street">Rua:</label>
             <input type="text" id="street" value={street} onChange={(e) => setStreet(e.target.value)} required />
@@ -201,6 +207,21 @@ const CheckoutPage = () => {
           <FormGroup>
             <label htmlFor="phone">Telefone (com DDD):</label>
             <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(XX) XXXXX-XXXX" required />
+          </FormGroup>
+        </FormSection>
+
+        {/* --- NOVO --- Seção para as observações */}
+        <FormSection>
+          <h2>Observações (Opcional)</h2>
+          <FormGroup>
+            <label htmlFor="observations">Alguma instrução especial para o seu pedido?</label>
+            <textarea
+              id="observations"
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="Ex: Digite aqui sua sugestão, etc."
+              rows="3"
+            />
           </FormGroup>
         </FormSection>
 

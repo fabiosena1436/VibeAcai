@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import Box from '@mui/material/Box'; // Importação que estava faltando
 
 export const PageWrapper = styled.div`
   h1 {
@@ -121,7 +122,6 @@ export const OrderTotal = styled.div`
   color: #7c3aed;
 `;
 
-// --- NOVO --- Container para agrupar o seletor de status e o botão de impressão
 export const CardActionsContainer = styled.div`
   display: flex;
   gap: 10px;
@@ -158,5 +158,65 @@ export const StatusSelector = styled.select`
   &:focus {
     outline: none;
     border-color: #7c3aed;
+  }
+`;
+
+// Estilos que eu tinha enviado antes, agora no lugar certo
+export const ObservationSection = styled.div`
+  padding: 12px;
+  background-color: #fff8e1;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+  margin: 10px 0;
+  font-size: 0.9em;
+  color: #555;
+
+  strong {
+    color: #333;
+  }
+
+  p {
+    margin: 5px 0 0 0;
+    font-style: italic;
+  }
+`;
+
+export const DetailPanelWrapper = styled(Box)`
+  padding: 20px;
+  background-color: #fafafa;
+  border-top: 1px solid #e0e0e0;
+
+  h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  ul {
+    padding-left: 20px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    list-style-type: disc;
+  }
+  
+  li {
+    margin-bottom: 5px;
+  }
+
+  em {
+    font-size: 0.9em;
+    color: #555;
+  }
+
+  .observations {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+
+    p {
+      font-style: italic;
+      color: #c62828;
+      font-size: 1.05em;
+    }
   }
 `;

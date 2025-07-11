@@ -78,7 +78,6 @@ const PrintableReceiptPage = () => {
   return (
     <>
       <PrintStyles />
-      {/* A ÚNICA MUDANÇA É A ADIÇÃO DA CLASSNAME ABAIXO */}
       <ReceiptWrapper className="printable-receipt"> 
         <Header>
           {settings.logoUrl && <LogoImage src={settings.logoUrl} alt="Logo da loja" />}
@@ -112,6 +111,20 @@ const PrintableReceiptPage = () => {
             ))}
           </ItemsList>
         </Section>
+
+        {/* --- NOVO --- Seção de Observações adicionada aqui */}
+        {order.observations && (
+          <>
+            <DottedLine />
+            <Section>
+              <SectionTitle>OBSERVAÇÕES</SectionTitle>
+              <p style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                {order.observations}
+              </p>
+            </Section>
+          </>
+        )}
+
         <DottedLine />
 
         <Footer>

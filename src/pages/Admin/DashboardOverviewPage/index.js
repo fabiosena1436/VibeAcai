@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../../services/firebaseConfig';
 import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-import { FaPrint } from 'react-icons/fa';
+import { FaPrint, FaRegCommentDots } from 'react-icons/fa'; // Ícone novo
 import Box from '@mui/material/Box';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid'; // Componente novo
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+
+// Componentes estilizados
 import {
   PageWrapper,
   SectionTitle,
@@ -21,8 +23,36 @@ import {
   CustomerInfo,
   OrderTotal,
   StatusSelector,
-  CardActionsContainer
+  CardActionsContainer,
+  // --- NOVOS ---
+  ObservationSection,
+  DetailPanelWrapper 
 } from './styles';
+
+// --- NOVO --- Componente para o painel de detalhes do DataGrid
+const OrderDetailPanel = ({ row }) => {
+  return (
+    <DetailPanelWrapper>
+      <h4>Itens do Pedido:</h4>
+      <ul>
+        {row.items.map(item => (
+          <li key={item.id_cart || item.id}>
+            {item.quantity}x {item.name}
+            {item.selectedToppings && item.selectedToppings.length > 0 && (
+              <em> - Adicionais: {item.selectedToppings.map(t => t.name).join(', ')}</em>
+            )}
+          </li>
+        ))}
+      </ul>
+      {row.observations && (
+        <div className="observations">
+          <h4>Observações do Cliente:</h4>
+          <p>{row.observations}</p>
+        </div>
+      )}
+    </DetailPanelWrapper>
+  );
+};
 
 const DashboardOverviewPage = () => {
   const [orders, setOrders] = useState([]);
@@ -81,7 +111,6 @@ const DashboardOverviewPage = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  // --- NOVO --- Função para enviar notificação pelo WhatsApp
   const sendWhatsAppNotification = (phone, customerName, orderId) => {
     const cleanedPhone = phone.replace(/\D/g, '');
     const message = `Olá, ${customerName}! Seu pedido #${orderId.substring(0, 5)} da Vibe Açaí saiu para entrega e chegará em breve! 🛵`;
@@ -97,7 +126,6 @@ const DashboardOverviewPage = () => {
       await updateDoc(orderDocRef, { status: newStatus });
       toast.success("Status do pedido atualizado!");
 
-      // --- ALTERADO --- Lógica para notificação de entrega
       if (newStatus === 'Saiu para Entrega') {
         const order = orders.find(o => o.id === orderId);
         if (order && order.phone) {
@@ -113,7 +141,6 @@ const DashboardOverviewPage = () => {
     }
   };
 
-  // --- NOVO --- Função para abrir a página de impressão
   const handlePrintOrder = (orderId) => {
     window.open(`/admin/print/order/${orderId}`, '_blank');
   };
@@ -121,6 +148,15 @@ const DashboardOverviewPage = () => {
   const columns = [
     { field: 'createdAt', headerName: 'Data', width: 170, valueGetter: (params) => params.row?.createdAt?.toDate() || null, renderCell: (params) => params.value ? params.value.toLocaleString('pt-BR') : 'N/A' },
     { field: 'customerName', headerName: 'Cliente', width: 200, flex: 1 },
+    // --- NOVO --- Coluna para indicar observações
+    { 
+      field: 'observations', 
+      headerName: 'Obs.', 
+      width: 80, 
+      renderCell: (params) => (
+        params.value ? <FaRegCommentDots color="#7c3aed" title={`Observação: ${params.value}`} /> : 'Não'
+      )
+    },
     { field: 'grandTotal', headerName: 'Total', width: 130, type: 'number', renderCell: (params) => `R$ ${params.value?.toFixed(2).replace('.', ',') || '0,00'}` },
     {
       field: 'status', headerName: 'Status', width: 180,
@@ -138,7 +174,6 @@ const DashboardOverviewPage = () => {
         </StatusSelector>
       )
     },
-    // --- NOVO --- Coluna de Ações com botão de imprimir
     {
       field: 'actions',
       headerName: 'Ações',
@@ -202,6 +237,8 @@ const DashboardOverviewPage = () => {
             <DataGrid
               rows={filteredOrders}
               columns={columns}
+              // --- NOVO --- Prop para mostrar o painel de detalhes
+              getDetailPanelContent={({ row }) => <OrderDetailPanel row={row} />}
               initialState={{ columns: { columnVisibilityModel: { id: false } } }}
               pageSizeOptions={[5, 10, 20]}
               loading={loading}
@@ -218,6 +255,15 @@ const DashboardOverviewPage = () => {
                   <CustomerInfo><h4>{order.customerName}</h4><span>{order.createdAt?.toDate().toLocaleString('pt-BR') || 'Data indisponível'}</span></CustomerInfo>
                   <OrderTotal>R$ {order.grandTotal?.toFixed(2).replace('.', ',') || '0,00'}</OrderTotal>
                 </CardHeader>
+                
+                {/* --- NOVO --- Seção para mostrar as observações no mobile */}
+                {order.observations && (
+                  <ObservationSection>
+                    <strong>Observações:</strong>
+                    <p>{order.observations}</p>
+                  </ObservationSection>
+                )}
+
                 <CardActionsContainer>
                   <StatusSelector value={order.status} onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}>
                     <option value="Pendente">Pendente</option>
