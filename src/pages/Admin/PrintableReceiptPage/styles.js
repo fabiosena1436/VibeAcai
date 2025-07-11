@@ -1,8 +1,9 @@
 import styled, { createGlobalStyle } from 'styled-components';
 
 export const ReceiptWrapper = styled.div`
+  /* Estilo para visualização na tela */
   width: 100%;
-  max-width: 80mm;
+  max-width: 58mm; /* MUDANÇA AQUI */
   margin: 20px auto;
   padding: 15px;
   font-family: 'Courier New', Courier, monospace;
@@ -26,19 +27,19 @@ export const ReceiptWrapper = styled.div`
 
 export const PrintStyles = createGlobalStyle`
   @page {
-    size: 80mm auto;
-    margin: 4mm;
+    /* MUDANÇA PRINCIPAL AQUI */
+    size: 58mm auto; /* Definindo o tamanho do papel para 58mm */
+    margin: 3mm;     /* Reduzindo a margem para caber mais conteúdo */
   }
 
   @media print {
     html, body {
-      width: 80mm;
+      width: 58mm;
       background: #fff;
       -webkit-print-color-adjust: exact;
       color-adjust: exact;
     }
 
-    /* MUDANÇA AQUI: Usando uma classe CSS simples em vez de uma interpolação complexa */
     body > #root > *:not(.printable-receipt) {
       display: none;
     }
@@ -49,37 +50,43 @@ export const PrintStyles = createGlobalStyle`
   }
 `;
 
+// O resto dos estilos com pequenos ajustes de fonte para caber melhor
 export const Header = styled.header`
   text-align: center;
   margin-bottom: 10px;
+
+  p {
+    font-size: 11px;
+    margin: 2px 0;
+  }
 `;
 
 export const LogoImage = styled.img`
-  max-width: 150px;
-  max-height: 80px;
-  margin-bottom: 10px;
+  max-width: 120px;
+  max-height: 70px;
+  margin-bottom: 8px;
 `;
 
 export const Title = styled.h1`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
-  margin: 0;
+  margin: 0 0 2px 0;
   text-transform: uppercase;
 `;
 
 export const StoreInfo = styled.p`
-  font-size: 12px;
+  font-size: 11px;
   margin: 2px 0;
 `;
 
 export const DottedLine = styled.div`
   border-top: 1px dashed #000;
-  margin: 10px 0;
+  margin: 8px 0;
 `;
 
 export const Section = styled.section`
-  margin-bottom: 10px;
-  font-size: 12px;
+  margin-bottom: 8px;
+  font-size: 11px;
   
   p {
     margin: 2px 0;
@@ -87,7 +94,7 @@ export const Section = styled.section`
 `;
 
 export const SectionTitle = styled.h3`
-  font-size: 14px;
+  font-size: 12px;
   margin: 0 0 8px 0;
   text-align: center;
   font-weight: bold;
@@ -97,10 +104,11 @@ export const InfoRow = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 3px;
-  font-size: 12px;
+  font-size: 11px;
+  word-break: break-word;
 
   &.grand-total {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     margin-top: 5px;
   }
@@ -120,12 +128,12 @@ export const Item = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  font-size: 12px;
+  font-size: 11px;
 `;
 
 export const ItemName = styled.span`
   flex-grow: 1;
-  padding-right: 10px;
+  padding-right: 8px;
 `;
 
 export const ItemPrice = styled.span`
@@ -133,14 +141,14 @@ export const ItemPrice = styled.span`
 `;
 
 export const Footer = styled.footer`
-  padding-top: 10px;
+  padding-top: 8px;
 `;
 
 export const ThankYouMessage = styled.p`
   text-align: center;
   font-style: italic;
-  margin-top: 20px;
-  font-size: 12px;
+  margin-top: 15px;
+  font-size: 11px;
 `;
 
 export const LoadingText = styled.p`
